@@ -1,0 +1,15 @@
+*.form
+*.swp
+*.bak
+.DS_Store
+.svn
+._*
+.Spotlight-V100
+.Trashes
+
+########
+# NetBeans
+########
+build*
+manifest.mf
+nbproject/
