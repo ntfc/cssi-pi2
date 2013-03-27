@@ -27,8 +27,7 @@ public class Test {
     System.out.println("p1+p2="+p1.add(p2).toString());
     System.out.println("p1*p2="+p1.mul(p2).toString());
     System.out.println("p1+p3="+p1.add(p3).toString());
-    System.out.println("p2+p2="+p2.add(p2).toString());
-    System.out.println(p1.mul(p2));
+    System.out.println("p2*p2="+p2.mul(p2).toString());
 
 
   }

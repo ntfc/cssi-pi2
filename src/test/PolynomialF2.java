@@ -13,7 +13,6 @@ import java.util.BitSet;
  */
 public class PolynomialF2 {
   private BitSet coeficients;
-
   /**
    * Creates a new empty instance of <code>PolynomialF2</code>.
    */
@@ -73,7 +72,6 @@ public class PolynomialF2 {
 
   
   // return c = this + b;
-  // TODO: acho que isto esta mal. ver melhor..
   public PolynomialF2 add(PolynomialF2 b) throws PolynomialF2Exception {
     PolynomialF2 c = new PolynomialF2((BitSet) this.coeficients.clone());
     c.coeficients.xor(b.coeficients);
@@ -82,6 +80,22 @@ public class PolynomialF2 {
   }
 
   // return c = this * b;
+  public PolynomialF2 mul(PolynomialF2 b) {
+    BitSet c = new BitSet();
+    for(int i = 0; i < this.coeficients.length(); i++) {
+      for(int j = 0; j < b.coeficients.length(); j++) {
+        int c_ij = c.get(i + j) ? 1 : 0;
+        int n1 = this.coeficients.get(i) ? 1 : 0;
+        int n2 = b.coeficients.get(j) ? 1 : 0;
+        int new_c_ij = c_ij + (n1 * n2);
+        c.set(i+j, (new_c_ij % 2) == 1);
+      }
+    }
+    return new PolynomialF2(c);
+  }
+  /*
+  // daqui para a baixo esta a multiplicação em módulo, QUASE
+  // TODO: acho que isto esta mal. ver melhor..
   public PolynomialF2 mul(PolynomialF2 b) {
     return new PolynomialF2(rotateRight(b.coeficients, this.coeficients.cardinality()));
     
@@ -105,4 +119,5 @@ public class PolynomialF2 {
     }
     return bsClone;
   }
+  */
 }
