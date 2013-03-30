@@ -5,6 +5,7 @@
 
 package test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -18,7 +19,7 @@ public class Test {
    * Creates a new empty instance of <code>Test</code>.
    */
   public static void main(String[] args) throws Exception {
-    PolynomialF2 p1 = new PolynomialF2(1,2);
+    /*PolynomialF2 p1 = new PolynomialF2(1,2);
     PolynomialF2 p2 = new PolynomialF2(0,1,3);
     PolynomialF2 p3 = new PolynomialF2(0,1,2);
     System.out.println("'"+p1+"'");
@@ -32,8 +33,14 @@ public class Test {
     System.out.println(R.nElems());
     PolynomialF2 r1 = new PolynomialF2(0,1);
     PolynomialF2 r2 = new PolynomialF2(0,1,2);
-    System.out.println(r1+" * "+r2+" = " + R.mult(r1, r2));
-
+    System.out.println(r1+" * "+r2+" = " + R.mult(r1, r2));*/
+    int param = 80;
+    Tag tag = new Tag(param);
+    Reader reader = new Reader(param);
+    BigInteger readerC = reader.genC();
+    System.out.println("readerC = " + readerC);
+    RingLPNUtils utils = new RingLPNUtils(param);
+    utils.mappingIrreductive(readerC);
   }
 
 }
