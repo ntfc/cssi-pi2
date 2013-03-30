@@ -4,6 +4,8 @@
  */
 package test;
 
+import java.math.BigInteger;
+
 /**
  *
  * @author nc
@@ -15,4 +17,5 @@ public interface Ring<T> {
   T mult(T e1, T e2);
   T zero();
   T one();
+  BigInteger nElems();
 }

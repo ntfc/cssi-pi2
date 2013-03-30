@@ -11,6 +11,7 @@ import java.util.BitSet;
  *
  * @author nc
  */
+// based on this: http://introcs.cs.princeton.edu/java/92symbolic/Polynomial.java.html
 public class PolynomialF2 {
   private BitSet coeficients;
   /**
@@ -76,7 +77,6 @@ public class PolynomialF2 {
     PolynomialF2 c = new PolynomialF2((BitSet) this.coeficients.clone());
     c.coeficients.xor(b.coeficients);
     return c;
-    
   }
 
   // return c = this * b;

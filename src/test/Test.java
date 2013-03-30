@@ -28,7 +28,11 @@ public class Test {
     System.out.println("p1*p2="+p1.mul(p2).toString());
     System.out.println("p1+p3="+p1.add(p3).toString());
     System.out.println("p2*p2="+p2.mul(p2).toString());
-
+    PolynomialRingF2 R = new PolynomialRingF2(new PolynomialF2(0,1,3));
+    System.out.println(R.nElems());
+    PolynomialF2 r1 = new PolynomialF2(0,1);
+    PolynomialF2 r2 = new PolynomialF2(0,1,2);
+    System.out.println(r1+" * "+r2+" = " + R.mult(r1, r2));
 
   }
 
