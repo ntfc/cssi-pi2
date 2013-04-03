@@ -1,0 +1,7 @@
+- F_2 e o mesmo que um GaloisField(2^1)
+ -> em sage: F = GF(2)
+- F_2[x]
+ -> em sage: F = PolynomialRing(GF(2), 'x')
+- R = F_2[x]/f(x)
+ -> em sage: F = PolynomialRing(GF(2), 'x'); x = F.gen();
+             R = F.quotient(f(x), 'a'); a = R.gen(); // este 'a' aparece para que??
