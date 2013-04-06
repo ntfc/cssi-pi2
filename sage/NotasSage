@@ -7,3 +7,7 @@
              R = F.quotient(f(x), 'a'); a = R.gen(); // este 'a' aparece para que??
 - Usar f.list() para converter um poly numa lista binaria
 - Hamming de uma lista e simplesmente: l.count(1)
+
+-R^* senão tou enganado é por aqui. Deixei comentado no código como acho que deve ser.
+-Na verificação se o elemento pertence ao anel, acho que a condição que meti não é suficiente
+-http://www.sagemath.org/doc/reference/rings_standard/sage/rings/finite_rings/integer_mod_ring.html
