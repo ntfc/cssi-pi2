@@ -1,14 +1,17 @@
-def constantC(x, y):
-  return ((x/y)^x) * ((1-x)/(1-y))^(1-x)
-
-def Ber(tau=1/8):
-  # aquele range(1) pode ser optimizado...
-  return sum (random() < tau for _ in range(1))
-
+# parameters for the irreducible case
 lam = 80
 tau = 1/8
 tau2 = 0.27
 n = 532
+
+# constant function defined in the paper
+def constantC(x, y):
+  return ((x/y)^x) * ((1-x)/(1-y))^(1-x)
+
+# bernoulli distribution
+def Ber(tau=1/8):
+  return int(random() < tau)
+
 
 def initRing(f=x^532+x+1):
   # crete finite field F_2[a]
@@ -24,11 +27,8 @@ def genkey(R):
   s_ = R.random_element()
   return (s, s_)
 
-# generate challenge
-def genchallenge(n=80):
-  return Integer(getrandbits(n))
 
-# retorn a lista dos coeficientes do novo polinomio v
+# returns the list of coefficients of the new polynomial v
 def pimapping(R, c):
   l = c.bits()
   coefs = []
@@ -49,10 +49,13 @@ def createPoly(R, l):
     v += x^l[i]
   return v
 
+# convert a bitlist to sage Integer
 def bitlistToInt(l):
   out = 0
   for bit in l:
     out = (out << 1) | bit
   return out
 
-# TODO: convert polys to integers
+# generate challenge
+def genchallenge(n=80):
+  return Integer(getrandbits(n))
