@@ -19,4 +19,9 @@ def initRing(f=x^532+x+1):
   x = F.gen()
   return R
 
+def genkey(R):
+  s = R.random_element()
+  s_ = R.random_element()
+  return (s, s_)
 
+# TODO: convert polys to integers
