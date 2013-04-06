@@ -24,4 +24,32 @@ def genkey(R):
   s_ = R.random_element()
   return (s, s_)
 
+# generate challenge
+def genchallenge(n=80):
+  return Integer(getrandbits(n))
+
+def pimapping(R, c):
+  l = c.bits()
+  coefs = []
+  for x in range(0, 16):
+    ci = l[x*5:(x*5)+5]
+    #print "{0} = {1}".format(ci, bitlistToInt(ci))
+    # here we use x instead of the (x-1) indicated in the paper
+    i = 16 * x + bitlistToInt(ci)
+    print "i = {0}".format(i)
+    coefs.append(i)
+  return coefs
+
+def createPoly(R, l):
+  f = 0
+  for i in range(0, len(l)):
+    f += x^l[i]
+  return f
+
+def bitlistToInt(l):
+  out = 0
+  for bit in l:
+    out = (out << 1) | bit
+  return out
+
 # TODO: convert polys to integers
