@@ -37,7 +37,7 @@ def pimapping(R, c):
     #print "{0} = {1}".format(ci, bitlistToInt(ci))
     # here we use x instead of the (x-1) indicated in the paper
     i = 16 * x + bitlistToInt(ci)
-    print "i = {0}".format(i)
+    #print "i = {0}".format(i)
     coefs.append(i)
   return coefs
 
@@ -56,6 +56,54 @@ def bitlistToInt(l):
     out = (out << 1) | bit
   return out
 
-# generate challenge
-def genchallenge(n=80):
+# hamming weight of a polynomial
+def wt(e):
+  return e.list().count(1)
+
+"""
+" The Protocol
+"""
+
+# generate random c. Used by the Reader
+def genC(n=80):
   return Integer(getrandbits(n))
+
+# generate r
+def genR(R):
+  return R.random_element()
+
+# generate e
+def genE(R):
+  l = []
+  e = 0
+  x = R.gen()
+  for i in range(0, n):
+    ci = Ber()
+    if ci == 1:
+      e += x^i
+  return e
+
+# executed by the tag
+def calcZ(c, s, s_, R):
+  r = genR(R)
+  e = genE(R)
+  pi = createPoly(R, pimapping(R,c))
+  z = r * (s * pi + s_) + e
+  return (r, z)
+
+# executed by the tag
+def calcE_(c, s, s_, r, z, R):
+  pi = createPoly(R, pimapping(R,c))
+  return z - r * (s * pi + s_)
+
+# test if accepts or rejects
+def accept(s, s_, c, r, z, R):
+  # TODO: nao e assim que e suposto ser, mas sim  r not in R*
+  if r not in R:
+    print "reject R*"
+    return
+  e_ = calcE_(c, s, s_, r, z, R)
+  if wt(e_) > (n * tau2):
+    print "reject"
+    return
+  print "accept"

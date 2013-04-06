@@ -5,3 +5,5 @@
 - R = F_2[x]/f(x)
  -> em sage: F = PolynomialRing(GF(2), 'x'); x = F.gen();
              R = F.quotient(f(x), 'a'); a = R.gen(); // este 'a' aparece para que??
+- Usar f.list() para converter um poly numa lista binaria
+- Hamming de uma lista e simplesmente: l.count(1)
