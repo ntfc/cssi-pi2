@@ -28,6 +28,7 @@ def genkey(R):
 def genchallenge(n=80):
   return Integer(getrandbits(n))
 
+# retorn a lista dos coeficientes do novo polinomio v
 def pimapping(R, c):
   l = c.bits()
   coefs = []
@@ -40,11 +41,13 @@ def pimapping(R, c):
     coefs.append(i)
   return coefs
 
+# create the v in R polynomial 
 def createPoly(R, l):
-  f = 0
+  v = 0
+  x = R.gen()
   for i in range(0, len(l)):
-    f += x^l[i]
-  return f
+    v += x^l[i]
+  return v
 
 def bitlistToInt(l):
   out = 0
