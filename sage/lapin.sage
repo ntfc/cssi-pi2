@@ -53,7 +53,7 @@ def createPoly(R, l):
 def bitlistToInt(l):
   out = 0
   for bit in l:
-    out = (out << 1) | bit
+    out = (out << 1) | int(bit)
   return out
 
 # hamming weight of a polynomial
