@@ -70,6 +70,7 @@ def genC(n=80):
 
 # generate r
 def genR(R):
+  # TODO: isto ta mal. o elemento gerado deve ser de R* e nao de R
   return R.random_element()
 
 # generate e
