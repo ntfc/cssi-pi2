@@ -71,7 +71,9 @@ def genC(n=80):
 # generate r
 def genR(R):
   # TODO: isto ta mal. o elemento gerado deve ser de R* e nao de R
+  #return R.multiplicative_generator()
   return R.random_element()
+  
 
 # generate e
 def genE(R):
@@ -100,7 +102,8 @@ def calcE_(c, s, s_, r, z, R):
 # test if accepts or rejects
 def accept(s, s_, c, r, z, R):
   # TODO: nao e assim que e suposto ser, mas sim  r not in R*
-  if r not in R:
+  #if r.multiplicative_group_is_cyclic() != true:
+   if r not in R:
     print "reject R*"
     return
   e_ = calcE_(c, s, s_, r, z, R)
