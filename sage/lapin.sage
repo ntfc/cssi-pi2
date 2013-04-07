@@ -13,11 +13,12 @@ def Ber(tau=1/8):
   return int(random() < tau)
 
 
-def initRing(f=x^532+x+1):
+def initRing():
   # crete finite field F_2[a]
   F = PolynomialRing(GF(2), 'x')
   x = F.gen()
   # create the ring
+  f = x^532 + x + 1
   R = F.quotient(f, 'x')
   x = F.gen()
   return R
@@ -42,12 +43,17 @@ def pimapping(R, c):
   return coefs
 
 # create the v in R polynomial
-def createPoly(R, l):
+# l is a list of integers
+def createPolyFromListInt(R, l):
   v = 0
   x = R.gen()
   for i in range(0, len(l)):
     v += x^l[i]
   return v
+
+# convert integer to bitlist
+def intToBitlist(n):
+  return [int(bit) for bit in Integer(n).binary()]
 
 # convert a bitlist to sage Integer
 def bitlistToInt(l):
@@ -56,6 +62,16 @@ def bitlistToInt(l):
     out = (out << 1) | int(bit)
   return out
 
+# pad n with size bits with value bit
+# return as a bitlist
+def padNumber(n, size, bit=0):
+  l = intToBitlist(n)
+  l.reverse()
+  l.extend([int(bit)] * size)
+  l.reverse()
+  return l
+
+# TODO: adicionar um wt para inteiros
 # hamming weight of a polynomial
 def wt(e):
   return e.list().count(1)
@@ -66,7 +82,8 @@ def wt(e):
 
 # generate random c. Used by the Reader
 def genC(n=80):
-  return Integer(getrandbits(n))
+  c = Integer(getrandbits(n))
+  return c
 
 # generate r
 def genR(R):
@@ -94,13 +111,13 @@ def genE(R):
 def calcZ(c, s, s_, R):
   r = genR(R)
   e = genE(R)
-  pi = createPoly(R, pimapping(R,c))
+  pi = createPolyFromListInt(R, pimapping(R,c))
   z = r * (s * pi + s_) + e
   return (r, z)
 
 # executed by the tag
 def calcE_(c, s, s_, r, z, R):
-  pi = createPoly(R, pimapping(R,c))
+  pi = createPolyFromListInt(R, pimapping(R,c))
   return z - r * (s * pi + s_)
 
 # test if accepts or rejects
