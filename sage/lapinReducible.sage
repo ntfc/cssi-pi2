@@ -5,12 +5,21 @@ tau = 1/6
 tau2 = 0.29
 lam = 80
 
-# irreducible pentanomials
-f = x^127 + x^8 + x^7 + x^3 + 1
-g = x^126 + x^9 + x^6 + x^5 + 1
-p = x^125 + x^9 + x^7 + x^4 + 1
-l = x^122 + x^7 + x^4 + x^3 + 1
-k = x^121 + x^8 + x^5 + x + 1 
+
+def initRing():
+  F = PolynomialRing(GF(2), 'x')
+  x = F.gen()
+  # irreducible pentanomials
+  f1 = x^127 + x^8 + x^7 + x^3 + 1
+  f2 = x^126 + x^9 + x^6 + x^5 + 1
+  f3 = x^125 + x^9 + x^7 + x^4 + 1
+  f4 = x^122 + x^7 + x^4 + x^3 + 1
+  f5 = x^121 + x^8 + x^5 + x + 1 
+  # calculate polynomial f
+  f = f1 * f2 * f3 * f4 * f5
+  # create the ring
+  R = F.quotient_ring(f, 'x')
+  return R
 
 #Chinese Remainder Theorem
 def crTheorem(f, g, n, m):

@@ -15,6 +15,7 @@
 - Pagina 505 do livro de TC tem um algoritmo para calcular inversas modulares multiplicativas
 - Tambem diz que se gcd(a,N) = 1, entao a pertence a R^* (a e um elemento de R)
 - Ja fizemos isto para o PI1, para o Paillier
-
 --
 -CRT no sage: http://www.sagemath.org/doc/reference/misc/sage/rings/arith.html
+--
+-converter inteiro c para lista de inteiros: [int(bit) for bit in c.binary()]
