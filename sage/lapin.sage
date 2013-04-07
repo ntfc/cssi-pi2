@@ -8,7 +8,7 @@ n = 532
 def constantC(x, y):
   return ((x/y)^x) * ((1-x)/(1-y))^(1-x)
 
-# bernoulli distribution
+# bernoulli distribution. Returns a random bit
 def Ber(tau=1/8):
   return int(random() < tau)
 
@@ -41,7 +41,7 @@ def pimapping(R, c):
     coefs.append(i)
   return coefs
 
-# create the v in R polynomial 
+# create the v in R polynomial
 def createPoly(R, l):
   v = 0
   x = R.gen()
@@ -70,10 +70,14 @@ def genC(n=80):
 
 # generate r
 def genR(R):
-  # TODO: isto ta mal. o elemento gerado deve ser de R* e nao de R
   #return R.multiplicative_generator()
-  return R.random_element()
-  
+  f = bitlistToInt(R.modulus().list())
+  r = R.random_element()
+  # while gcd(r, f) != 1, r not in R*
+  while gcd(bitlistToInt(r.list()), f) != 1:
+    r = R.random_element()
+  return r
+
 
 # generate e
 def genE(R):
@@ -101,13 +105,12 @@ def calcE_(c, s, s_, r, z, R):
 
 # test if accepts or rejects
 def accept(s, s_, c, r, z, R):
-  # TODO: nao e assim que e suposto ser, mas sim  r not in R*
-  #if r.multiplicative_group_is_cyclic() != true:
-   if r not in R:
+  #if r not in R:
+  if gcd(bitlistToInt(r.list()), bitlistToInt(R.modulus().list())) != 1:
     print "reject R*"
     return
   e_ = calcE_(c, s, s_, r, z, R)
   if wt(e_) > (n * tau2):
-    print "reject"
+    print "reject wt"
     return
   print "accept"

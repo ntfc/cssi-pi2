@@ -11,3 +11,7 @@
 -R^* senão tou enganado é por aqui. Deixei comentado no código como acho que deve ser.
 -Na verificação se o elemento pertence ao anel, acho que a condição que meti não é suficiente
 -http://www.sagemath.org/doc/reference/rings_standard/sage/rings/finite_rings/integer_mod_ring.html
+--
+- Pagina 505 do livro de TC tem um algoritmo para calcular inversas modulares multiplicativas
+- Tambem diz que se gcd(a,N) = 1, entao a pertence a R^* (a e um elemento de R)
+- Ja fizemos isto para o PI1, para o Paillier
