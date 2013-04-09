@@ -79,12 +79,14 @@ def bitlistToPoly(R, l):
 
 
 ## DUVIDA ##
+Como representar os polinomios? Porque depois vamos ter de fazer contas com eles,
+e entao e melhor ver a melhor maneira de os guardar (e de fazer padding)
 x^3 + x + 1 <=> 1 1 0 1
 OU
 x^3 + x + 1 <=> 1 0 1 1
 Caso seja a primeira opcao, faz-se padding para a esquerda certo?
-
-
+Caso seja a segunda, e preciso mudar tudo no lapin.sage!
+E depois a conversao para binario, o LSB esta na esquerda certo?
 
 
 
