@@ -14,7 +14,7 @@ def initRing():
   f2 = x^126 + x^9 + x^6 + x^5 + 1
   f3 = x^125 + x^9 + x^7 + x^4 + 1
   f4 = x^122 + x^7 + x^4 + x^3 + 1
-  f5 = x^121 + x^8 + x^5 + x + 1 
+  f5 = x^121 + x^8 + x^5 + x + 1
   # calculate polynomial f
   f = f1 * f2 * f3 * f4 * f5
   # create the ring
@@ -25,10 +25,6 @@ def initRing():
 #Chinese Remainder Theorem
 def crTheorem(f, g, n, m):
   return crt(f, g, n, m)
-
-#degree of polynomial
-def polyDegree(f):
-  return f.degree()
 
 # convert integer to bitlist
 def intToBitlist(n):
@@ -41,37 +37,72 @@ def bitlistToInt(l):
     out = (out << 1) | int(bit)
   return out
 
-# pad n with size bits with value bit
-# return as a bitlist
-def padNumber(n, size, bit=0):
-  l = intToBitlist(n)
-  l.reverse()
-  l.extend([int(bit)] * size)
-  l.reverse()
+# pad list of bits
+def padBitList(l, padding, v=0):
+  # TODO: padding < len(l)
+  l.extend([int(v)] * padding)
   return l
 
-# create the v \in R polynomial
-# l must be a bit list
-# [1,0,0,1,1] = x^4 + x + 1
-def createPolyFromBitlist(R, l):
+# pad number n. padding must be the number of pads to add
+# return as a bitlist
+def padNumber(n, padding, v=0):
+  l = intToBitlist(n)
+
+  return padBitList(l, padding, v)
+
+# convert a bitlist to a polynomial
+def bitlistToPoly(R, l):
   v = 0
   x = R.gen()
-  for i in range(len(l)-1,-1,-1): # reverse order
+  for i in range(0, len(l)):
     if l[i] == 1:
       v += x^i
   return v
 
 # fi must be a list! TODO: validate that
 # returns a list of polynomials in CRT TODO: que e um poly em CRT?
-def pimapping(c, R, fi):
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## DUVIDA ##
+x^3 + x + 1 <=> 1 1 0 1
+OU
+x^3 + x + 1 <=> 1 0 1 1
+Caso seja a primeira opcao, faz-se padding para a esquerda certo?
+
+
+
+
+
+
+
+
+
+
+
+"""
+def pimapping(R, c, fi):
   v = []
+  l = padNumber(c, 80)
   for f in fi:
     d = f.degree()
     pad = d - 80
-    # c must have exactly 80 bits
-    newC = padNumber(c, 80-c.nbits())
-    newC.extend([0] * pad)
-    v.append(createPolyFromBitlist(R,newC))
+    vi = bitlistToPoly(R, padBitList(l, pad))
+    v.append(vi)
   return v
 
 """

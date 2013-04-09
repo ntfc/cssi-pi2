@@ -90,7 +90,10 @@ def genR(R):
   #return R.multiplicative_generator()
   f = bitlistToInt(R.modulus().list())
   r = R.random_element()
+  print "r = {0}".format(bitlistToInt(r.list()))
+  print "gcd(r, f) = {0}".format(gcd(bitlistToInt(r.list()), f))
   # while gcd(r, f) != 1, r not in R*
+  # this wasnt supposed to be necessary, but sometimes gcd(r,f) = 5 ... :/
   while gcd(bitlistToInt(r.list()), f) != 1:
     r = R.random_element()
   return r
