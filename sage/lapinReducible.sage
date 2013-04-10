@@ -1,3 +1,10 @@
+
+
+"""
+NAO USAR O f.list()! Usar antes o polyToBitlist()
+"""
+
+
 # parameters for the reducible case
 m = 5
 n = 621
@@ -5,6 +12,9 @@ tau = 1/6
 tau2 = 0.29
 lam = 80
 
+# bernoulli distribution. Returns a random bit
+def Ber(tau=1/6):
+  return int(random() < tau)
 
 def initRing():
   F = PolynomialRing(GF(2), 'x')
@@ -26,9 +36,19 @@ def initRing():
 def crTheorem(f, g, n, m):
   return crt(f, g, n, m)
 
+"""
+All these auxiliary methods need the Ring
+"""
 # convert integer to bitlist
-def intToBitlist(n):
-  return [int(bit) for bit in Integer(n).binary()]
+# example: if R.degree() is 100 and n has 9 bits, this returns a list with length
+# 100, and the first 91 (100 - 81) bits are set to 0
+def intToBitlist(R, n):
+  nbits = Integer(n).nbits()
+  deg = R.degree()
+  # add the "unnecessary" bits to the left
+  l = [0] * (deg - nbits)
+  l.extend([int(bit) for bit in Integer(n).binary()])
+  return l
 
 # convert a bitlist to sage Integer
 def bitlistToInt(l):
@@ -37,83 +57,85 @@ def bitlistToInt(l):
     out = (out << 1) | int(bit)
   return out
 
-# pad list of bits
+# convert a bitlist to a polynomial
+# [1,0,1,1,1] = x^4 + x^2 + x + 1
+def bitlistToPoly(R, l):
+  v = 0
+  x = R.gen()
+  n = len(l)
+  for i in range(0, n):
+    if l[i] == 1:
+      v += x^(n - i - 1)
+  return v
+
+# convert a poly to bitlist
+# given x^4 + x^2 + x + 1 = 10111
+# returns a list with len = R.degree()
+def polyToBitlist(f):
+  l = f.list()
+  l.reverse()
+  return l
+
+# pad list of bits. add padding bits to the right
 def padBitList(l, padding, v=0):
   # TODO: padding < len(l)
   l.extend([int(v)] * padding)
   return l
 
-# pad number n. padding must be the number of pads to add
-# return as a bitlist
-def padNumber(n, padding, v=0):
-  l = intToBitlist(n)
-
-  return padBitList(l, padding, v)
-
-# convert a bitlist to a polynomial
-def bitlistToPoly(R, l):
-  v = 0
-  x = R.gen()
-  for i in range(0, len(l)):
-    if l[i] == 1:
-      v += x^i
-  return v
-
 # fi must be a list! TODO: validate that
-# returns a list of polynomials in CRT TODO: que e um poly em CRT?
-"""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## DUVIDA ##
-Como representar os polinomios? Porque depois vamos ter de fazer contas com eles,
-e entao e melhor ver a melhor maneira de os guardar (e de fazer padding)
-x^3 + x + 1 <=> 1 1 0 1
-OU
-x^3 + x + 1 <=> 1 0 1 1
-Caso seja a primeira opcao, faz-se padding para a esquerda certo?
-Caso seja a segunda, e preciso mudar tudo no lapin.sage!
-E depois a conversao para binario, o LSB esta na esquerda certo?
-
-Ver aqui:
-http://en.wikipedia.org/wiki/Finite_field_arithmetic
-
-
-
-
-
-
-
-
-
-"""
+# c must be a bitlist
+# returns a list of polynomials in CRT
 def pimapping(R, c, fi):
-  v = []
-  l = padNumber(c, 80)
+  v = [] # list of v_i
   for f in fi:
+    l = list(c) # save original value of c for each iteration
     d = f.degree()
-    pad = d - 80
-    vi = bitlistToPoly(R, padBitList(l, pad))
+    pad = d - lam
+    l.extend([0] * pad)
+    # new ring Fi[x]/fi
+    Fi = R.polynomial_ring()
+    Ri = Fi.quotient_ring(f,'x')
+    vi = bitlistToPoly(Ri, l)
     v.append(vi)
   return v
+
+def genkey(R):
+  s = R.random_element()
+  s_ = R.random_element()
+  return (s, s_)
 
 """
 The protocol
 """
 # generate random c. Used by the Reader
-def genC(n=80):
-  c = Integer(getrandbits(n))
+def genC(n=lam):
+  #c = Integer(getrandbits(n))
+  # c is a bitlist
+  c = [int(bit) for bit in (Integer(getrandbits(n))).binary()]
+  # pad c, if necessary
+  if len(c) < n:
+    # list of padding bits
+    paddedC = [0] * (n - len(c))
+    paddedC.extend(c)
+    c = paddedC
+    # c is now a list with 80bits
   return c
+
+# generate r \in R^*
+def genR(R):
+  # DUVIDA: da sempre um elemento de R^* ??????
+  return R.random_element()
+
+# generate e
+def genE(R):
+  l = []
+  e = 0
+  x = R.gen()
+  for i in range(0, R.degree()):
+    ci = Ber()
+    if ci == 1:
+      e += x^i
+  return e
+
+def calcZ(R, s, s_, c):
+  pi = pimapping(R, c)

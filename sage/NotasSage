@@ -19,3 +19,8 @@
 -CRT no sage: http://www.sagemath.org/doc/reference/misc/sage/rings/arith.html
 --
 -converter inteiro c para lista de inteiros: [int(bit) for bit in c.binary()]
+--
+Dado um polynomio f, f.padded_list()
+ - f.coeffs() retorna lista de coeficientes
+ - f.hamming_weight() retorna wt(f)
+ - f.truncate() pode dar jeito
