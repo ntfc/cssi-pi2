@@ -88,6 +88,9 @@ Caso seja a primeira opcao, faz-se padding para a esquerda certo?
 Caso seja a segunda, e preciso mudar tudo no lapin.sage!
 E depois a conversao para binario, o LSB esta na esquerda certo?
 
+Ver aqui:
+http://en.wikipedia.org/wiki/Finite_field_arithmetic
+
 
 
 
