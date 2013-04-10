@@ -61,7 +61,8 @@ def bitlistToInt(l):
 # [1,0,1,1,1] = x^4 + x^2 + x + 1
 def bitlistToPoly(R, l):
   v = 0
-  x = R.gen()
+  #x = R.gen() # type(v) == sage.rings.polynomial.polynomial_quotient_ring_element.PolynomialQuotientRing_field_with_category.element_class
+  x = R.polynomial_ring().gen() # type(v) == sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
   n = len(l)
   for i in range(0, n):
     if l[i] == 1:
@@ -100,8 +101,11 @@ def pimapping(R, c, fi):
   return v
 
 def genkey(R):
-  s = R.random_element()
-  s_ = R.random_element()
+  #s = R.random_element()
+  #s_ = R.random_element()
+  #### TEMPORARY
+  s = genR(R)
+  s_ = genR(R)
   return (s, s_)
 
 """
@@ -124,13 +128,15 @@ def genC(n=lam):
 # generate r \in R^*
 def genR(R):
   # DUVIDA: da sempre um elemento de R^* ??????
-  return R.random_element()
+  #return R.random_element()
+  return bitlistToPoly(R, polyToBitlist(R.random_element()))
 
 # generate e
 def genE(R):
   l = []
   e = 0
-  x = R.gen()
+  #x = R.gen()
+  x = R.polynomial_ring().gen()
   for i in range(0, R.degree()):
     ci = Ber()
     if ci == 1:
