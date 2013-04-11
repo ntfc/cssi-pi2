@@ -77,12 +77,6 @@ def polyToBitlist(f):
   l.reverse()
   return l
 
-# pad list of bits. add padding bits to the right
-def padBitList(l, padding, v=0):
-  # TODO: padding < len(l)
-  l.extend([int(v)] * padding)
-  return l
-
 # fi must be a list! TODO: validate that
 # c must be a bitlist
 # returns a list of polynomials in CRT
@@ -103,10 +97,16 @@ def pimapping(R, c, fi):
 def genkey(R):
   #s = R.random_element()
   #s_ = R.random_element()
-  #### TEMPORARY
-  s = genR(R)
-  s_ = genR(R)
+  s = random_element(R)
+  s_ = random_element(R)
   return (s, s_)
+
+# generate a random element in R
+# cast the result to sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+def random_element(R):
+  # generate random element in R, then convert it to bitlist, then return bitlist
+  # as a polynomial type sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+  return bitlistToPoly(R, polyToBitlist(R.random_element()))
 
 """
 The protocol
@@ -129,7 +129,7 @@ def genC(n=lam):
 def genR(R):
   # DUVIDA: da sempre um elemento de R^* ??????
   #return R.random_element()
-  return bitlistToPoly(R, polyToBitlist(R.random_element()))
+  return random_element(R)
 
 # generate e
 def genE(R):
@@ -143,5 +143,11 @@ def genE(R):
       e += x^i
   return e
 
-def calcZ(R, s, s_, c):
+def calcZ(R, fi, s, s_, c):
   pi = pimapping(R, c)
+  r = genR(R)
+  e = genE(R)
+  z = []
+  for f in fi:
+    # do the CRT
+    r * (s *
