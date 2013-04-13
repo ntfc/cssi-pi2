@@ -143,11 +143,45 @@ def genE(R):
       e += x^i
   return e
 
+# reduces a polynomial to its CRT form
+# a: polynomial to reduce
+# fi: list of modulus
+def reduceToCRT(a, fi):
+  c = []
+  for f in fi:
+    c.append(a.mod(f))
+  return c
+
 def calcZ(R, fi, s, s_, c):
-  pi = pimapping(R, c)
+  pi = pimapping(R, c, fi)
+  # TODO: gerar apenas o e a partir do anel R. Derivar r da chave s
   r = genR(R)
   e = genE(R)
-  z = []
-  for f in fi:
-    # do the CRT
-    r * (s *
+  # TODO: optimizar esta parte
+  rCRT = reduceToCRT(r, fi)
+  eCRT = reduceToCRT(e, fi)
+  sCRT = reduceToCRT(s, fi)
+  s_CRT = reduceToCRT(s_, fi)
+  z = [] # c will be in CRT form
+  for i in range(0, len(fi)):
+    # TODO: usar o metodo de multiplicacao do paper
+    zi = rCRT[i].mod(fi[i]) * ((sCRT[i].mod(fi[i])*pi[i]) + s_CRT[i].mod(fi[i])) + eCRT[i].mod(fi[i])
+    z.append(zi.mod(fi[i]))
+  return z
+
+def calcE_(R, s, s_, pi, r, z):
+  return (z - r * (s * pi + s_)).mod(R.modulus())
+
+def verify(R, fi, s, s_, c, r, zCRT):
+  if r.gcd(R.modulus()) != 1:
+    print "reject R*"
+    return
+  # create mapping and do the CRT
+  pi = CRT_list(pimapping(R, c, fi), fi)
+  # compute z
+  z = CRT_list(zCRT, fi)
+  e_ = calcE_(R, s, s_, pi, r, z)
+  if e_.hamming_weight() > (n * tau2):
+    print "reject wt"
+    return
+  print "accept"
