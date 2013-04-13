@@ -60,13 +60,13 @@ def bitlistToInt(l):
 # convert a bitlist to a polynomial
 # [1,0,1,1,1] = x^4 + x^2 + x + 1
 def bitlistToPoly(R, l):
-  v = 0
   #x = R.gen() # type(v) == sage.rings.polynomial.polynomial_quotient_ring_element.PolynomialQuotientRing_field_with_category.element_class
   x = R.polynomial_ring().gen() # type(v) == sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+  v = 0*x
   n = len(l)
   for i in range(0, n):
     if l[i] == 1:
-      v += x^(n - i - 1)
+      v += x**(n - i - 1)
   return v
 
 # convert a poly to bitlist
@@ -76,6 +76,50 @@ def polyToBitlist(f):
   l = f.list()
   l.reverse()
   return l
+
+def polyToBitlistPadded(f, size):
+  l = polyToBitlist(f)
+  pad = size - len(l)
+  # reverse
+  l.reverse()
+  # Pad list, at the end
+  l.extend([0]*pad)
+  # revere again
+  l.reverse()
+  return l
+
+# f: modulus polynomial
+# p: polynomial to convert
+# convert to an array of W-bit words
+def polyToWbitList(f, p, W=32): # default = 32bits
+  m = f.degree()
+  if m <= p.degree():
+    print "Degree of polynomial p must be at most m-1"
+    return
+  t = ceil(m/W)
+  s = (W * t) - m
+  l = polyToBitlistPadded(p, t * W)
+  A = [] # length = t. W bits in each position
+  print "t = {0} and s = {1}". format(t, s)
+  for i in range(0, t):
+    w = len(l) - (i * W)
+    ai = l[w-W : w]
+    A.append(ai)
+  return (s,t,A)
+
+# modulo f, A in Wbitlist format
+# returns a list with f.degree() bits
+def wBitlistToBitlist(f, A, W=32):
+  m = f.degree()
+  t = ceil(m/W)
+  s = (W * t) - m
+  a = []
+  a.extend(A[t-1][0:s])
+
+  for i in range(t-2, -1, -1):
+    a.extend(A[i])
+  return a
+
 
 # fi must be a list! TODO: validate that
 # c must be a bitlist
@@ -107,6 +151,54 @@ def random_element(R):
   # generate random element in R, then convert it to bitlist, then return bitlist
   # as a polynomial type sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
   return bitlistToPoly(R, polyToBitlist(R.random_element()))
+
+# perform bitwise xor on two lists of the same length
+def bitwiseXor(l1, l2):
+  if len(l1) != len(l2):
+    print "Error: l1 and l2 must be of equal length"
+    return
+  r = []
+  for i in range(0, len(l1)):
+    # cast to Integer is important
+    r.append(Integer(l1[i]).__xor__(Integer(l2[i])))
+  return r
+
+# modulo f
+# polynomial a and b, returns c = a + b
+def addition(f, a, b):
+  W = 32
+  (s, t, A) = polyToWbitList(f, a)
+  B = polyToWbitList(f, b)[2]
+  C = []
+  for i in range(0, t):
+    C.append(bitwiseXor(A[i], B[i]))
+  return C
+
+# right-to-left comb method
+def multiplication(f, a, b):
+  W = 32
+  s, t, A = polyToWbitList(f, a)
+  B = polyToWbitList(f, b)[2]
+  x = f.variables()[0]
+  c = 0*x # polynomial = 0
+
+  """ Qual destes e mesmo o C? """
+  C = [0] * (f.degree()-1)
+  #C = polyToWbitList(f, c)
+  """  """
+
+  for k in range(0, W):
+    for j in range(0, t):
+      if A[j][k] == 1:
+        """
+        TODO: Como e que se adiciona B a C{j}??
+        TODO: B <- B*z e para fazer shift como em FC?
+        http://www.engr.uconn.edu/~zshi/publications/shi08software.pdf
+        """
+        #Cj = C[0:(len(C) - j)]
+        # add Cj = Cj + B mod f
+
+  return C
 
 """
 The protocol
@@ -160,8 +252,8 @@ def calcZ(R, fi, s, s_, c):
   # TODO: optimizar esta parte
   rCRT = reduceToCRT(r, fi)
   eCRT = reduceToCRT(e, fi)
-  sCRT = reduceToCRT(s, fi)
   s_CRT = reduceToCRT(s_, fi)
+  sCRT = reduceToCRT(s, fi)
   z = [] # c will be in CRT form
   for i in range(0, len(fi)):
     # TODO: usar o metodo de multiplicacao do paper
