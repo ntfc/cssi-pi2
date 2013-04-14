@@ -47,7 +47,8 @@ def intToBitlist(R, n):
   deg = R.degree()
   # add the "unnecessary" bits to the left
   l = [0] * (deg - nbits)
-  l.extend([int(bit) for bit in Integer(n).binary()])
+  if nbits != 0:
+    l.extend([int(bit) for bit in Integer(n).binary()])
   return l
 
 # convert a bitlist to sage Integer
