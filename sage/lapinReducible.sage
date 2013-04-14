@@ -121,10 +121,14 @@ def wBitlistToBitlist(f, A, W=32):
   return a
 
 
-# fi must be a list! TODO: validate that
+# fi must be a list!
 # c must be a bitlist
 # returns a list of polynomials in CRT
 def pimapping(R, c, fi):
+  #validate if fi is a list
+  if type(fi) is not list:
+    print"Error: fi must be a list!"
+    return
   v = [] # list of v_i
   for f in fi:
     l = list(c) # save original value of c for each iteration
