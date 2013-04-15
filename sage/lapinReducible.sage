@@ -122,25 +122,21 @@ def wBitlistToBitlist(f, A, W=32):
   return a
 
 
-# fi must be a list!
-# c must be a bitlist
+# fis must be a list!
+# c must be a bitlist, with length = 80
 # returns a list of polynomials in CRT
-def pimapping(R, c, fi):
-  #validate if fi is a list
-  if type(fi) is not list:
+def pimapping(R, c, fis):
+  #validate if fis is a list
+  if type(fis) is not list:
     print"Error: fi must be a list!"
     return
   v = [] # list of v_i
-  for f in fi:
-    l = list(c) # save original value of c for each iteration
-    d = f.degree()
-    pad = d - lam
-    l.extend([0] * pad)
-    # new ring Fi[x]/fi
-    Fi = R.polynomial_ring()
-    Ri = Fi.quotient_ring(f,'x')
-    vi = bitlistToPoly(Ri, l)
-    v.append(vi)
+  for fi in fis:
+    newList = list(c)
+    toPad = fi.degree() - 80
+    newList.extend([0] * toPad) #after this, len(newList) = fi.degree()
+    v.append(bitlistToPoly(R, newList))
+
   return v
 
 def genkey(R):
