@@ -269,6 +269,16 @@ def calcZ(R, fi, s, s_, c):
 def calcE_(R, s, s_, pi, r, z):
   return (z - r * (s * pi + s_)).mod(R.modulus())
 
+# tag step1. generate e, r and z in CRT form
+def step2(R, s, s_, c):
+  r = genR(R)
+  e = genE(R)
+  # z = r * (s*pi + s') + e
+  piCRT = CRT_list(pimapping(R, c, fi), fi)
+  z = r * (s*piCRT + s_) + e
+  return z.mod(R.modulus())
+
+
 def verify(R, fi, s, s_, c, r, zCRT):
   if r.gcd(R.modulus()) != 1:
     print "reject R*"
