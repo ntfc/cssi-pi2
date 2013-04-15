@@ -227,10 +227,10 @@ def genR(R):
 # generate e
 def genE(R):
   l = []
-  e = 0
   #x = R.gen()
   x = R.polynomial_ring().gen()
-  for i in range(0, R.degree()):
+  e = x*0
+  for i in range(0, n):
     ci = Ber()
     if ci == 1:
       e += x^i

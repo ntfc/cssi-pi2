@@ -103,7 +103,7 @@ def genR(R):
 def genE(R):
   l = []
   e = 0
-  x = R.gen()
+  x = R.polynomial_ring().gen()
   for i in range(0, n):
     ci = Ber()
     if ci == 1:
