@@ -206,7 +206,6 @@ The protocol
 """
 # generate random c. Used by the Reader
 def genC(n=lam):
-  #c = Integer(getrandbits(n))
   # c is a bitlist
   c = [int(bit) for bit in (Integer(getrandbits(n))).binary()]
   # pad c, if necessary
@@ -269,10 +268,11 @@ def calcE_(R, s, s_, pi, r, z):
 def step2(R, s, s_, c):
   r = genR(R)
   e = genE(R)
+  print e.hamming_weight()
   # z = r * (s*pi + s') + e
   piCRT = CRT_list(pimapping(R, c, fi), fi)
   z = r * (s*piCRT + s_) + e
-  return z.mod(R.modulus())
+  return (r, z.mod(R.modulus()))
 
 
 def verify(R, fi, s, s_, c, r, zCRT):
