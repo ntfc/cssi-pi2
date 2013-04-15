@@ -244,11 +244,20 @@ def reduceToCRT(a, fi):
     c.append(a.mod(f))
   return c
 
-def calcZ(R, fi, s, s_, c):
+# not using CRT
+def calcZv1(R, fi, s, s_, c):
   pi = pimapping(R, c, fi)
-  # TODO: gerar apenas o e a partir do anel R. Derivar r da chave s
   r = genR(R)
   e = genE(R)
+
+  z = r * ((s * CRT_list(pi, fi)) + s_) + e
+  return z.mod(R.modulus())
+
+def calcZ(R, fi, s, s_, c):
+  pi = pimapping(R, c, fi) # in CRT form
+  # TODO: gerar apenas o e a partir do anel R. Derivar r da chave s
+  r = genR(R) # not in CRT
+  e = genE(R) # not in CRT
   # TODO: optimizar esta parte
   rCRT = reduceToCRT(r, fi)
   eCRT = reduceToCRT(e, fi)
@@ -257,23 +266,13 @@ def calcZ(R, fi, s, s_, c):
   z = [] # c will be in CRT form
   for i in range(0, len(fi)):
     # TODO: usar o metodo de multiplicacao do paper
-    zi = rCRT[i].mod(fi[i]) * ((sCRT[i].mod(fi[i])*pi[i]) + s_CRT[i].mod(fi[i])) + eCRT[i].mod(fi[i])
-    z.append(zi.mod(fi[i]))
+    modFi = fi[i]
+    zi = rCRT[i] * ((sCRT[i] *pi[i]) + s_CRT[i]) + eCRT[i]
+    z.append(zi.mod(modFi))
   return z
 
 def calcE_(R, s, s_, pi, r, z):
   return (z - r * (s * pi + s_)).mod(R.modulus())
-
-# tag step1. generate e, r and z in CRT form
-def step2(R, s, s_, c):
-  r = genR(R)
-  e = genE(R)
-  print e.hamming_weight()
-  # z = r * (s*pi + s') + e
-  piCRT = CRT_list(pimapping(R, c, fi), fi)
-  z = r * (s*piCRT + s_) + e
-  return (r, z.mod(R.modulus()))
-
 
 def verify(R, fi, s, s_, c, r, zCRT):
   if r.gcd(R.modulus()) != 1:
@@ -284,6 +283,109 @@ def verify(R, fi, s, s_, c, r, zCRT):
   # compute z
   z = CRT_list(zCRT, fi)
   e_ = calcE_(R, s, s_, pi, r, z)
+  if e_.hamming_weight() > (n * tau2):
+    print "reject wt"
+    return
+  print "accept"
+
+
+def irreducibleProtocol():
+  # parameters for the irreducible case
+  lam = 80
+  tau = 1/8
+  tau2 = 0.27
+  n = 532
+
+  #### init ring
+  # crete finite field F_2[a]
+  F = PolynomialRing(GF(2), 'x')
+  x = F.gen()
+  # create the ring
+  f = x^532 + x + 1
+  R = F.quotient(f, 'x')
+  x = F.gen()
+  #### end of init ring
+
+  ## key gen ###
+  (s, s_) = genkey(R)
+  ## generate challenge
+  c = genC()
+  ## generate e and r
+  r = genR(R)
+  e = genE(R)
+  ## generate pimapping
+  coefs = []
+  pi = x*0
+  for j in range(0, 16):
+    ci = c[j*5:(j*5)+5]
+    i = 16 * j + bitlistToInt(ci)
+    coefs.append(i)
+    pi += x^i
+  ## calc z
+  z = (r * ((s * pi) + s_) + e).mod(R.modulus())
+
+  ## verification
+  if r.gcd(R.modulus()) != 1:
+    print "reject R*"
+    return
+  e_ = (z - r * ((s * pi) + s_)).mod(R.modulus())
+  if e_.hamming_weight() > (n * tau2):
+    print "reject wt"
+    return
+  print "accept"
+
+def reducibleProtocol():
+  # parameters for the reducible case
+  m = 5
+  n = 621
+  tau = 1/6
+  tau2 = 0.29
+  lam = 80
+
+  ## init ring
+  F = PolynomialRing(GF(2), 'x')
+  x = F.gen()
+  # irreducible pentanomials
+  f1 = x^127 + x^8 + x^7 + x^3 + 1
+  f2 = x^126 + x^9 + x^6 + x^5 + 1
+  f3 = x^125 + x^9 + x^7 + x^4 + 1
+  f4 = x^122 + x^7 + x^4 + x^3 + 1
+  f5 = x^121 + x^8 + x^5 + x + 1
+  fi = [f1, f2, f3, f4, f5]
+  # calculate polynomial f
+  modulus = f1 * f2 * f3 * f4 * f5
+  # create the ring
+  R = F.quotient_ring(modulus, 'x')
+
+  ### keygen
+  (s, s_) = genkey(R)
+  ### generate c
+  c = genC()
+  ## generate e and r
+  e = genE(R)
+  r = genR(R)
+  ## generate pimapping
+  pi = []
+  for f in fi:
+    toPad = f.degree() - 80
+    ## assim nao funciona
+    #pNew = list(c)
+    #pNew.extend([0] * toPad)
+    ## assim funciona
+    pNew = [0] * toPad
+    pNew.extend(list(c))
+    pi.append(bitlistToPoly(R, pNew))
+    ## just to test, create a ring F_2[x]/f_i
+    #Ri = F.quotient_ring(f, 'x')
+
+  piNotCrt = CRT_list(pi, fi)
+  ## calc z
+  z = (r * ((s * piNotCrt) + s_) + e).mod(f)
+  ## verification
+  e_ = (z - r * (s + piNotCrt) + s_).mod(f)
+  if r.gcd(R.modulus()) != 1:
+    print "reject R*"
+    return
   if e_.hamming_weight() > (n * tau2):
     print "reject wt"
     return
