@@ -132,9 +132,13 @@ def pimapping(R, c, fis):
     return
   v = [] # list of v_i
   for fi in fis:
-    newList = list(c)
     toPad = fi.degree() - 80
-    newList.extend([0] * toPad) #after this, len(newList) = fi.degree()
+    #### append to the end
+    #newList = list(c)
+    #newList.extend([0] * toPad) #after this, len(newList) = fi.degree()
+    #### append to the beggining
+    newList = [0] * toPad
+    newList.extend(list(c))
     v.append(bitlistToPoly(R, newList))
 
   return v
@@ -243,15 +247,6 @@ def reduceToCRT(a, fi):
   for f in fi:
     c.append(a.mod(f))
   return c
-
-# not using CRT
-def calcZv1(R, fi, s, s_, c):
-  pi = pimapping(R, c, fi)
-  r = genR(R)
-  e = genE(R)
-
-  z = r * ((s * CRT_list(pi, fi)) + s_) + e
-  return z.mod(R.modulus())
 
 def calcZ(R, fi, s, s_, c):
   pi = pimapping(R, c, fi) # in CRT form
@@ -377,10 +372,12 @@ def reducibleProtocol():
     pi.append(bitlistToPoly(R, pNew))
     ## just to test, create a ring F_2[x]/f_i
     #Ri = F.quotient_ring(f, 'x')
-
+  pim = pimapping(R, c, fi)
+  print pim == pi
   piNotCrt = CRT_list(pi, fi)
   ## calc z
   z = (r * ((s * piNotCrt) + s_) + e).mod(f)
+
   ## verification
   e_ = (z - r * (s + piNotCrt) + s_).mod(f)
   if r.gcd(R.modulus()) != 1:
