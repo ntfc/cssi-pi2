@@ -175,29 +175,33 @@ def addition(f, a, b):
     C.append(bitwiseXor(A[i], B[i]))
   return C
 
+# C is an array of the form C = C[n], .. ,C[1], C[0]
+# returns a truncated array of the form C[n], .., C[j+1], C[j]
+def truncate(C, j):
+  l = []
+  for i in range(len(C)-1, j-1, -1):
+    #l.append(C[i])
+    l.extend(C[i])
+  return l
+
 # right-to-left comb method
-def multiplication(f, a, b):
-  W = 32
-  s, t, A = polyToWbitList(f, a)
-  B = polyToWbitList(f, b)[2]
+def multiplication(f, a, b, W=32):
+  (s, t, A) = polyToWbitList(f, a, W)
+  B = polyToWbitList(f, b, W)[2]
   x = f.variables()[0]
   c = 0*x # polynomial = 0
 
   """ Qual destes e mesmo o C? """
-  C = [0] * (f.degree()-1)
-  #C = polyToWbitList(f, c)
-  """  """
+  #C = [0] * f.degree()
+  C = polyToWbitList(f, c, W)[2]
 
-  for k in range(0, W):
+  #for k in range(0, W):
+  for k in range(W-1, -1, -1):
     for j in range(0, t):
       if A[j][k] == 1:
-        """
-        TODO: Como e que se adiciona B a C{j}??
-        TODO: B <- B*z e para fazer shift como em FC?
-        http://www.engr.uconn.edu/~zshi/publications/shi08software.pdf
-        """
-        #Cj = C[0:(len(C) - j)]
-        # add Cj = Cj + B mod f
+        # tamamanho de Cj e B e sempre diferente. Pensar melhor na cena que o mbb disse e na cena dos shifts
+        print "tamanho B = {0} e tamamho Cj = {1}".format(len(truncate(B,0)), len(truncate(C, j)))
+
 
   return C
 
