@@ -133,10 +133,6 @@ def pimapping(R, c, fis):
   v = [] # list of v_i
   for fi in fis:
     toPad = fi.degree() - 80
-    #### append to the end
-    #newList = list(c)
-    #newList.extend([0] * toPad) #after this, len(newList) = fi.degree()
-    #### append to the beggining
     newList = [0] * toPad
     newList.extend(list(c))
     v.append(bitlistToPoly(R, newList))
@@ -243,146 +239,50 @@ def genE(R):
 # a: polynomial to reduce
 # fi: list of modulus
 def reduceToCRT(a, fi):
-  c = []
-  for f in fi:
-    c.append(a.mod(f))
-  return c
+  return map(lambda f : a.mod(f), fi)
 
+# f1 and f2 must be in CRT form
+# result in CRT form
+def multCRT(p1, p2, fi):
+  p1zip = zip(p1, fi)
+  p2zip = zip(p2, fi)
+
+  # returns a list with all multiplications done modulo each fi
+  # CRT_list(return value, fi) == (p1*p2).mod(fi)
+  return map(lambda ((x1, y1), (x2, y2)) : (x1 * x2).mod(y1), zip(p1zip, p2zip))
+
+# p1 and p2 must be in CRT form
+# result in CRT form
+def addCRT(p1, p2, fi):
+  pAddZip = zip(p1,p2)
+
+  return map(lambda (x,y,z) : (x+y).mod(z), zip(p1, p2, fi))
+
+# returns r and z in crt form
 def calcZ(R, fi, s, s_, c):
+  r = reduceToCRT(genR(R), fi)
+  e = reduceToCRT(genE(R), fi)
   pi = pimapping(R, c, fi) # in CRT form
-  # TODO: gerar apenas o e a partir do anel R. Derivar r da chave s
-  r = genR(R) # not in CRT
-  e = genE(R) # not in CRT
-  # TODO: optimizar esta parte
-  rCRT = reduceToCRT(r, fi)
-  eCRT = reduceToCRT(e, fi)
-  s_CRT = reduceToCRT(s_, fi)
   sCRT = reduceToCRT(s, fi)
-  z = [] # c will be in CRT form
-  for i in range(0, len(fi)):
-    # TODO: usar o metodo de multiplicacao do paper
-    modFi = fi[i]
-    zi = rCRT[i] * ((sCRT[i] *pi[i]) + s_CRT[i]) + eCRT[i]
-    z.append(zi.mod(modFi))
-  return z
+  s_CRT = reduceToCRT(s_, fi)
 
-def calcE_(R, s, s_, pi, r, z):
-  return (z - r * (s * pi + s_)).mod(R.modulus())
+  # z = add( mult (r, add( mult( s, pi), s')), e) == r * (s * pi) + e
+  z = addCRT(multCRT(r, addCRT(multCRT(sCRT, pi, fi), s_CRT, fi), fi), e, fi)
 
-def verify(R, fi, s, s_, c, r, zCRT):
-  if r.gcd(R.modulus()) != 1:
-    print "reject R*"
-    return
-  # create mapping and do the CRT
-  pi = CRT_list(pimapping(R, c, fi), fi)
-  # compute z
+  return (r, z)
+
+# r and z in CRT form
+def verify(R, fi, s, s_, c, rCRT, zCRT):
+  r = CRT_list(rCRT, fi)
   z = CRT_list(zCRT, fi)
-  e_ = calcE_(R, s, s_, pi, r, z)
-  if e_.hamming_weight() > (n * tau2):
-    print "reject wt"
-    return
-  print "accept"
 
-
-def irreducibleProtocol():
-  # parameters for the irreducible case
-  lam = 80
-  tau = 1/8
-  tau2 = 0.27
-  n = 532
-
-  #### init ring
-  # crete finite field F_2[a]
-  F = PolynomialRing(GF(2), 'x')
-  x = F.gen()
-  # create the ring
-  f = x^532 + x + 1
-  R = F.quotient(f, 'x')
-  x = F.gen()
-  #### end of init ring
-
-  ## key gen ###
-  (s, s_) = genkey(R)
-  ## generate challenge
-  c = genC()
-  ## generate e and r
-  r = genR(R)
-  e = genE(R)
-  ## generate pimapping
-  coefs = []
-  pi = x*0
-  for j in range(0, 16):
-    ci = c[j*5:(j*5)+5]
-    i = 16 * j + bitlistToInt(ci)
-    coefs.append(i)
-    pi += x^i
-  ## calc z
-  z = (r * ((s * pi) + s_) + e).mod(R.modulus())
-
-  ## verification
   if r.gcd(R.modulus()) != 1:
     print "reject R*"
     return
-  e_ = (z - r * ((s * pi) + s_)).mod(R.modulus())
-  if e_.hamming_weight() > (n * tau2):
-    print "reject wt"
-    return
-  print "accept"
-
-def reducibleProtocol():
-  # parameters for the reducible case
-  m = 5
-  n = 621
-  tau = 1/6
-  tau2 = 0.29
-  lam = 80
-
-  ## init ring
-  F = PolynomialRing(GF(2), 'x')
-  x = F.gen()
-  # irreducible pentanomials
-  f1 = x^127 + x^8 + x^7 + x^3 + 1
-  f2 = x^126 + x^9 + x^6 + x^5 + 1
-  f3 = x^125 + x^9 + x^7 + x^4 + 1
-  f4 = x^122 + x^7 + x^4 + x^3 + 1
-  f5 = x^121 + x^8 + x^5 + x + 1
-  fi = [f1, f2, f3, f4, f5]
-  # calculate polynomial f
-  modulus = f1 * f2 * f3 * f4 * f5
-  # create the ring
-  R = F.quotient_ring(modulus, 'x')
-
-  ### keygen
-  (s, s_) = genkey(R)
-  ### generate c
-  c = genC()
-  ## generate e and r
-  e = genE(R)
-  r = genR(R)
-  ## generate pimapping
-  pi = []
-  for f in fi:
-    toPad = f.degree() - 80
-    ## assim nao funciona
-    #pNew = list(c)
-    #pNew.extend([0] * toPad)
-    ## assim funciona
-    pNew = [0] * toPad
-    pNew.extend(list(c))
-    pi.append(bitlistToPoly(R, pNew))
-    ## just to test, create a ring F_2[x]/f_i
-    #Ri = F.quotient_ring(f, 'x')
-  pim = pimapping(R, c, fi)
-  print pim == pi
-  piNotCrt = CRT_list(pi, fi)
-  ## calc z
-  z = (r * ((s * piNotCrt) + s_) + e).mod(f)
-
-  ## verification
-  e_ = (z - r * (s + piNotCrt) + s_).mod(f)
-  if r.gcd(R.modulus()) != 1:
-    print "reject R*"
-    return
+  # create pi mapping, not in CRT form
+  pi = CRT_list(pimapping(R, c, fi), fi)
+  # e' = z - r * (s * pi + s')
+  e_ = (z - r * (s * pi + s_)).mod(R.modulus())
   if e_.hamming_weight() > (n * tau2):
     print "reject wt"
     return
