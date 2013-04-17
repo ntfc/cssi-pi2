@@ -1,10 +1,3 @@
-
-
-"""
-NAO USAR O f.list()! Usar antes o polyToBitlist()
-"""
-
-
 # parameters for the reducible case
 m = 5
 n = 621
@@ -108,6 +101,15 @@ def polyToWbitList(f, p, W=32): # default = 32bits
     A.append(ai)
   return (s,t,A)
 
+# convert bitlist to wbitlist
+# p: bitlist
+def bitlistToWBitlist(p, W=32):
+  t = ceil(len(p)/W)
+  C = []
+  for i in range(0, t):
+    C.append([0] * W)
+  return C
+
 # modulo f, A in Wbitlist format
 # returns a list with f.degree() bits
 def wBitlistToBitlist(f, A, W=32):
@@ -189,21 +191,43 @@ def multiplication(f, a, b, W=32):
   (s, t, A) = polyToWbitList(f, a, W)
   B = polyToWbitList(f, b, W)[2]
   x = f.variables()[0]
-  c = 0*x # polynomial = 0
 
-  """ Qual destes e mesmo o C? """
-  #C = [0] * f.degree()
-  C = polyToWbitList(f, c, W)[2]
+  # C in a Wbitlist
+  C = []
+  for i in range(0, t*2):
+    C.append([0] * W)
 
+  # with k in range(0, W), test bit at (W*j)+k
+  # with k in range(W-1, -1, -1), test bit at (W*j) + (W-k-1)
   #for k in range(0, W):
+  # http://books.google.pt/books?id=nErZY4vYHIoC&lpg=PA88&ots=MwEgWsdTq2&dq=right-to-left%20comb%20method%20for%20polynomial%20multiplication&pg=PA88#v=onepage&q=right-to-left%20comb%20method%20for%20polynomial%20multiplication&f=false
   for k in range(W-1, -1, -1):
     for j in range(0, t):
+      #print "test bit a_{0}".format((W*j) + (W-k-1))
+      #print "test bit in A[{0}] in position {1}".format(j,k)
       if A[j][k] == 1:
+        #print "bit {0} is 1".format((W*j) + (W-k-1))
+        #print len(truncate(C, j))
+        #print len(wBitlistToBitlist(f, B))
+        for i in range(0, t):
+          #print "C[{0}] = C[{0}] + B[{1}]".format(j+i, i)
+          #print "C[{0}] = C[{0}] + B[{1}]".format(j+i, i)
+          C[j+i] = bitwiseXor(C[j+i], B[i])
+    if k != (W-1):
+      bList = wBitlistToBitlist(f, B, W)
+      bList.pop(0)
+      bList.append(0)
+      B = bitlistToWBitlist(bList)
+      #print " B after = {0}".format(B)
         # tamamanho de Cj e B e sempre diferente. Pensar melhor na cena que o mbb disse e na cena dos shifts
-        print "tamanho B = {0} e tamamho Cj = {1}".format(len(truncate(B,0)), len(truncate(C, j)))
+        #print "tamanho B = {0} e tamamho Cj = {1}".format(len(truncate(B,0)), len(truncate(C, j)))
 
 
   return C
+
+def printWList(w):
+  for i in range(0, len(w)):
+    print "A[{0}] = {1}".format(i,w[i])
 
 """
 The protocol
