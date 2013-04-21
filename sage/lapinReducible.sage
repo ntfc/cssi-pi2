@@ -1,3 +1,4 @@
+# TODO: criar uma classe que recebe o f como parametro. Assim o W, m e t ficam sempre disponivies
 # parameters for the reducible case
 m = 5
 n = 621
