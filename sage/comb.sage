@@ -100,10 +100,11 @@ def polyMult(a, b, f, W=8):
 
   m = f.degree()
   t = ceil(m / W)
+  print t
   s = (W * t) - m
   # C is a 2t word array?
   print "t = {0}, s = {1}".format(t, s)
-  C = [0] * 2*(t * W)
+  C = [0] * 2*(t)
 
   for k in xrange(0, W):
     for j in xrange(0, t):
