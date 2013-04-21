@@ -104,7 +104,7 @@ def polyMult(a, b, f, W=8):
   s = (W * t) - m
   # C is a 2t word array?
   print "t = {0}, s = {1}".format(t, s)
-  C = [0] * 2*(t)
+  C = [0] * (2*t)
 
   for k in xrange(0, W):
     for j in xrange(0, t):
