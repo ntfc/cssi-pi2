@@ -94,6 +94,14 @@ def shiftRight(A, s, W=8):
   B.extend(toShift)
   return B
 
+def shiftLeft(A, s, W=8):
+  toShift = A[s:]
+  b = toShift.pop(len(toShift)-1)
+  B = [0] * s
+  B.append(b)
+  B.extend(toShift)
+  return B
+
 def polyMult(a, b, f, W=8):
   A = polyToBin(a, f)
   B = polyToBin(b, f)
@@ -113,12 +121,14 @@ def polyMult(a, b, f, W=8):
       #print "{0}-th bit of A[{1}] = {2}".format(k, j, kthBitOfAj)
       if kthBitOfAj == 1:
         #print "add B to C({0}) because {1}th bit of A[{0}] = {2}".format(j, k, kthBitOfAj)
-        #print "add {0} to {1}".format(len(B), len(truncate(C, j)))
         C = addToTruncated(C, B, j, W)
+        print C
     if k != (W-1):
       #print "B = B . x because k = {0}".format(k)
       #print B
+      ## shift left ou shift right? Ou nada disto? :(
       B = shiftRight(B, s, W)
+      #B = shiftLeft(B, s, W)
       print "mult"
 
   return C
