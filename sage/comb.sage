@@ -112,7 +112,7 @@ def polyMult(a, b, f, W=8):
   s = (W * t) - m
   # C is a 2t word array?
   print "t = {0}, s = {1}".format(t, s)
-  C = [0] * (2*t)
+  C = [0] * (2 * t)
 
   for k in xrange(0, W):
     for j in xrange(0, t):
@@ -121,15 +121,18 @@ def polyMult(a, b, f, W=8):
       #print "{0}-th bit of A[{1}] = {2}".format(k, j, kthBitOfAj)
       if kthBitOfAj == 1:
         #print "add B to C({0}) because {1}th bit of A[{0}] = {2}".format(j, k, kthBitOfAj)
+        print "len C({0}) = {1}, len(B) = {2}".format(j, len(truncate(C, j, W)), len(B))
+        print "B = {0}".format(B)
+        print "C = {0}".format(C)
+        print "C({1}) = {0}".format(truncate(C, j, W), j)
+        print ""
         C = addToTruncated(C, B, j, W)
-        print C
     if k != (W-1):
       #print "B = B . x because k = {0}".format(k)
       #print B
       ## shift left ou shift right? Ou nada disto? :(
       B = shiftRight(B, s, W)
       #B = shiftLeft(B, s, W)
-      print "mult"
 
   return C
 
