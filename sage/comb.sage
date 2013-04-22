@@ -110,7 +110,7 @@ def polyMult(a, b, f, W=8):
   t = ceil(m / W)
   print t
   s = (W * t) - m
-  # C is a 2t word array?
+  # C is a 2t word array or just 0?
   print "t = {0}, s = {1}".format(t, s)
   C = [0] * (2 * t)
 
