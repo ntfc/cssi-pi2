@@ -1,4 +1,163 @@
-# parameters for the irreducible case
+class Lapin:
+  """ Lapin superclass """
+  def __init__(self, reducible=False):
+    self.reducible = reducible
+    if reducible == False:
+      self.sec_param = 80
+      self.tau = 1/8
+      self.tau2 = 0.27
+      self.n = 532
+      self.protocol = Irreducible()
+      (self.key1, self.key2) = self.protocol.genKey()
+    elif reducible == True:
+      self.security_param = 80
+      self.tau = 1/6
+      self.tau2 = 0.29
+      self.n = 621
+      #self.protocol = Reducible()
+      #self.key =
+    else:
+      print "irreducible parameter must be either 0 or 1"
+      
+  # generate c
+  def reader_step1(self):
+    # generate binary string with len(c) = self.sec_param
+    return bin(getrandbits(self.sec_param))[2:].zfill(self.sec_param)
+    
+  # generate (r,z)
+  def tag_step2(self,c):
+    if self.reducible == False:
+      r = protocol.genR()
+      e = protocol.genE(self.tau)
+      pi = protocol.pimapping(c)
+      z = r * (self.key1 * pi + self.key2) + e
+      return (r,z)
+    elif self.reducible == True:
+      print "1"
+    else:
+      print "irreducible parameter must be either 0 or 1"
+    
+  # verification
+  # TODO: create one class for Reader and another for Tag
+  def reader_step3(self,c,r,z):
+    if self.reducible == False:
+      if r.gcd(self.protocol.f) != 1:
+        print "reject R*"
+        return False
+      e2 = (z - r * (self.key1 * protocol.pimapping(c) + self.key2)).mod(self.protocol.f)
+      if e2.hamming_weight() > (self.n * self.tau2):
+        print "reject wt"
+        return False
+      print "accept"
+      return True
+    elif self.reducible == True:
+      print "1"
+    else:
+      print "irreducible parameter must be either 0 or 1"
+        
+class Irreducible:
+  """ Irreducible protocol """
+  def __init__(self):
+    (self.R, self.f) = self.__initRing()
+    
+  def __initRing(self):
+    F = PolynomialRing(GF(2), 'x')
+    x = F.gen()
+    f = x^532 + x + 1
+    R = F.quotient(f, 'x')
+    self.x = F.gen()
+    return (R, f)
+  
+  # return key (s, s_)
+  def genKey(self):
+    # TODO: return s,s' as sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+    return (binToPoly(polyToBin(self.R.random_element(), self.x), self.x), binToPoly(polyToBin(self.R.random_element(), self.x), self.x))
+    
+  # returns the list of coefficients of the new polynomial v
+  # c must be in binary format
+  def pimapping(self, c):
+    # DUVIDA: retornar list de coefs ou poly?
+    v = 0*self.x
+    for j in xrange(0, 16):
+      # 32 = 5 bits
+      cj = c[j*5 : (j*5) + 5]
+      # here we use x instead of the (x-1) indicated in the paper
+      # because we're in 0-index mode
+      i = (16 * j) + binToInt(cj) # TODO: use binary operations here as well
+      v += self.x**i
+    return v
+  
+  # generate r
+  def genR(self):
+    # TODO: macumba para transformat R.random_element() em sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+    r = binToPoly(polyToBin(self.R.random_element(), self.x), self.x)
+    # while gcd(r, f) != 1, r not in R*
+    # this wasnt supposed to be necessary, but sometimes gcd(r,f) = 5 ... :/
+    while r.gcd(self.f) != 1:
+      # TODO: macumba para transformat R.random_element() em sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+      r = binToPoly(polyToBin(self.R.random_element(), self.x), self.x)
+    return r
+
+  # generate e
+  def genE(self, tau):
+    l = []
+    e = 0*self.x
+    for i in xrange(0, self.f.degree()):
+      ci = bernoulli(tau)
+      if ci == 1:
+        e += self.x**i
+    return e
+    
+    
+""" Aux methods """
+def bernoulli(tau):
+  return int(random() < tau)
+# p: poly, var=x, fill=length in binary
+def polyToBin(p, var, fill=0):
+  # TODO: validate types
+  # TODO: var and p must be sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+  l = p.list()
+  # traverse in reversed order
+  return (''.join(str(l[bit]) for bit in xrange(len(l)-1, -1, -1))).zfill(fill)
+  
+# convert a binary string to a polynomial
+# [1,0,1,1,1] = x^4 + x^2 + x + 1
+def binToPoly(b, var):
+  # TODO: validate types
+  # TODO: var must be sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+  v = 0*var
+  n = len(b)
+  for i in xrange(0, n):
+    if int(b[i]) == 1:
+      v += var**(n - i - 1)
+  return v
+
+def intToBin(i, fill=0):
+  return ''.join(bin(i)[2:]).zfill(fill)
+
+# converts a binary to int
+def binToInt(i):
+  out = 0
+  for bit in i:
+    out = (out << 1) | int(bit)
+  return out
+
+# perform bitwise xor on two bins
+# lists can have different length
+def bitwiseXor(a, b):
+  lenA = len(a)
+  lenB = len(b)
+  if len(a) >= len(b):
+    diff = lenA - lenB
+    c = a[:diff]
+    c += ''.join(str(e) for e in map(lambda x,y : int(x).__xor__(int(y)), a[diff:], b))
+  else:
+    diff = lenB - lenA
+    c = b[:diff]
+    c += ''.join(str(e) for e in map(lambda x,y : int(x).__xor__(int(y)), a, b[diff:]))
+  return c
+  
+"""# parameters for the irreducible case
 lam = 80
 tau = 1/8
 tau2 = 0.27
@@ -76,9 +235,9 @@ def padNumber(n, size, bit=0):
 def wt(e):
   return e.list().count(1)
 
-"""
+""
 " The Protocol
-"""
+""
 
 # generate random c. Used by the Reader
 def genC(n=80):
@@ -134,3 +293,4 @@ def accept(s, s_, c, r, z, R):
     print "reject wt"
     return
   print "accept"
+"""
