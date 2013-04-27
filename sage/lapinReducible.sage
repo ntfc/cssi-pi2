@@ -312,6 +312,7 @@ def verify(R, fi, s, s_, c, rCRT, zCRT):
   pi = CRT_list(pimapping(R, c, fi), fi)
   # e' = z - r * (s * pi + s')
   e_ = (z - r * (s * pi + s_)).mod(R.modulus())
+
   if e_.hamming_weight() > (n * tau2):
     print "reject wt"
     return
