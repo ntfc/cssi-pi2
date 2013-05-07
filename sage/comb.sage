@@ -22,24 +22,22 @@ class BinaryPolynomial:
       print "degree a >= degree m"
       return
     aList = a.list()
-    A = [0] * (self.t * self.W)
-
-    lenA = len(A)
-    for i in xrange(0, len(aList)):
-      #print "{0} = {1}".format(i, len(A) - i)
-      A[lenA - i - 1] = int(aList[i])
-    return A
+    # reverse list
+    aList.reverse()
+    # convert list to str
+    A = ''.join(str(ch) for ch in aList)
+    # return str A with t W-bit words
+    return A .zfill(self.W * self.t)
 
   # convert an array of W-bit words to a polynomial
   def binToPoly(self, A):
     a = self.var*0
-    lenA = len(A)
-    for i in xrange(0, self.m):
-      # len(A) - i - 1 == last position of A == a_0
-      pos = lenA - i - 1
-      #print "x^{0} = {1}".format(i, pos)
-      if A[pos] == 1:
-        a += self.var**i
+    # traverse A from left to right
+    for i in xrange(0, len(A)):      
+      if int(A[i]) == 1:
+        # the symmetric position of i
+        pos = len(A) - 1 - i
+        a += self.var**pos
     return a
 
   # get the i-th W-bit word from an array
@@ -51,11 +49,14 @@ class BinaryPolynomial:
     end = start - self.W
     return A[end : start]
 
-  # get the i-th bit of the W-bit word a
-  def getBit(self, a, i):
-    if len(a) != self.W:
-      print "Word a is not a {0}-bit word!. Found W={1} instead.".format(self.W, len(a))
-    return a[len(a) - i - 1]
+  # get the k-th bit of the j-th W-bit word of polynomial a
+  def getBit(self, a, j, k):
+    # TODO: validate j and k and a
+    # j-th word of polynomial begins at position len(a) - (W*j) - 1
+    wordStart = len(a) - (self.W * j) - 1
+    # k-th bit is at position wordStart - k
+    bitPosition = wordStart - k
+    return a[bitPosition]    
 
   # Given an array in the form C = (C[n],..,C[1],C[0]),
   # this returns the truncated array (C[n],..,C[j+1],C[j])
@@ -67,13 +68,18 @@ class BinaryPolynomial:
       C.extend(self.getWord(A, i))
     return C
 
-  # A and B are already in binary form
+  # a and b must be in binary form
   # C is returned in binary form
   def polyAddition(self, a, b):
-    A = self.polyToBin(a)
-    B = self.polyToBin(b)
-    return bitwiseXor(A, B)
+    if type(a) != str or type(b) != str:
+      print "Polynomials must be in binary form!"
+      return
+    if len(a) != len(b):
+      print "Polynomials must be of same length"
+      return
+    return bitwiseXor(a, b)
 
+  # DEPRECATED
   # perform C{j} = C{j} + B, but return the new C
   def addToTruncated(self, C, B, j):
     Cj = self.truncate(C, j)
@@ -83,31 +89,55 @@ class BinaryPolynomial:
     D.extend(C[len(C) - diff:])
     return D
 
+  # return the multiplication between a and b, not modulo!!
   def polyMult(self, a, b):
-    A = self.polyToBin(a)
-    B = self.polyToBin(b)
-
-    # C is a 2t word array?
-    C = [0] * (2*self.t)
-
+    if type(a) != str or type(b) != str:
+      print "Polynomials must be in binary form!"
+      return
+    if len(a) != len(b):
+      print "Polynomials must be of same length"
+      return
+    # TODO: confirmar que len(C) = 2*t - 1 palavras de W-bits
+    # work with C as a list, because python string are immutable
+    C = list('0' * ((2*self.t-1) * self.W))
     for k in xrange(0, self.W):
-      for j in xrange(0, self.t):
-        Aj = self.getWord(A, j)
-        kthBitOfAj = self.getBit(Aj, k)
-        #print "{0}-th bit of A[{1}] = {2}".format(k, j, kthBitOfAj)
-        if kthBitOfAj == 1:
-          #print "add B to C({0}) because {1}th bit of A[{0}] = {2}".format(j, k, kthBitOfAj)
-          C = self.addToTruncated(C, B, j)
-          print C
-      if k != (self.W-1):
-        #print "B = B . x because k = {0}".format(k)
-        #print B
-        ## shift left ou shift right? Ou nada disto? :(
-        B = shiftRight(B, self.s)
-        #B = shiftLeft(B, s)
-        print "mult"
+      for j in xrange(0, self.t): 
+        if int(self.getBit(a, j, k)) == 1:
+          # bAux = b with j words appended to the right
+          bAux = self.addWordsToRight(b, j)
+          # difference of W-bit words between C and bAux
+          diffWords = (len(C) - len(bAux)) // self.W
+          # cAux is the adition between C and bAux
+          cAux = self.polyAddition(''.join(C[(self.W * diffWords) : ]), bAux)
+          # concat disaligned C with calculated cAux
+          C = list(''.join(C[ : self.W * diffWords]) + cAux)
+      if k != (self.W - 1):
+        b = shiftLeft(b)
+    # return as str
+    return ''.join(C)
+    
+  # add j W-bit words to the left of array of words c
+  def addWordsToLeft(self, c, j):
+    if j <= 0:
+      return c
+    # j words = j * W bits
+    return c.zfill(len(c) + j*self.W)
+    
+  # add j W-bit words to the right of array of words c
+  def addWordsToRight(self, c, j):
+    if j <= 0:
+      return c
+    return c + '0' * (j * self.W)
+    
+  def polyToString(self, a):
+    # TODO: a must be binary string
+    s = ' | '
+    t = len(a) // self.W
+    for i in xrange(0, t):
+      s += a[(i * self.W) : ((i * self.W )+ self.W)]
+      s += ' | '
+    return s
 
-    return C
 
 """ End of class Binary Polynomial """
 
@@ -125,35 +155,20 @@ def expressionToPoly(e, var):
     p += var**op[1]
   return p
 
-# perform bitwise xor on two lists
-# lists can have different length
+# perform bitwise xor on two binary strings
+# strings must be of same size
 def bitwiseXor(a, b):
-  lenA = len(a)
-  lenB = len(b)
-  if len(a) >= len(b):
-    diff = lenA - lenB
-    c = a[:diff]
-    c.extend(map(lambda x,y : int(x).__xor__(int(y)), a[diff:], b))
-  else:
-    diff = lenB - lenA
-    c = b[:diff]
-    c.extend(map(lambda x,y : int(x).__xor__(int(y)), a, b[diff:]))
+  if len(a) != len(b):
+    print "String must be of same size"
+    return
+  c = ''.join(map(lambda x,y : str(int(x).__xor__(int(y))), a, b))
   return c
 
-# leftmost s bits are not considered in the sift operation
-# this is equivalent to b = a*x
-def shiftRight(A, s=0):
-  toShift = A[s:]
-  b = toShift.pop(0)
-  toShift.append(b)
-  B = [0] * s
-  B.extend(toShift)
-  return B
-
-def shiftLeft(A, s=0):
-  toShift = A[s:]
-  b = toShift.pop(len(toShift)-1)
-  B = [0] * s
-  B.append(b)
-  B.extend(toShift)
-  return B
+# shift left by one bit
+# all we need to to is delete the left-most bit and add one 0 to to the right
+def shiftLeft(a):
+  # delete the left-most bit
+  toShift = list(a[1:]) # work with list instead of string
+  toShift.append('0')
+  # return as string
+  return ''.join(toShift)

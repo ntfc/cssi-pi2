@@ -10,14 +10,12 @@ class Lapin:
       self.tau2 = 0.27
       self.n = 532
       self.protocol = Irreducible()
-    elif reducible == True:
+    else:
       self.sec_param = 80
       self.tau = 1/6
       self.tau2 = 0.29
       self.n = 621
       self.protocol = Reducible()
-    else:
-      print "irreducible parameter must be either 0 or 1"
       
   # TODO: throw something when trying to use protocol without generating keys
   def genKey(self):
@@ -218,12 +216,13 @@ def binToPoly(b, var):
 def intToBin(i, fill=0):
   return ''.join(bin(i)[2:]).zfill(fill)
 
-# converts a binary to int
+# converts a binary string to int
 def binToInt(i):
-  out = 0
+  """out = 0
   for bit in i:
     out = (out << 1) | int(bit)
-  return out
+  return out"""
+  return Integer(i, 2)
 
 # perform bitwise xor on two bins
 # lists can have different length
