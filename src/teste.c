@@ -2,30 +2,33 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 #include "random-bytes.h"
 
-//TODO: define the default word size
+// TODO: define the default word size
+// TODO: add a method to create a random polynomial using bernoulli and uniform_rand. convert it to char*
+// TODO: dont convert the char* to uint at once. Convert every 32chars to a uint
+// NOTE: use the urandom to create the keys and random polynomials => random reducible poly == genreate 4 random uint32_t, 5 times
+// TODO: organize this :)
 
 // polinomios sao arrays de uint32_t. uint32_t esta em stdint.h
-// pode representar um polinomio (redutivel) como um array de uint16_t (para nao astar os 32bits, nao e preciso)
-// assim temos: uint16_t f = { 532, 1, 0};
 
+// representacao mais agradavel
 uint16_t f_irr_int[3] = {532, 1, 0};
-// x^532 + x + 1
+// representacao binaria, mais eficiente
 uint32_t f_irr_bin[17] = { 0x00100000, 0x00000000, 0x00000000, 0x00000000,
                            0x00000000, 0x00000000, 0x00000000, 0x00000000,
                            0x00000000, 0x00000000, 0x00000000, 0x00000000,
                            0x00000000, 0x00000000, 0x00000000, 0x00000000,
                            0x00000003
                          }; // x^532 + x + 1
-
+// representacao mais agradavel
 uint8_t f_red_int[5][5] = { {127, 8, 7, 3, 0},
                             {126, 9, 6, 5, 0},
                             {125, 9, 7, 4, 0},
                             {122, 7, 4, 3, 0},
                             {121, 8, 5, 1, 0}
                           };
+// representacao binaria, mais eficiente
 uint32_t f_red_bin[5][4] = { { 0x80000000, 0x00000000, 0x00000000, 0x00000189 }, // x^127+x^8+x^7+x^3+1
                              { 0x40000000, 0x00000000, 0x00000000, 0x00000261 }, // x^126+x^9+x^6+x^5+1
                              { 0x20000000, 0x00000000, 0x00000000, 0x00000291 }, // x^125+x^6+x^7+x^4+1
@@ -34,6 +37,7 @@ uint32_t f_red_bin[5][4] = { { 0x80000000, 0x00000000, 0x00000000, 0x00000189 },
                            };
 
 // to count the bits
+// Used by: http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
 static const int S[] = {1, 2, 4, 8, 16}; // Magic Binary Numbers
 static const int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF};
 
@@ -48,7 +52,8 @@ uint32_t hamming_weight(uint32_t n) {
   return wt;
 }
 
-// t: number of 32bit words
+// p: 1st word in the polynomial // ATTENTION: by 1st, we mean the MSB
+// t: number of 32bit words in the polynomial
 uint32_t degree(uint32_t* p, uint32_t t) {
   uint8_t deg = 0;
   while(*p >>= 1)
@@ -59,7 +64,6 @@ uint32_t degree(uint32_t* p, uint32_t t) {
 
 // generates a double between 0 and 1
 double uniform_rand() {
-  // crypto secure?
   double ret = ((double)rand()/(double)RAND_MAX);
   return ret;
 }
@@ -76,6 +80,5 @@ int main() {
   printf("Ber = %d\n", bernoulli(1/8));
   printf("wt(0x%x) = %d\n",f_red_bin[0][3], hamming_weight(f_red_bin[0][3]));
   printf("deg(x^532 + x + 1) = %d\n", degree(f_red_bin[1], 4));
-  while(a--) printf("%d", bernoulli((double)1/(double)6));
   return 0;
 }
