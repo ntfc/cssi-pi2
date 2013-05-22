@@ -57,17 +57,15 @@ uint32_t degree(uint32_t* p, uint32_t t) {
   return deg + (32 * (t-1));
 }
 
-// TODO: not good yet..
-// TODO: http://stackoverflow.com/questions/146387/what-is-the-best-way-to-produce-random-double-on-posix
+// generates a double between 0 and 1
 double uniform_rand() {
   // crypto secure?
   double ret = ((double)rand()/(double)RAND_MAX);
-  //sleep(0.2); // do not allow to generate two equal doubles
   return ret;
 }
 
-// TODO: as it depends on uniform_rand, it is not yet good
-int bernoulli(double tau) {
+// returns a random bit
+uint8_t bernoulli(double tau) {
   return (int)(uniform_rand() < tau);
 }
 int main() {
@@ -78,5 +76,6 @@ int main() {
   printf("Ber = %d\n", bernoulli(1/8));
   printf("wt(0x%x) = %d\n",f_red_bin[0][3], hamming_weight(f_red_bin[0][3]));
   printf("deg(x^532 + x + 1) = %d\n", degree(f_red_bin[1], 4));
+  while(a--) printf("%d", bernoulli((double)1/(double)6));
   return 0;
 }
