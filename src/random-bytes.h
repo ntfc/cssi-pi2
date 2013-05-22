@@ -11,7 +11,10 @@ Public domain.
 extern "C" {
 #endif
 
-extern void randombytes(unsigned char *,unsigned long long);
+/**
+ * Read xlen bytes from /dev/urandom and saves then in x
+ */
+extern void randombytes(void *,unsigned long);
 
 #ifdef __cplusplus
 }

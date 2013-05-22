@@ -7,7 +7,7 @@
 
 static int fd = -1;
 
-void randombytes(unsigned char *x,unsigned long long xlen)
+void randombytes(void *x, unsigned long xlen)
 {
   int i;
 
