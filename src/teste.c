@@ -1,14 +1,25 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "random-bytes.h"
+
+#define CHAR_BIT_SIZE sizeof(char) * 8 // should always be equal to 8
+#define W sizeof(uint32_t) * 8
+#define NUMBER_OF_WORDS(m) CEILING((double)m / (double)W)
+
+// http://stackoverflow.com/a/6556588/1975046
+#define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
+#define CEILING_NEG(X) ((X-(int)(X)) < 0 ? (int)(X-1) : (int)(X))
+#define CEILING(X) ( ((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X) )
 
 // TODO: define the default word size
 // TODO: add a method to create a random polynomial using bernoulli and uniform_rand. convert it to char*
 // TODO: dont convert the char* to uint at once. Convert every 32chars to a uint
 // NOTE: use the urandom to create the keys and random polynomials => random reducible poly == genreate 4 random uint32_t, 5 times
 // TODO: organize this :)
+// NOTE: printf unsigned char = %u
 
 // polinomios sao arrays de uint32_t. uint32_t esta em stdint.h
 
@@ -59,7 +70,18 @@ uint32_t degree(uint32_t* p, uint32_t t) {
   while(*p >>= 1)
     deg++;
   // TODO: define the word size. And this muliplication can be more efficient
-  return deg + (32 * (t-1));
+  return deg + (W * (t-1));
+}
+
+// reverses all bits from a number: reverse_number(0b01001) = 0b10010
+uint32_t reverse_number(uint32_t n) {
+  uint32_t s = sizeof(n) * CHAR_BIT_SIZE; // bit size; must be power of 2 
+  uint32_t mask = ~0;         
+  while ((s >>= 1) > 0) {
+    mask ^= (mask << s);
+    n = ((n >> s) & mask) | ((n << s) & ~mask);
+  }
+  return n;
 }
 
 // generates a double between 0 and 1
@@ -70,15 +92,53 @@ double uniform_rand() {
 
 // returns a random bit
 uint8_t bernoulli(double tau) {
-  return (int)(uniform_rand() < tau);
+  return (uint8_t)(uniform_rand() < tau);
 }
+
+//uint32_t* gen_uniform_rand_poly(uint32_t size) {
+  //TODO
+//}
+
+// f: polynomial of degree m
+// t: number of words in f
+uint32_t* gen_bernoulli_rand_poly(uint32_t* f, uint32_t t, double tau) {
+  // TODO: generate a random poly using the bernoulli distribution
+  // TODO: return uint32_t* or char* ?
+  //uint32_t i = 0;
+  uint8_t j = 0;
+  //uint32_t m = degree(f, t);
+  uint8_t new_word[W];
+  //for(; i < m; i++) {
+    // generate one 32-bit word
+    for(j = 0; j < W; j++) {
+      //printf("%u\n", (char)bernoulli(tau));
+      new_word[j] = bernoulli(tau);
+    }
+  //}
+  return new_word;
+}
+
+uint32_t uint_array_to_uint(uint32_t *t) {
+  // TODO: receive uint32_t* or char*?
+  uint32_t n = 0;
+  while(*t++) {
+    printf("->%d\n", *t);
+    /*n <<= 1;
+    if(*t++ == 1)
+      n ^= 1;*/
+  }
+  return n;
+}
+
 int main() {
   srand((unsigned)time(NULL));
-  uint16_t a = 0xFFFF;
-  printf("%u\n", a);
+  uint32_t a = 0x80000000;
+  uint32_t b[W];
   printf("U(0,1) = %.8f\n", uniform_rand());
   printf("Ber = %d\n", bernoulli(1/8));
   printf("wt(0x%x) = %d\n",f_red_bin[0][3], hamming_weight(f_red_bin[0][3]));
-  printf("deg(x^532 + x + 1) = %d\n", degree(f_red_bin[1], 4));
+  printf("deg(x^532 + x + 1) = %d\n", degree(f_irr_bin, 17));
+  printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
+  memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
   return 0;
 }
