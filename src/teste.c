@@ -14,6 +14,8 @@
 #define CEILING_NEG(X) ((X-(int)(X)) < 0 ? (int)(X-1) : (int)(X))
 #define CEILING(X) ( ((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X) )
 
+// TODO: it is better to use unsigned char[] instead of uint32_t[]
+// TODO: check http://crypto.stackexchange.com/questions/8388/polynomial-multiplication-and-division-in-2128
 // TODO: define the default word size
 // TODO: add a method to create a random polynomial using bernoulli and uniform_rand. convert it to char*
 // TODO: dont convert the char* to uint at once. Convert every 32chars to a uint
@@ -140,5 +142,6 @@ int main() {
   printf("deg(x^532 + x + 1) = %d\n", degree(f_irr_bin, 17));
   printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
   memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
+  printf("%u\n", 111111111111111U);
   return 0;
 }
