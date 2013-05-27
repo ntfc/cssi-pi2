@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-double uniform_rand();
-uint8_t uniform_rand_range(uint8_t min, uint8_t max);
-uint8_t bernoulli(double tau);
+double random_uniform();
+uint8_t random_uniform_range(uint8_t min, uint8_t max);
+uint8_t random_bernoulli(double tau);
 
 #endif

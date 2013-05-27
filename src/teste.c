@@ -16,7 +16,6 @@
 // TODO: check http://crypto.stackexchange.com/questions/8388/polynomial-multiplication-and-division-in-2128
 // TODO: define the default word size
 // NOTE: use the urandom to create the keys and random polynomials => random reducible poly == genreate 4 random uint32_t, 5 times
-// NOTE: printf unsigned char = %u
 
 // polinomios sao arrays de uint32_t. uint32_t esta em stdint.h
 
@@ -66,7 +65,18 @@ int main() {
   //printf("deg(x^532 + x + 1) = %d\n", degree(f_irr_bin, 17));
   //printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
   //memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
-  Poly c = random_uniform_poly(4);
-  printf("0x%u 0x%u 0x%u 0x%u\n", c[0], c[1], c[2], c[3]);
+  //Poly c = poly_random_uniform_poly(f_irr_bin, 17);
+  Poly c = poly_random_bernoulli_poly(f_irr_bin, 17, (double)1/(double)8);
+  unsigned char w[32];
+  int i = 0;
+  for(; i < 17; i++) {
+    printf("%s", binary_uint_to_char(f_irr_bin[i], w));
+  }
+  printf("\n");
+  for(i = 0; i < 17; i++) {
+    printf("%s", binary_uint_to_char(c[i], w));
+  }
+  printf("\n");
+  poly_free(c);
   return 0;
 }

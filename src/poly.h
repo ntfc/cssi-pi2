@@ -5,8 +5,9 @@
 
 typedef uint32_t* Poly;
 
-uint32_t random_uniform_32bit_word();
-Poly random_uniform_poly(uint8_t t);
-uint32_t random_bernoulli_32bit_word(double tau);
-uint32_t* gen_bernoulli_rand_poly(uint32_t t, double tau);
+uint32_t poly_random_uniform_32bit_word();
+Poly poly_random_uniform_poly(Poly f, uint8_t t);
+uint32_t poly_random_bernoulli_32bit_word(double tau);
+Poly poly_random_bernoulli_poly(Poly f, uint8_t t, double tau);
+void poly_free(Poly p);
 #endif
