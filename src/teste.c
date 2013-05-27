@@ -104,9 +104,20 @@ uint8_t bernoulli(double tau) {
   return (uint8_t)(uniform_rand() < tau);
 }
 
+// generate a random word, according to bernoulli distribution
+uint32_t random_bernoulli_32bit_word(double tau) {
+  unsigned char word[W] = {0};
+  int i = 0;
+  for(; i < W; i++) {
+    // convert (int)0 to '0' or (int)1 to '1'
+    word[i] = '0'+bernoulli(tau);
+  }
+  return char_to_uint(word);
+}
+
 // f: polynomial of degree m
 // t: number of words in f
-/*uint32_t* gen_bernoulli_rand_poly(uint32_t* f, uint32_t t, double tau) {
+uint32_t* gen_bernoulli_rand_poly(uint32_t* f, uint32_t t, double tau) {
   // TODO: generate a random poly using the bernoulli distribution
   // TODO: return uint32_t* or char* ?
   //uint32_t i = 0;
@@ -121,7 +132,7 @@ uint8_t bernoulli(double tau) {
     }
   //}
   return NULL;
-}*/
+}
 
 /*uint32_t uint_array_to_uint(uint32_t *t) {
   // TODO: receive uint32_t* or char*?
@@ -158,7 +169,7 @@ void test_print_char_word(const unsigned char *c) {
 }
 
 // generate a random number between
-uint32_t random_32bit_word() {
+uint32_t random_uniform_32bit_word() {
   unsigned char word[W] = {0};
   int i = 0;
   for(; i < W; i++) {
@@ -174,7 +185,7 @@ Poly random_poly(uint8_t m) {
   Poly p = malloc(sizeof(uint32_t) * m);
   
   while(m--)
-    p[m] = random_32bit_word();
+    p[m] = random_uniform_32bit_word();
   return p;
 }
 
