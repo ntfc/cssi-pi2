@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "random.h"
 
+// TODO
 //#ifdef URANDOM
 
 //#elifdef SRAND

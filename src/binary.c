@@ -6,14 +6,14 @@ static const int S[] = {1, 2, 4, 8, 16}; // Magic Binary Numbers
 static const int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF};
 
 // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-uint32_t hamming_weight(uint32_t n) {
-  unsigned int wt = 0;
+uint8_t hamming_weight(uint32_t n) {
+  uint32_t wt = 0;
   wt = n - ((n >> 1) & B[0]);
   wt = ((wt >> S[1]) & B[1]) + (wt & B[1]);
   wt = ((wt >> S[2]) + wt) & B[2];
   wt = ((wt >> S[3]) + wt) & B[3];
   wt = ((wt >> S[4]) + wt) & B[4];
-  return wt;
+  return (uint8_t)wt;
 }
 
 // p: 1st word in the polynomial // ATTENTION: by 1st, we mean the MSB
