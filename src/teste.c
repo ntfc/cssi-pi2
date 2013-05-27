@@ -6,7 +6,7 @@
 #include "random-bytes.h"
 
 #define CHAR_BIT_SIZE sizeof(char) * 8 // should always be equal to 8
-#define W sizeof(uint32_t) * 8
+#define W (uint8_t)(sizeof(uint32_t) * 8)
 #define NUMBER_OF_WORDS(m) CEILING((double)m / (double)W)
 
 // http://stackoverflow.com/a/6556588/1975046
@@ -14,7 +14,7 @@
 #define CEILING_NEG(X) ((X-(int)(X)) < 0 ? (int)(X-1) : (int)(X))
 #define CEILING(X) ( ((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X) )
 
-// TODO: it is better to use unsigned char[] instead of uint32_t[]
+// TODO: move the random functions to a module random.h
 // TODO: check http://crypto.stackexchange.com/questions/8388/polynomial-multiplication-and-division-in-2128
 // TODO: define the default word size
 // TODO: add a method to create a random polynomial using bernoulli and uniform_rand. convert it to char*
@@ -22,6 +22,8 @@
 // NOTE: use the urandom to create the keys and random polynomials => random reducible poly == genreate 4 random uint32_t, 5 times
 // TODO: organize this :)
 // NOTE: printf unsigned char = %u
+
+typedef uint32_t* Poly;
 
 // polinomios sao arrays de uint32_t. uint32_t esta em stdint.h
 
@@ -92,18 +94,19 @@ double uniform_rand() {
   return ret;
 }
 
+uint8_t uniform_rand_range(uint8_t min, uint8_t max) {
+  double ret = ((double) rand() / (((double)RAND_MAX) + 1.0)) * (max-min+1) + min;
+  return (uint8_t)ret;
+}
+
 // returns a random bit
 uint8_t bernoulli(double tau) {
   return (uint8_t)(uniform_rand() < tau);
 }
 
-//uint32_t* gen_uniform_rand_poly(uint32_t size) {
-  //TODO
-//}
-
 // f: polynomial of degree m
 // t: number of words in f
-uint32_t* gen_bernoulli_rand_poly(uint32_t* f, uint32_t t, double tau) {
+/*uint32_t* gen_bernoulli_rand_poly(uint32_t* f, uint32_t t, double tau) {
   // TODO: generate a random poly using the bernoulli distribution
   // TODO: return uint32_t* or char* ?
   //uint32_t i = 0;
@@ -117,31 +120,77 @@ uint32_t* gen_bernoulli_rand_poly(uint32_t* f, uint32_t t, double tau) {
       new_word[j] = bernoulli(tau);
     }
   //}
-  return new_word;
-}
+  return NULL;
+}*/
 
-uint32_t uint_array_to_uint(uint32_t *t) {
+/*uint32_t uint_array_to_uint(uint32_t *t) {
   // TODO: receive uint32_t* or char*?
   uint32_t n = 0;
   while(*t++) {
     printf("->%d\n", *t);
-    /*n <<= 1;
+    / *n <<= 1;
     if(*t++ == 1)
-      n ^= 1;*/
+      n ^= 1;* /
   }
   return n;
+}*/
+
+// convert a binary string to uint32_t
+// bits from position 32 forward are discarded
+uint32_t char_to_uint(const unsigned char *c) {
+  uint32_t out = 0;
+  const unsigned char *s = c;
+  while(*s && s-c < W) {
+    out = (out << 1) | (*s == '0' ? 0 : 1);
+    s++;
+  }
+  return out;
 }
+
+// print 32 chars from a string
+void test_print_char_word(const unsigned char *c) {
+  const unsigned char *s = c;
+  while(*c && c-s < W) {
+    printf("%c", *c);
+    c++;
+  }
+  printf("\n");
+}
+
+// generate a random number between
+uint32_t random_32bit_word() {
+  unsigned char word[W] = {0};
+  int i = 0;
+  for(; i < W; i++) {
+    // convert (int)0 to '0' or (int)1 to '1'
+    word[i] = '0'+uniform_rand_range(0, 1);
+  }
+  return char_to_uint(word);
+}
+
+// TODO: generate a poly smaller than f
+// m words
+Poly random_poly(uint8_t m) {
+  Poly p = malloc(sizeof(uint32_t) * m);
+  
+  while(m--)
+    p[m] = random_32bit_word();
+  return p;
+}
+
+//uint32_t* random_ring_element(uint32_t* f, uint32_t m) {
+  
+//}
 
 int main() {
   srand((unsigned)time(NULL));
-  uint32_t a = 0x80000000;
-  uint32_t b[W];
-  printf("U(0,1) = %.8f\n", uniform_rand());
-  printf("Ber = %d\n", bernoulli(1/8));
-  printf("wt(0x%x) = %d\n",f_red_bin[0][3], hamming_weight(f_red_bin[0][3]));
-  printf("deg(x^532 + x + 1) = %d\n", degree(f_irr_bin, 17));
-  printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
-  memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
-  printf("%u\n", 111111111111111U);
+  //printf("U(0,1) = %.8f\n", uniform_rand());
+  //printf("Ber = %d\n", bernoulli(1/8));
+  //printf("wt(0x%x) = %d\n",f_red_bin[0][3], hamming_weight(f_red_bin[0][3]));
+  //printf("deg(x^532 + x + 1) = %d\n", degree(f_irr_bin, 17));
+  //printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
+  //memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
+  Poly c = random_poly(4);
+  printf("0x%u 0x%u 0x%u 0x%u\n", c[0], c[1], c[2], c[3]);
   return 0;
 }
