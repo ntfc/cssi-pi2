@@ -4,6 +4,8 @@
 #include "binary.h"
 #include "poly.h"
 
+// TODO: confirma que p[0]%f[0] esta certo!
+
 // generate a random number between
 uint32_t poly_random_uniform_32bit_word() {
   unsigned char word[W] = {0};
@@ -48,6 +50,16 @@ Poly poly_random_bernoulli_poly(uint32_t *f, uint8_t t, double tau) {
     p[t] = poly_random_bernoulli_32bit_word(tau);
   p[0] = p[0] % f[0];
   return p;
+}
+
+// t: number of words
+// returns c = a + b
+Poly poly_add(Poly a, Poly b, uint8_t t) {
+  Poly c = malloc(sizeof(uint32_t) * t);
+  while(t--) {
+    c[t] = a[t] ^ b[t];
+  }
+  return c;
 }
 
 void poly_free(Poly p) {

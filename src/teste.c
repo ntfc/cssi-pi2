@@ -66,17 +66,23 @@ int main() {
   //printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
   //memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
   //Poly c = poly_random_uniform_poly(f_irr_bin, 17);
-  Poly c = poly_random_bernoulli_poly(f_irr_bin, 17, (double)1/(double)8);
   unsigned char w[32];
   int i = 0;
-  for(; i < 17; i++) {
-    printf("%s", binary_uint_to_char(f_irr_bin[i], w));
-  }
-  printf("\n");
+  uint32_t a[17] = { 0,0,0,0,0,0,0x0, 0x0, 0x0, 0x0, 0x0, 0xF0, 0x12, 0x82, 0x12, 0x32, 0x12};
+  Poly b = poly_random_bernoulli_poly(f_irr_bin, 17, (double)1/(double)8);
+  Poly d = poly_add(a, b, 17);
+  printf("a = ");
   for(i = 0; i < 17; i++) {
-    printf("%s", binary_uint_to_char(c[i], w));
+    printf("%s", binary_uint_to_char(a[i], w));
+  }
+  printf("\nb = ");
+  for(i = 0; i < 17; i++) {
+    printf("%s", binary_uint_to_char(b[i], w));
+  }
+  printf("\na*b = ");
+  for(i = 0; i < 17; i++) {
+    printf("%s", binary_uint_to_char(d[i], w));
   }
   printf("\n");
-  poly_free(c);
   return 0;
 }
