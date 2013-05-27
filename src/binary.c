@@ -66,3 +66,11 @@ unsigned char* binary_uint_to_char(uint32_t w, unsigned char *dst) {
   *(dst + c) = 0;
   return dst;
 }
+
+// get bit i from word w
+// http://stackoverflow.com/a/4854257/1975046
+uint8_t binary_get_bit(uint32_t w, uint8_t i) {
+  // TODO: i must be greater than 0
+  uint8_t set = (w & (1 << (i - 1))) != 0;
+  return set;
+}
