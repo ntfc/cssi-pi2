@@ -53,9 +53,15 @@ void test_print_char_word(const unsigned char *c) {
   printf("\n");
 }
 
-//uint32_t* random_ring_element(uint32_t* f, uint32_t m) {
-  
-//}
+void teste(Poly *f, uint8_t t) {
+  printf("f size = %u\n", sizeof(*f)/sizeof(**f));
+  Poly temp = realloc(*f, sizeof(uint32_t) * (t + 1));
+  if(temp == NULL)
+    printf("ERro\n");
+  else
+    *f = temp;
+  printf("f size = %u\n", sizeof(*f)/sizeof(**f));
+}
 
 int main() {
   srand((unsigned)time(NULL));
@@ -70,31 +76,56 @@ int main() {
   int i = 0;
   // x^167 + x^166 + x^165 + x^164 + x^132 + x^129 + x^103 + x^97 + x^68 + x^65 + x^37 + x^36 + x^33 + x^4 + x
   uint32_t a[17] = { 0,0,0,0,0,0,0x0, 0x0, 0x0, 0x0, 0x0, 0xF0, 0x12, 0x82, 0x12, 0x32, 0x12};
-  printf("a = \n");
+  /*printf("a = \n");
   for(i = 0; i < 17; i++)
     printf("%s", (binary_uint_to_char(a[i], w)));
-  printf("\nb = \n");
+  printf("\nb = \n");*/
   uint32_t b[17] = {0x8302, 0x80a008, 0x40000, 0x80120802, 0x10002, 0x8080000, 0x200810, 
                     0x4110, 0x30240008, 0x8030, 0x480000, 0x80040000, 0x4b00083, 0x4280200,
                     0xa8041002, 0x680050, 0x40090 };
-  for(i = 0; i < 17; i++)
+  /*for(i = 0; i < 17; i++)
     printf("%s", (binary_uint_to_char(b[i], w)));
   printf("\n");
   Poly d = poly_add(a, b, 17);
   printf("\na + b = \n");
   for(i = 0; i < 17; i++)
     printf("%s", (binary_uint_to_char(d[i], w)));
-  printf("\n");
-  
+  printf("\n");*/
+  printf("a = "); poly_print_poly(a, 17);
   Poly e;
   uint8_t new_t = poly_mult(a, b, &e, 17);
-  printf("\na*b = ");
+  /*
+   * printf("\na*b = ");
   for(i = 0; i < new_t; i++) {
-    printf("%s", binary_uint_to_char(d[i], w));
+    printf("%s", binary_uint_to_char(e[i], w));
   }
   printf("\n");
+  */
+  //printf("sizeof(f_irr) = %u\n", sizeof(f_irr_bin)/sizeof(f_irr_bin[0]));
+
+  /*Poly f = poly_random_uniform_poly(f_red_bin[1], 5);
+  printf("%p\n", &f);
+  teste(&f, 5);
+  printf("%p\n", &f);
+  f[5] = 0xF;
+  printf("f[5] = %s\n", binary_uint_to_char(f[5], w));
   
-  printf("%s\n", binary_uint_to_char(poly_random_uniform_poly(f_irr_bin, 17)[0], w));
-  printf("%s\n", binary_uint_to_char(poly_random_bernoulli_poly(f_irr_bin, 17, (double)1/(double)8)[0], w));
+  printf("%p\n", &f);
+  teste(&f, 6);
+  printf("%p\n", &f);
+  f[6] = 0xFF;
+  printf("f[6] = %s\n", binary_uint_to_char(f[6], w));
+  
+  printf("%p\n", &f);
+  teste(&f, 7);
+  printf("%p\n", &f);
+  f[7] = 0xFFF;
+  printf("f[7] = %s\n", binary_uint_to_char(f[7], w));
+  
+  printf("%p\n", &f);
+  teste(&f, 8);
+  printf("%p\n", &f);
+  f[8] = 0xFFFF;
+  printf("f[8] = %s\n", binary_uint_to_char(f[8], w));*/
   return 0;
 }

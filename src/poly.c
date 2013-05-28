@@ -59,7 +59,7 @@ Poly poly_random_bernoulli_poly(const Poly f, uint8_t t, double tau) {
 
 // t: number of words
 // returns c = a + b
-Poly poly_add(Poly a, Poly b, uint8_t t) {
+Poly poly_add(const Poly a, const Poly b, uint8_t t) {
   Poly c = malloc(sizeof(uint32_t) * t);
   while(t--) {
     c[t] = a[t] ^ b[t];
@@ -70,13 +70,49 @@ Poly poly_add(Poly a, Poly b, uint8_t t) {
 // right-to-left comb method
 // returns the number of words in C
 // C is written to *c. c is allocated here
-// TODO: should c be allocated here?
-uint8_t poly_mult(Poly a, Poly b, Poly *c, uint8_t t) {
-  uint8_t k, j;
+// TODO: should c be allocated here? becuase we have to return the number of words in C
+uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
+  uint8_t k, j, actual_j;
   uint8_t i = 0;
-  // TODO: verifiy validity of c
+  unsigned char w[32];
+  size_t c_words = 2*t - 1; // number of words
+ 
+  // allocate c
+  *c = calloc(c_words, sizeof(uint32_t));
+  Poly bAux = malloc(sizeof(uint32_t) * t);
+  for(i = 0; i < t; i++) // copy b to bAux
+    bAux[i] = b[i];
+  for(k = 0; k < W; k++) {
+    for(j = 0; j < t; j++) {
+      // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
+      actual_j = (t - j) - 1;
+      uint8_t kthBit = binary_get_bit(a[actual_j], k+1);
+      //printf("a[%d] = %s\n", actual_j, binary_uint_to_char(a[actual_j], w));
+      if(kthBit == 1) {
+        //printf("%d-th bit of A[%d] (actual j = %d) is 1\n", k, j, actual_j);
+        // realloc bAux
+        Poly temp = realloc(bAux, sizeof(uint32_t) * (t + j));
+        if(temp != NULL) {
+          bAux = temp;
+        }
+        // now: bAux = b with j words appended to the right
+        //printf("bAux=");poly_print_poly(bAux, t + j);
+        // difference of W-bit words between C and bAux
+        uint8_t diffWords = c_words - (t + j);
+        printf("diffWords = %d\n", diffWords);
+        Poly cAux = poly_add(*c + diffWords, bAux, t+j);
+        printf("cAux = ");poly_print_poly(cAux, t+j);
+        for(i = diffWords; i < (t+j); i++) {
+          printf("c[%d] = cAux[%d]\n", i, i-diffWords);
+          //*c[i] = cAux[i - diffWords];
+        }
+        
+      }
+    }
+  }
+  free(bAux);
+  /*// TODO: verifiy validity of c
   // traversing in reverse order, so a[0] = A[t], a[1] = A[t-1] .. a[t] = A[0]
-  size_t c_size = 2*t - 1; // number of words
   size_t b_size = t; // number of words in b
   *c = calloc(c_size, sizeof(uint32_t));
   /////// copy b to bAux
@@ -90,6 +126,7 @@ uint8_t poly_mult(Poly a, Poly b, Poly *c, uint8_t t) {
     //// j goes from t to 1, so we must use j-1 inside this for loop
     //for(j = t; j > 0; j--) {
     for(j = 0; j < t; j++) {
+      printf("verify A[%d][%d] || ", k, t-j);
       //printf("(k,j) = (%2d, %2d)\n", k, j-1);
       uint8_t kThBit = binary_get_bit(a[t-j], k);
       if(kThBit == 1) {
@@ -116,20 +153,43 @@ uint8_t poly_mult(Poly a, Poly b, Poly *c, uint8_t t) {
       }
       if(k != (W-1)) {
         //printf("B = B.x\n");
-        b = poly_shift_left(b);
+        b = poly_shift_left(b, t);
       }
     }
-  }
+    printf("\n");
+  }*/
   
-  return c_size;
+  return c_words;
 }
 
-Poly poly_shift_left(Poly a) {
-  // TODO implement shift left to polynomial
+// NOTE: the Poly a is changed, and the value returned is the same as a
+// addapted from here and from prof: http://stackoverflow.com/questions/2773890/efficient-bitshifting-an-array-of-int
+Poly poly_shift_left(Poly a, uint8_t t) {
+  uint8_t i = 0;
+  for(i = 0; i < (t - 1); i++)
+    a[i] = (a[i] << 1) | (a[i+1] >> (W - 1));
+  a[i] <<= 1;
   return a;
 }
 
 void poly_free(Poly p) {
   if(p != NULL)
     free(p);
+}
+
+void poly_print_poly(const Poly f, uint8_t t) {
+  unsigned char w[32];
+  uint8_t i = 0;
+  while(i < t) {
+    printf("%s", binary_uint_to_char(f[i], w));
+    i++;
+  }
+  printf("\n");
+}
+
+uint16_t poly_hamming_weight(const Poly a, uint8_t t) {
+  uint16_t wt = 0;
+  while(t--)
+    wt += binary_hamming_weight(a[t]);
+  return wt;
 }
