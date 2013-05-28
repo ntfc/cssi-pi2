@@ -94,5 +94,7 @@ int main() {
   }
   printf("\n");
   
+  printf("%s\n", binary_uint_to_char(poly_random_uniform_poly(f_irr_bin, 17)[0], w));
+  printf("%s\n", binary_uint_to_char(poly_random_bernoulli_poly(f_irr_bin, 17, (double)1/(double)8)[0], w));
   return 0;
 }

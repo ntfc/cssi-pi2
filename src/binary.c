@@ -20,9 +20,10 @@ uint8_t binary_hamming_weight(uint32_t n) {
 // p: 1st word in the polynomial // ATTENTION: by 1st, we mean the MSB
 // t: number of 32bit words in the polynomial
 // http://graphics.stanford.edu/~seander/bithacks.html
-uint32_t binary_degree(uint32_t* p, uint32_t t) {
+uint16_t binary_degree(const uint32_t* p, uint32_t t) {
   uint8_t deg = 0;
-  while(*p >>= 1)
+  uint32_t p0 = *p;
+  while(p0 >>= 1)
     deg++;
   // TODO: define the word size. And this muliplication can be more efficient
   return deg + (W * (t-1));

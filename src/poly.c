@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h> // TODO: remove this
 #include <string.h>
 
 #include "random.h"
@@ -21,13 +21,14 @@ uint32_t poly_random_uniform_32bit_word() {
 
 // TODO: generate a poly smaller than f
 // t words
-Poly poly_random_uniform_poly(uint32_t *f, uint8_t t) {
-  // TODO: use malloc?
+Poly poly_random_uniform_poly(const Poly f, uint8_t t) {
+  // TODO: receive s as parameter?
+  uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
+  printf("1st = 0x%x, t = %u, degree = %u, s = %u\n", f[0], t, binary_degree(f, t), s);
   Poly p = malloc(sizeof(uint32_t) * t);
-  
   while(t--)
     p[t] = poly_random_uniform_32bit_word();
-  p[0] = p[0] % f[0];
+  p[0] &= (0xffffffff >> s); // align last word
   return p;
 }
 
@@ -44,13 +45,15 @@ uint32_t poly_random_bernoulli_32bit_word(double tau) {
 
 // f: polynomial of degree m
 // t: number of words in f
-Poly poly_random_bernoulli_poly(uint32_t *f, uint8_t t, double tau) {
-  // TODO: use malloc?
+Poly poly_random_bernoulli_poly(const Poly f, uint8_t t, double tau) {
+  // TODO: receive s as parameter?
+  uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
+  printf("t = %u, degree = %u, s = %u\n", t, binary_degree(f, t), s);
   uint32_t *p = malloc(sizeof(uint32_t) * t);
-  
+
   while(t--)
     p[t] = poly_random_bernoulli_32bit_word(tau);
-  p[0] = p[0] % f[0];
+  p[0] &= (0xffffffff >> s); // align last word
   return p;
 }
 
