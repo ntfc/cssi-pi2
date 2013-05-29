@@ -67,6 +67,44 @@ Poly poly_add(const Poly a, const Poly b, uint8_t t) {
   return c;
 }
 
+uint8_t poly_mult_v2(const Poly a, const Poly b, Poly *c, uint8_t t) {
+  size_t c_words = 2*t - 1; // numer of words
+  uint8_t k, j, actual_j;
+  uint8_t i = 0;
+  unsigned char w[32];
+  Poly C = *c;
+  C = calloc(c_words, sizeof(uint32_t));
+  Poly B = calloc(t, sizeof(uint32_t));
+  for(k = 0; k < W; k++) {
+    for(j = 0; j < t; j++) {
+      // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
+      actual_j = (t - j) - 1;
+      uint8_t kthBit = binary_get_bit(a[actual_j], k+1);
+      
+      if(kthBit == 1) {
+        Poly newB = calloc(c_words, sizeof(uint32_t));
+        
+        // put the B in newB
+        for(i = 0; i < t; i++) {
+          newB[i + (c_words - t)] = b[i];
+        }
+        uint8_t toShift = (W+j) + k;
+        while(toShift > 0) {
+          poly_shift_left(newB, c_words);
+          toShift--;
+        }
+        // add newB to C
+        C = poly_add(C, newB, c_words);
+        free(newB);
+      }
+    }
+    if(k != (W-1)) {
+      B = poly_shift_left(B, t);
+    }
+  }
+  printf("C = "); poly_print_poly(C, c_words);
+  return c_words;
+}
 // right-to-left comb method
 // returns the number of words in C
 // C is written to *c. c is allocated here
@@ -79,9 +117,14 @@ uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
  
   // allocate c
   *c = calloc(c_words, sizeof(uint32_t));
-  Poly bAux = malloc(sizeof(uint32_t) * t);
-  for(i = 0; i < t; i++) // copy b to bAux
-    bAux[i] = b[i];
+  
+  Poly newB = calloc(c_words, sizeof(uint32_t));
+  for(i = 0; i < t; i++) {
+    newB[i+(c_words - t)] = b[i];
+  }
+  printf("b = "); poly_print_poly(b, t);
+  printf("newB = "); poly_print_poly(newB, c_words);
+  printf("c_words = %d\n", c_words);
   for(k = 0; k < W; k++) {
     for(j = 0; j < t; j++) {
       // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
@@ -90,27 +133,41 @@ uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
       //printf("a[%d] = %s\n", actual_j, binary_uint_to_char(a[actual_j], w));
       if(kthBit == 1) {
         //printf("%d-th bit of A[%d] (actual j = %d) is 1\n", k, j, actual_j);
-        // realloc bAux
-        Poly temp = realloc(bAux, sizeof(uint32_t) * (t + j));
-        if(temp != NULL) {
-          bAux = temp;
+
+        // now: newB = b with j words appended to the right
+        //printf("newB=");poly_print_poly(newB, t + j);
+        // difference of W-bit words between C and newB
+        //uint8_t diffWords = c_words - (t + j);
+        printf("Wj + k = %d\n", (W*j) + k);
+        int8_t toShift = (W*j) + k;
+        while(toShift > 0) {
+          poly_shift_left(newB, c_words); // align newB with C
+          toShift--;
         }
-        // now: bAux = b with j words appended to the right
-        //printf("bAux=");poly_print_poly(bAux, t + j);
-        // difference of W-bit words between C and bAux
-        uint8_t diffWords = c_words - (t + j);
-        printf("diffWords = %d\n", diffWords);
-        Poly cAux = poly_add(*c + diffWords, bAux, t+j);
-        printf("cAux = ");poly_print_poly(cAux, t+j);
-        for(i = diffWords; i < (t+j); i++) {
-          printf("c[%d] = cAux[%d]\n", i, i-diffWords);
-          //*c[i] = cAux[i - diffWords];
+        *c = poly_add(*c, newB, c_words);
+        // restore newB to its original state
+        toShift = (W*j) + k;
+        while(toShift > 0) {
+          poly_shift_right(newB, c_words);
+          toShift--;
         }
-        
+        //printf("diffWords = %d, t+j == (c_size - diffWords) <=> %d = %u\n", diffWords, t+j, c_words-diffWords);
+        //Poly cAux = poly_add(*c + diffWords, newB, t+j);
+        //printf("cAux = ");poly_print_poly(cAux, t+j);
+        //printf("c = ");poly_print_poly(*c, c_words);
+        //for(i = diffWords; i < c_words; i++) {
+          ////printf("c[%d] = cAux[%d]\n", i, i-diffWords);
+          //(*c)[i] = cAux[i - diffWords];
+        //}
+        //free(cAux);
       }
     }
+    if(k != (W-1)) {
+      poly_shift_left(newB, c_words);
+    }
   }
-  free(bAux);
+  printf("C=");poly_print_poly(*c, c_words);
+  free(newB);
   /*// TODO: verifiy validity of c
   // traversing in reverse order, so a[0] = A[t], a[1] = A[t-1] .. a[t] = A[0]
   size_t b_size = t; // number of words in b
@@ -169,6 +226,14 @@ Poly poly_shift_left(Poly a, uint8_t t) {
   for(i = 0; i < (t - 1); i++)
     a[i] = (a[i] << 1) | (a[i+1] >> (W - 1));
   a[i] <<= 1;
+  return a;
+}
+
+Poly poly_shift_right(Poly a, uint8_t t) {
+  uint8_t i = 0;
+  for(i = 0; i < (t - 1); i++)
+    a[i] = (a[i] >> 1) | (a[i+1] << (W - 1));
+  a[i] >>= 1;
   return a;
 }
 

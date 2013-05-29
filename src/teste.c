@@ -92,8 +92,9 @@ int main() {
     printf("%s", (binary_uint_to_char(d[i], w)));
   printf("\n");*/
   printf("a = "); poly_print_poly(a, 17);
+
   Poly e;
-  uint8_t new_t = poly_mult(a, b, &e, 17);
+  uint8_t new_t = poly_mult_v2(a, b, &e, 17);
   /*
    * printf("\na*b = ");
   for(i = 0; i < new_t; i++) {
