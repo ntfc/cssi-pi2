@@ -53,14 +53,14 @@ void test_print_char_word(const unsigned char *c) {
   printf("\n");
 }
 
-void teste(Poly *f, uint8_t t) {
-  printf("f size = %u\n", sizeof(*f)/sizeof(**f));
-  Poly temp = realloc(*f, sizeof(uint32_t) * (t + 1));
-  if(temp == NULL)
-    printf("ERro\n");
-  else
-    *f = temp;
-  printf("f size = %u\n", sizeof(*f)/sizeof(**f));
+void poly_print_poly(const Poly f, uint8_t t) {
+  unsigned char w[32];
+  uint8_t i = 0;
+  while(i < t) {
+    printf("%s", binary_uint_to_char(f[i], w));
+    i++;
+  }
+  printf("\n");
 }
 
 int main() {
@@ -75,14 +75,16 @@ int main() {
   unsigned char w[32];
   int i = 0;
   // x^167 + x^166 + x^165 + x^164 + x^132 + x^129 + x^103 + x^97 + x^68 + x^65 + x^37 + x^36 + x^33 + x^4 + x
-  uint32_t a[17] = { 0,0,0,0,0,0,0x0, 0x0, 0x0, 0x0, 0x0, 0xF0, 0x12, 0x82, 0x12, 0x32, 0x12};
+  //uint32_t a[17] = { 0,0,0,0,0,0,0x0, 0x0, 0x0, 0x0, 0x0, 0xF0, 0x12, 0x82, 0x12, 0x32, 0x12};
+  uint32_t a[2] = { 0x0, 0x82};
   /*printf("a = \n");
   for(i = 0; i < 17; i++)
     printf("%s", (binary_uint_to_char(a[i], w)));
   printf("\nb = \n");*/
-  uint32_t b[17] = {0x8302, 0x80a008, 0x40000, 0x80120802, 0x10002, 0x8080000, 0x200810, 
-                    0x4110, 0x30240008, 0x8030, 0x480000, 0x80040000, 0x4b00083, 0x4280200,
-                    0xa8041002, 0x680050, 0x40090 };
+  //uint32_t b[17] = {0x8302, 0x80a008, 0x40000, 0x80120802, 0x10002, 0x8080000, 0x200810, 
+  //                  0x4110, 0x30240008, 0x8030, 0x480000, 0x80040000, 0x4b00083, 0x4280200,
+  //                  0xa8041002, 0x680050, 0x40090 };
+  uint32_t b[2] = {0x02, 0x80120802};
   /*for(i = 0; i < 17; i++)
     printf("%s", (binary_uint_to_char(b[i], w)));
   printf("\n");
@@ -91,10 +93,11 @@ int main() {
   for(i = 0; i < 17; i++)
     printf("%s", (binary_uint_to_char(d[i], w)));
   printf("\n");*/
-  printf("a = "); poly_print_poly(a, 17);
-
+  printf(" a = "); poly_print_poly(a, 2);
+  printf(" b = "); poly_print_poly(b, 2);
   Poly e;
-  uint8_t new_t = poly_mult_v2(a, b, &e, 17);
+  uint8_t new_t = poly_mult(a, b, &e, 2);
+  printf("ab = "); poly_print_poly(e, 3);
   /*
    * printf("\na*b = ");
   for(i = 0; i < new_t; i++) {
