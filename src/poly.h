@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef uint32_t* Poly;
+typedef uint32_t PolyElem;
 
 uint32_t poly_random_uniform_32bit_word();
 Poly poly_random_uniform_poly(const Poly f, uint8_t t);
@@ -17,6 +18,9 @@ uint16_t poly_hamming_weight(const Poly a, uint8_t t);
 
 Poly poly_shift_left(Poly a, uint8_t t);
 Poly poly_shift_right(Poly a, uint8_t t);
+
+// return a mod f
+Poly poly_mod(const Poly a, uint8_t t, const Poly f);
 
 Poly poly_alloc(uint8_t t);
 void poly_free(Poly p);

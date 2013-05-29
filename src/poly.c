@@ -4,7 +4,7 @@
 #include "binary.h"
 #include "poly.h"
 
-// TODO: confirma que p[0]%f[0] esta certo!
+// TODO: ignore the s rightmost bits
 
 // generate a random number between
 uint32_t poly_random_uniform_32bit_word() {
@@ -67,6 +67,7 @@ Poly poly_add(const Poly a, const Poly b, uint8_t t) {
 // C is written to *c. c is allocated here
 // TODO: should c be allocated here? becuase we have to return the number of words in C
 uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
+  // TODO: not sure about this value.. might be just 2*t
   size_t c_words = 2*t - 1; // number of words in C
   uint8_t k, j, actual_j;
   uint8_t i = 0;
@@ -107,7 +108,7 @@ uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
     }
   }
   // free B
-  poly_free(B);
+  //poly_free(B);
   // because poly_add creates a new poly, we need to re-set c's address
   *c = C;
   return c_words;
@@ -138,6 +139,11 @@ uint16_t poly_hamming_weight(const Poly a, uint8_t t) {
   return wt;
 }
 
+// return a mod f
+Poly poly_mod(const Poly a, uint8_t t, const Poly f) {
+  //TODO: implement Algorithm 2.40 or the more efficient one's
+  return NULL;
+}
 
 Poly poly_alloc(uint8_t t) {
   Poly p = calloc(t, sizeof(uint32_t));

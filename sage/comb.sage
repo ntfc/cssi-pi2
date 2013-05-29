@@ -99,7 +99,7 @@ class BinaryPolynomial:
       return
     # TODO: confirmar que len(C) = 2*t - 1 palavras de W-bits
     # work with C as a list, because python string are immutable
-    C = list('0' * ((2*self.t-1) * self.W))
+    C = list('0' * ((2*self.t) * self.W))
     for k in xrange(0, self.W):
       for j in xrange(0, self.t): 
         if int(self.getBit(a, j, k)) == 1:
