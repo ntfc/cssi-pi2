@@ -17,6 +17,7 @@ uint8_t binary_hamming_weight(uint32_t n) {
   return (uint8_t)wt;
 }
 
+
 // p: 1st word in the polynomial // ATTENTION: by 1st, we mean the MSB
 // t: number of 32bit words in the polynomial
 // http://graphics.stanford.edu/~seander/bithacks.html
@@ -56,10 +57,27 @@ uint32_t binary_char_to_uint(const unsigned char *c) {
 // convert a uint32_t to its binary representation
 // saves the result in dst and returns it
 // http://stackoverflow.com/a/16313354/1975046
-unsigned char* binary_uint_to_char(const uint32_t w, unsigned char *dst) {
+unsigned char* binary_uint32_to_char(const uint32_t w, unsigned char *dst) {
   uint32_t n = w;
-  int i = 0, c = 0;
-  for(i = W - 1; i >= 0; i--) {
+  int8_t i = 0, c = 0, w_size = sizeof(w)*8;
+  
+  for(i = w_size - 1; i >= 0; i--) {
+    n = w >> i;
+    *(dst + c) = (n & 0x1) ? '1' : '0';
+    c++;
+  }
+  *(dst + c) = 0;
+  return dst;
+}
+
+// convert a uint8_t to its binary representation
+// saves the result in dst and returns it
+// http://stackoverflow.com/a/16313354/1975046
+unsigned char* binary_uint8_to_char(const uint8_t w, unsigned char *dst) {
+  uint8_t n = w;
+  int8_t i = 0, c = 0, w_size = sizeof(w)*8;
+  
+  for(i = w_size - 1; i >= 0; i--) {
     n = w >> i;
     *(dst + c) = (n & 0x1) ? '1' : '0';
     c++;

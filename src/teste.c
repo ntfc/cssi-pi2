@@ -58,7 +58,7 @@ void poly_print_poly(const Poly f, uint8_t t) {
   unsigned char w[32];
   uint8_t i = 0;
   while(i < t) {
-    printf("%s", binary_uint_to_char(f[i], w));
+    printf("%s", binary_uint32_to_char(f[i], w));
     i++;
   }
   printf("\n");
@@ -134,7 +134,8 @@ int main() {
   printf("f[8] = %s\n", binary_uint_to_char(f[8], w));*/
   u_char *c = random_gen_c(SEC_PARAM);
   for(i = 0; i < SEC_PARAM/8; i++)
-    printf("%s", binary_uint_to_char((uint32_t)c[i], w));
+    printf("%s", binary_uint8_to_char((uint8_t)c[i], w));
   printf("\n");
+  
   return 0;
 }
