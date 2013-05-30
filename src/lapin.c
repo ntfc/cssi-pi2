@@ -1,17 +1,7 @@
+#include <stdio.h> // TODO: remove
 #include "lapin.h"
 #include "random.h"
-
-// TODO: implement pi-mappings
-//isto era apenas um projecto e não é por aqui 99% de certeza
-unsigned char pimappingReducible(const unsigned char *c, uint8_t t){
-	uint16_t v[5] = {0};
-	for(i=0; i>5; i++){
-		uint32_t uc = binary_char_to_uint(c);
-		uint16_t dg = binary_degree(uc, t);
-		uint16_t toPad = dg - 80;
-
-	}
-}
+#include "binary.h"
 
 
 //PiMapping irreducible
@@ -28,3 +18,14 @@ Poly pimappingIrreducible(){
 	return p;
 }
 
+
+// TODO: implement pi-mappings
+// c must be an array with 80 elems
+void lapin_pimapping_reduc(const unsigned char *c) {
+  uint8_t i = 0;
+  uint8_t toPad = 0;
+  for(i = 0; i < 5; i++) {
+    toPad = binary_degree(F_PROD_REDUCIBLE[i], 4) - SEC_PARAM;
+    printf("%d\n", toPad);
+  }
+}

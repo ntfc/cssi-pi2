@@ -56,7 +56,7 @@ uint32_t binary_char_to_uint(const unsigned char *c) {
 // convert a uint32_t to its binary representation
 // saves the result in dst and returns it
 // http://stackoverflow.com/a/16313354/1975046
-unsigned char* binary_uint_to_char(uint32_t w, unsigned char *dst) {
+unsigned char* binary_uint_to_char(const uint32_t w, unsigned char *dst) {
   uint32_t n = w;
   int i = 0, c = 0;
   for(i = W - 1; i >= 0; i--) {
