@@ -2,6 +2,7 @@
 #include "lapin.h"
 #include "random.h"
 #include "binary.h"
+#include "poly.h"
 
 
 //PiMapping irreducible
@@ -29,3 +30,35 @@ void lapin_pimapping_reduc(const unsigned char *c) {
     printf("%d\n", toPad);
   }
 }
+
+//TODO: confirmar isto
+//generate c
+//uint8_t security parameter
+Poly reader_step1(uint8_t n){
+	//n/8 é o número de palavras??
+	// convert SEC_PARAM to bytes
+	uint8_t w = n/8;
+	Poly c = malloc(sizeof(uint32_t) * w);
+	u_char* genc = random_gen_c(uint8_t n);
+	for(i = 0; i < w; i++) {
+    	uint32_t u = binary_char_to_uint(genc[i]);
+    	c[i] = u;
+  	}
+  	return c;
+}
+
+//TODO:
+//generate r, e
+//calculate z
+Poly tag_step2(){
+
+
+}
+
+//TODO:
+//verifyication
+bool reader_step3(){
+
+
+}
+

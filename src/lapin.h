@@ -28,5 +28,9 @@ static PolyElem F_REDUCIBLE[20] = { // degree = 621
 };
 
 void lapin_pimapping_reduc(const unsigned char* c);
+Poly pimappingIrreducible();
+Poly reader_step1(uint8_t n);
+Poly tag_step2();
+bool reader_step3();
 
 #endif
