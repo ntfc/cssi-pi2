@@ -2,13 +2,16 @@
 #define __LAPIN_H__
 
 #include <stdint.h>
+#include "poly.h"
 
-PolyElem F_IRREDUCIBLE[17] = {
+#define SEC_PARAM 80
+
+static PolyElem F_IRREDUCIBLE[17] = {
   0x100000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3
 }; // x^532 + x + 1
 
-PolyElem F_PROD_REDUCIBLE[5][4] = {
+static PolyElem F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
   { 0x80000000, 0x0, 0x0, 0x189 }, // x^127+x^8+x^7+x^3+1
   { 0x40000000, 0x0, 0x0, 0x261 }, // x^126+x^9+x^6+x^5+1
   { 0x20000000, 0x0, 0x0, 0x291 }, // x^125+x^6+x^7+x^4+1
@@ -17,12 +20,13 @@ PolyElem F_PROD_REDUCIBLE[5][4] = {
 };
 
 // pre-computed f reducible
-PolyElem F_REDUCIBLE[20] = { // degree = 621
+static PolyElem F_REDUCIBLE[20] = { // degree = 621
   0x02000000, 0x00000000, 0x00000000, 0x00000000, 0x153bc000,
   0x00000000, 0x00000000, 0x00000392, 0x564f0000, 0x00000000,
   0x00000000, 0x00358dfa, 0xca880000, 0x00000000, 0x00000001,
   0x3406728f, 0xce000000, 0x00000000, 0x000003b9, 0x42fa4143
 };
 
+void lapin_pimapping_reduc(const unsigned char* c);
 
 #endif

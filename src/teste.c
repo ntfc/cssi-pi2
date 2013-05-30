@@ -7,6 +7,7 @@
 #include "random.h"
 #include "poly.h"
 #include "binary.h"
+#include "lapin.h"
 
 // http://stackoverflow.com/a/6556588/1975046
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
@@ -131,5 +132,9 @@ int main() {
   printf("%p\n", &f);
   f[8] = 0xFFFF;
   printf("f[8] = %s\n", binary_uint_to_char(f[8], w));*/
+  u_char *c = random_gen_c(SEC_PARAM);
+  for(i = 0; i < SEC_PARAM/8; i++)
+    printf("%s", binary_uint_to_char((uint32_t)c[i], w));
+  printf("\n");
   return 0;
 }
