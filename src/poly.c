@@ -81,7 +81,7 @@ uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
     for(j = 0; j < t; j++) {
       // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
       actual_j = (t - j) - 1;
-      uint8_t kthBit = binary_get_bit(a[actual_j], k+1);
+      uint8_t kthBit = binary_get_bit(a[actual_j], k);
       
       if(kthBit == 1) {
         // TODO: find a way to not use poly_alloc for newB, but instead use only the B
