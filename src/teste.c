@@ -9,11 +9,6 @@
 #include "binary.h"
 #include "lapin.h"
 
-// http://stackoverflow.com/a/6556588/1975046
-#define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
-#define CEILING_NEG(X) ((X-(int)(X)) < 0 ? (int)(X-1) : (int)(X))
-#define CEILING(X) ( ((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X) )
-
 // TODO: check http://crypto.stackexchange.com/questions/8388/polynomial-multiplication-and-division-in-2128
 // TODO: define the default word size
 // NOTE: use the urandom to create the keys and random polynomials => random reducible poly == genreate 4 random uint32_t, 5 times
@@ -54,87 +49,58 @@ void test_print_char_word(const unsigned char *c) {
   printf("\n");
 }
 
-void poly_print_poly(const Poly f, uint8_t t) {
-  unsigned char w[32];
+void poly_print_poly(Poly *f) {
+  
   uint8_t i = 0;
+  uint8_t t = f->t;
+   
+  unsigned char w[W+1];
+  
   while(i < t) {
-    printf("%s", binary_uint_to_char(f[i], w));
+    binary_uint32_to_char(f->vec[i], w);
+    printf("%s", binary_uint32_to_char(f->vec[i], w));
     i++;
   }
   printf("\n");
+
 }
 
 int main() {
   srand((unsigned)time(NULL));
-  //printf("U(0,1) = %.8f\n", uniform_rand());
-  //printf("Ber = %d\n", bernoulli(1/8));
-  //printf("wt(0x%x) = %d\n",f_red_bin[0][3], hamming_weight(f_red_bin[0][3]));
-  //printf("deg(x^532 + x + 1) = %d\n", degree(f_irr_bin, 17));
-  //printf("%p\n", gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8));
-  //memcpy(b, gen_bernoulli_rand_poly(f_irr_bin, 17, (double)1/(double)8), W);
-  //Poly c = poly_random_uniform_poly(f_irr_bin, 17);
+
   unsigned char w[32];
   int i = 0;
-  // x^167 + x^166 + x^165 + x^164 + x^132 + x^129 + x^103 + x^97 + x^68 + x^65 + x^37 + x^36 + x^33 + x^4 + x
-  //uint32_t a[17] = { 0,0,0,0,0,0,0x0, 0x0, 0x0, 0x0, 0x0, 0xF0, 0x12, 0x82, 0x12, 0x32, 0x12};
-  uint32_t a[2] = { 0x0, 0x82};
-  /*printf("a = \n");
-  for(i = 0; i < 17; i++)
-    printf("%s", (binary_uint_to_char(a[i], w)));
-  printf("\nb = \n");*/
-  //uint32_t b[17] = {0x8302, 0x80a008, 0x40000, 0x80120802, 0x10002, 0x8080000, 0x200810, 
-  //                  0x4110, 0x30240008, 0x8030, 0x480000, 0x80040000, 0x4b00083, 0x4280200,
-  //                  0xa8041002, 0x680050, 0x40090 };
-  uint32_t b[2] = {0x02, 0x80120802};
-  /*for(i = 0; i < 17; i++)
-    printf("%s", (binary_uint_to_char(b[i], w)));
-  printf("\n");
-  Poly d = poly_add(a, b, 17);
-  printf("\na + b = \n");
-  for(i = 0; i < 17; i++)
-    printf("%s", (binary_uint_to_char(d[i], w)));
-  printf("\n");*/
-  printf(" a = "); poly_print_poly(a, 2);
-  printf(" b = "); poly_print_poly(b, 2);
-  Poly e;
-  uint8_t new_t = poly_mult(a, b, &e, 2);
-  printf("ab = "); poly_print_poly(e, 3);
-  /*
-   * printf("\na*b = ");
-  for(i = 0; i < new_t; i++) {
-    printf("%s", binary_uint_to_char(e[i], w));
+  Poly *a = poly_alloc(128, 4);
+  Poly *b = poly_alloc(128, 4);
+  uint32_t A[4] = {0x0, 0x0, 0x0, 0x324};
+  uint32_t B[4] = {0x0, 0xF, 0xC, 0xCF12};
+  poly_set_coefs(a, A);
+  poly_set_coefs(b, B);
+  
+  
+  printf("a = ");poly_print_poly(a);
+  printf("b = ");poly_print_poly(b);
+  Poly *c = poly_mult(a, b);
+  printf("a*b = ");poly_print_poly(c);
+  printf("%d\n", c->t);
+  
+  poly_free(a);
+  poly_free(b);
+  poly_free(c);
+  
+  // generate challenge
+  Challenge ch = lapin_gen_c(SEC_PARAM);
+  for(i = 0; i < 3; i++) {
+    printf("%s", binary_uint32_to_char(ch[i], w));
   }
   printf("\n");
-  */
-  //printf("sizeof(f_irr) = %u\n", sizeof(f_irr_bin)/sizeof(f_irr_bin[0]));
+  uint32_t sh[2] = {0x0F, 0x00000000};
+  printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
+  binary_array_shift_right(sh, 2);
+  printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
+  
+  lapin_pimapping_irreduc(ch, SEC_PARAM);
 
-  /*Poly f = poly_random_uniform_poly(f_red_bin[1], 5);
-  printf("%p\n", &f);
-  teste(&f, 5);
-  printf("%p\n", &f);
-  f[5] = 0xF;
-  printf("f[5] = %s\n", binary_uint_to_char(f[5], w));
-  
-  printf("%p\n", &f);
-  teste(&f, 6);
-  printf("%p\n", &f);
-  f[6] = 0xFF;
-  printf("f[6] = %s\n", binary_uint_to_char(f[6], w));
-  
-  printf("%p\n", &f);
-  teste(&f, 7);
-  printf("%p\n", &f);
-  f[7] = 0xFFF;
-  printf("f[7] = %s\n", binary_uint_to_char(f[7], w));
-  
-  printf("%p\n", &f);
-  teste(&f, 8);
-  printf("%p\n", &f);
-  f[8] = 0xFFFF;
-  printf("f[8] = %s\n", binary_uint_to_char(f[8], w));*/
-  u_char *c = random_gen_c(SEC_PARAM);
-  for(i = 0; i < SEC_PARAM/8; i++)
-    printf("%s", binary_uint_to_char((uint32_t)c[i], w));
-  printf("\n");
+  free(ch);
   return 0;
 }

@@ -1,6 +1,7 @@
 #include <stdio.h> // TODO: remove
 #include <stdlib.h>
 #include "random.h"
+#include "binary.h"
 
 // TODO
 //#ifdef URANDOM
@@ -23,19 +24,28 @@ uint8_t random_uniform_range(uint8_t min, uint8_t max) {
 uint8_t random_bernoulli(double tau) {
   return (uint8_t)(random_uniform() < tau);
 }
+//#endif
 
-// TODO: should c be represented using unsigned char *?
-// n: security parameter in bits
-// returns an array with 3 elements. 16 leftmost bits are set to 0
-u_char* random_gen_c(uint8_t n) {
-  uint8_t words = n/8; // convert SEC_PARAM to bytes
-  u_char *c = calloc(words, sizeof(u_char)); // uchar = 1byte
+// Generate a uniform random uint32
+uint32_t random_uniform_uint32(void) {
   uint8_t i = 0;
-  printf("words = %u\n", words);
-  for(i = 0; i < words; i++) {
-    c[i] = random_uniform_range(0x0, 0xF);
+  uint32_t n = 0;
+  for(i = 0; i < 32; i++) {
+    n <<= 1;
+    n ^= random_uniform_range(0, 1);
   }
-  return c;
+  return n;
 }
 
-//#endif
+// generate a random uint32, according to bernoulli distribution
+uint32_t random_bernoulli_uint32(double tau) {
+  uint8_t i = 0;
+  uint32_t n = 0;
+  for(; i < 32; i++) {
+    n <<= 1;
+    n ^= random_bernoulli(tau);
+  }
+  return n;
+}
+
+

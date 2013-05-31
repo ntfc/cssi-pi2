@@ -6,12 +6,14 @@
 
 #define SEC_PARAM 80
 
-static PolyElem F_IRREDUCIBLE[17] = {
+typedef uint32_t *Challenge;
+
+static uint32_t F_IRREDUCIBLE[17] = {
   0x100000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3
 }; // x^532 + x + 1
 
-static PolyElem F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
+static uint32_t F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
   { 0x80000000, 0x0, 0x0, 0x189 }, // x^127+x^8+x^7+x^3+1
   { 0x40000000, 0x0, 0x0, 0x261 }, // x^126+x^9+x^6+x^5+1
   { 0x20000000, 0x0, 0x0, 0x291 }, // x^125+x^6+x^7+x^4+1
@@ -20,17 +22,17 @@ static PolyElem F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
 };
 
 // pre-computed f reducible
-static PolyElem F_REDUCIBLE[20] = { // degree = 621
+static uint32_t F_REDUCIBLE[20] = { // degree = 621
   0x02000000, 0x00000000, 0x00000000, 0x00000000, 0x153bc000,
   0x00000000, 0x00000000, 0x00000392, 0x564f0000, 0x00000000,
   0x00000000, 0x00358dfa, 0xca880000, 0x00000000, 0x00000001,
   0x3406728f, 0xce000000, 0x00000000, 0x000003b9, 0x42fa4143
 };
 
-void lapin_pimapping_reduc(const unsigned char* c);
-Poly pimappingIrreducible();
-Poly reader_step1(uint8_t n);
-Poly tag_step2();
-bool reader_step3();
-
+Challenge lapin_gen_c(uint8_t n);
+void lapin_pimapping_reduc(const Challenge c, uint8_t n);
+Poly* lapin_pimapping_irreduc(const Challenge c, uint8_t n);
+Poly* lapin_reader_step1(uint8_t n);
+Poly* lapin_tag_step2();
+void lapin_reader_step3();
 #endif
