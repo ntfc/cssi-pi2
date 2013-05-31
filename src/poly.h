@@ -26,6 +26,8 @@ Poly* poly_shift_left(Poly *a);
 Poly* poly_shift_right(Poly *a);
 
 Poly* poly_alloc(uint8_t m);
+// TODO: careful with this one!!
+void poly_set_coefs(Poly *p, const uint32_t *coefs);
 void poly_free(Poly *p);
 
 #endif

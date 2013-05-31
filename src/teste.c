@@ -7,7 +7,7 @@
 #include "random.h"
 #include "poly.h"
 #include "binary.h"
-//#include "lapin.h"
+#include "lapin.h"
 
 // TODO: check http://crypto.stackexchange.com/questions/8388/polynomial-multiplication-and-division-in-2128
 // TODO: define the default word size
@@ -53,14 +53,12 @@ void poly_print_poly(Poly *f) {
   
   uint8_t i = 0;
   uint8_t t = f->t;
-  
-  int size = f->t * 8;
-  
+   
   unsigned char w[W+1];
   
   while(i < t) {
     binary_uint32_to_char(f->vec[i], w);
-    printf("%s | ", binary_uint8_to_char((uint8_t)f->vec[i], w));
+    printf("%s | ", binary_uint32_to_char(f->vec[i], w));
     i++;
   }
   printf("\n");
@@ -72,16 +70,20 @@ int main() {
 
   unsigned char w[32];
   int i = 0;
-  Poly *a = poly_alloc(127);
-  a->vec[0] = 0x2;
-  a->vec[1] = 0x4;
-  a->vec[2] = 0x6;
-  a->vec[3] = 0xF;
-  binary_uint32_to_char(a->vec[0], w);
+  Poly *a = poly_alloc(128);
+  Poly *b = poly_alloc(128);
+  poly_set_coefs(a, F_PROD_REDUCIBLE[0]);
+  poly_set_coefs(b, F_PROD_REDUCIBLE[1]);
   
-  poly_print_poly(a);
+  
+  printf("a = ");poly_print_poly(a);
+  printf("b = ");poly_print_poly(b);
+  Poly *c = poly_add(a, b);
+  printf("a+b = ");poly_print_poly(c);
+  
   poly_free(a);
- 
+  poly_free(b);
+  poly_free(c);
   
   return 0;
 }

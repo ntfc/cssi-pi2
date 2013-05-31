@@ -40,6 +40,9 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   }
   Poly *c = poly_alloc(a->t);
   uint8_t t = a->t;
+  c->t = t;
+  c->m = a->m;
+  c->s = a->s;
   while(t--) {
     c->vec[t] = a->vec[t] ^ b->vec[t];
   }
@@ -147,6 +150,16 @@ Poly* poly_alloc(uint8_t m) {
     return NULL;
   }
   return p;
+}
+
+void poly_set_coefs(Poly *p, const uint32_t *coefs) {
+  int8_t t = p->t;
+  if(p->vec == NULL) {
+    p->vec = calloc(p->t, sizeof(uint32_t));
+  }
+  while(t--) {
+    p->vec[t] = coefs[t];
+  }
 }
 
 void poly_free(Poly *p) {
