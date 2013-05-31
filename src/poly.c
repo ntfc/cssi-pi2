@@ -49,57 +49,57 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   return c;
 }
 
+// TODO: reorganize this. poly_alloc is being called wrong
 // right-to-left comb method
-// returns the number of words in C
-// C is written to *c. c is allocated here
-// TODO: should c be allocated here? becuase we have to return the number of words in C
-/*uint8_t poly_mult(const Poly a, const Poly be Poly *c, uint8_t t) {
+Poly* poly_mult(const Poly *a, const Poly *b) {
+  if(a->t != b->t) {
+    return 0;
+  }
+  uint8_t t = a->t;
   // TODO: not sure about this value.. might be just 2*t
   size_t c_words = 2*t - 1; // number of words in C
   uint8_t k, j, actual_j;
   uint8_t i = 0;
 
-  Poly C = *c = poly_alloc(c_words);
+  Poly *c = poly_alloc(c_words);
+  printf("%d\n", c->t);
   //C = poly_alloc(c_words);
-  Poly B = poly_alloc(t);
+  Poly *B = poly_alloc(t);
   for(i = 0; i < t; i++)
-    B[i] = b[i];
+    B->vec[i] = b->vec[i];
   for(k = 0; k < W; k++) {
     for(j = 0; j < t; j++) {
       // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
       actual_j = (t - j) - 1;
-      uint8_t kthBit = binary_get_bit(a[actual_j], k);
+      uint8_t kthBit = binary_get_bit(a->vec[actual_j], k);
       
       if(kthBit == 1) {
         // TODO: find a way to not use poly_alloc for newB, but instead use only the B
-        Poly newB = poly_alloc(c_words);
+        Poly *newB = poly_alloc(c_words);
         // put the B in newB
         for(i = 0; i < t; i++)
-          newB[i + (c_words - t)] = B[i];
+          newB->vec[i + (c_words - t)] = B->vec[i];
         // add j words to newB == shift j
         uint8_t toShift = j;
         while(toShift > 0) {
-          poly_shift_left(newB, c_words);
+          poly_shift_left(newB);
           toShift--;
         }
         // add newB to C. save to tmp in order to free old C
-        Poly tmp = poly_add(C, newB, c_words);
-        poly_free(C);
-        C = tmp;
+        c = poly_add(c, newB);
+        
         // free newB
         poly_free(newB);
       }
     }
     if(k != (W-1)) {
-      B = poly_shift_left(B, t);
+      B = poly_shift_left(B);
     }
   }
   // free B
-  //poly_free(B);
-  // because poly_add creates a new poly, we need to re-set c's address
-  *c = C;
-  return c_words;
-}*/
+  poly_free(B);
+  return c;
+}
 
 // NOTE: the Poly a is changed, and the value returned is the same as a
 // TODO: return a copy or return the same address?

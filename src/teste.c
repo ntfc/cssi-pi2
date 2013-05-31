@@ -78,8 +78,9 @@ int main() {
   
   printf("a = ");poly_print_poly(a);
   printf("b = ");poly_print_poly(b);
-  Poly *c = poly_add(a, b);
-  printf("a+b = ");poly_print_poly(c);
+  Poly *c = poly_mult(a, b);
+  printf("a*b = ");poly_print_poly(c);
+  printf("%d\n", c->t);
   
   poly_free(a);
   poly_free(b);
