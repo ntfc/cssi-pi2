@@ -58,7 +58,7 @@ void poly_print_poly(Poly *f) {
   
   while(i < t) {
     binary_uint32_to_char(f->vec[i], w);
-    printf("%s | ", binary_uint32_to_char(f->vec[i], w));
+    printf("%s", binary_uint32_to_char(f->vec[i], w));
     i++;
   }
   printf("\n");
@@ -70,10 +70,12 @@ int main() {
 
   unsigned char w[32];
   int i = 0;
-  Poly *a = poly_alloc(128);
-  Poly *b = poly_alloc(128);
-  poly_set_coefs(a, F_PROD_REDUCIBLE[0]);
-  poly_set_coefs(b, F_PROD_REDUCIBLE[1]);
+  Poly *a = poly_alloc(128, 4);
+  Poly *b = poly_alloc(128, 4);
+  uint32_t A[4] = {0x0, 0x0, 0x0, 0x324};
+  uint32_t B[4] = {0x0, 0xF, 0xC, 0xCF12};
+  poly_set_coefs(a, A);
+  poly_set_coefs(b, B);
   
   
   printf("a = ");poly_print_poly(a);

@@ -5,9 +5,9 @@
 
 // TODO: more polynomial info
 typedef struct s_poly {
-  uint8_t t;
+  uint16_t t;
   uint8_t s;
-  uint8_t m;
+  uint16_t m;
   uint32_t *vec; // actual polynomial, with t words
 } Poly;
 
@@ -25,7 +25,7 @@ uint16_t poly_hamming_weight(const Poly *a);
 Poly* poly_shift_left(Poly *a);
 Poly* poly_shift_right(Poly *a);
 
-Poly* poly_alloc(uint8_t m);
+Poly* poly_alloc(uint16_t m, uint16_t t);
 // TODO: careful with this one!!
 void poly_set_coefs(Poly *p, const uint32_t *coefs);
 void poly_free(Poly *p);

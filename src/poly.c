@@ -11,9 +11,9 @@
 Poly* poly_rand_uniform_poly(const Poly *f) {
   // TODO: receive s as parameter?
   //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
-  uint8_t t = f->t;
+  uint16_t t = f->t;
   //Poly p = malloc(sizeof(uint32_t) * t);
-  Poly *p = poly_alloc(t);
+  Poly *p = poly_alloc(f->m, t);
   while(t--)
     p->vec[t] = random_uniform_uint32();
   p->vec[0] &= (0xffffffff >> p->s); // align last word
@@ -23,9 +23,9 @@ Poly* poly_rand_uniform_poly(const Poly *f) {
 // f: polynomial of degree m
 Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
   //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
-  uint8_t t = f->t;
+  uint16_t t = f->t;
   //uint32_t *p = malloc(sizeof(uint32_t) * t);
-  Poly *p = poly_alloc(t);
+  Poly *p = poly_alloc(f->m, t);
   while(t--)
     p->vec[t] = random_bernoulli_uint32(tau);
   p->vec[0] &= (0xffffffff >> p->s); // align last word
@@ -38,8 +38,8 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   if(a->t != b->t) {
     return NULL;
   }
-  Poly *c = poly_alloc(a->t);
-  uint8_t t = a->t;
+  Poly *c = poly_alloc(a->m, a->t);
+  uint16_t t = a->t;
   c->t = t;
   c->m = a->m;
   c->s = a->s;
@@ -55,16 +55,16 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   if(a->t != b->t) {
     return 0;
   }
-  uint8_t t = a->t;
-  // TODO: not sure about this value.. might be just 2*t
-  size_t c_words = 2*t - 1; // number of words in C
+  uint16_t t = a->t;
+  uint16_t m = a->m;
+  size_t c_words = 2*t; // number of words in C
+  size_t c_max_deg = 2*m; // C is of degree at most m-1
   uint8_t k, j, actual_j;
   uint8_t i = 0;
 
-  Poly *c = poly_alloc(c_words);
-  printf("%d\n", c->t);
+  Poly *c = poly_alloc(c_max_deg, c_words);
   //C = poly_alloc(c_words);
-  Poly *B = poly_alloc(t);
+  Poly *B = poly_alloc(m, t);
   for(i = 0; i < t; i++)
     B->vec[i] = b->vec[i];
   for(k = 0; k < W; k++) {
@@ -75,19 +75,21 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
       
       if(kthBit == 1) {
         // TODO: find a way to not use poly_alloc for newB, but instead use only the B
-        Poly *newB = poly_alloc(c_words);
+        Poly *newB = poly_alloc(c_max_deg, c_words);
         // put the B in newB
         for(i = 0; i < t; i++)
           newB->vec[i + (c_words - t)] = B->vec[i];
+        
         // add j words to newB == shift j
-        uint8_t toShift = j;
+        uint16_t toShift = j;
         while(toShift > 0) {
-          poly_shift_left(newB);
+          newB = poly_shift_left(newB);
           toShift--;
         }
         // add newB to C. save to tmp in order to free old C
-        c = poly_add(c, newB);
-        
+        Poly *tmp = poly_add(c, newB);
+        poly_free(c);
+        c = tmp;
         // free newB
         poly_free(newB);
       }
@@ -98,6 +100,9 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   }
   // free B
   poly_free(B);
+  printf("deg a = %u\n", poly_degree(a));
+  printf("deg b = %u\n", poly_degree(b));
+  printf("deg c = %u\n", poly_degree(c));
   return c;
 }
 
@@ -105,8 +110,8 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
 // TODO: return a copy or return the same address?
 // addapted from here and from prof: http://stackoverflow.com/questions/2773890/efficient-bitshifting-an-array-of-int
 Poly* poly_shift_left(Poly *a) {
-  uint8_t i = 0;
-  uint8_t t = a->t;
+  uint16_t i = 0;
+  uint16_t t = a->t;
   for(i = 0; i < (t - 1); i++)
     a->vec[i] = (a->vec[i] << 1) | (a->vec[i+1] >> (W - 1));
   a->vec[i] <<= 1;
@@ -114,8 +119,8 @@ Poly* poly_shift_left(Poly *a) {
 }
 
 Poly* poly_shift_right(Poly *a) {
-  uint8_t i = 0;
-  uint8_t t = a->t;
+  uint16_t i = 0;
+  uint16_t t = a->t;
   for(i = 0; i < (t - 1); i++)
     a->vec[i] = (a->vec[i] >> 1) | (a->vec[i+1] << (W - 1));
   a->vec[i] >>= 1;
@@ -124,7 +129,7 @@ Poly* poly_shift_right(Poly *a) {
 
 uint16_t poly_hamming_weight(const Poly *a) {
   uint16_t wt = 0;
-  uint8_t t = a->t;
+  uint16_t t = a->t;
   while(t--)
     wt += binary_hamming_weight(a->vec[t]);
   return wt;
@@ -137,12 +142,13 @@ Poly* poly_mod(const Poly *a, const Poly *f) {
 }
 
 // m: degree of the irreducible polynomial
-Poly* poly_alloc(uint8_t m) {
+// t: number of words to allocate
+Poly* poly_alloc(uint16_t m, uint16_t t) {
   Poly *p = malloc(sizeof(Poly));
   if(p == NULL) // TODO: deal with errors
     return NULL;
   p->m = m;
-  p->t = NUMBER_OF_WORDS(m);
+  p->t = t;
   p->s = W*p->t - p->m;
   p->vec = calloc(p->t, sizeof(uint32_t));
   if(p->vec == NULL) {
@@ -152,8 +158,11 @@ Poly* poly_alloc(uint8_t m) {
   return p;
 }
 
+// coefs: array representing the coefficients
+// note: allocates a new p->vec only if necessary
 void poly_set_coefs(Poly *p, const uint32_t *coefs) {
-  int8_t t = p->t;
+  int16_t t = p->t;
+  // TODO: validate coeffs, ie, if degree >= m, truncate it
   if(p->vec == NULL) {
     p->vec = calloc(p->t, sizeof(uint32_t));
   }
@@ -168,4 +177,8 @@ void poly_free(Poly *p) {
       free(p->vec);
     free(p);
   }
+}
+
+uint16_t poly_degree(const Poly *p) {
+  return binary_degree(p->vec[0]) + (W * (p->t-1));
 }
