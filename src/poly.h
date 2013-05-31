@@ -30,4 +30,7 @@ Poly* poly_alloc(uint16_t m, uint16_t t);
 void poly_set_coefs(Poly *p, const uint32_t *coefs);
 void poly_free(Poly *p);
 
+// n: length of v
+Poly* poly_create_poly_from_coeffs(const uint8_t *v, uint8_t n);
+
 #endif

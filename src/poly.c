@@ -112,6 +112,7 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
 Poly* poly_shift_left(Poly *a) {
   uint16_t i = 0;
   uint16_t t = a->t;
+  // TODO: use this: binary_array_shift_left(a->vec, t);
   for(i = 0; i < (t - 1); i++)
     a->vec[i] = (a->vec[i] << 1) | (a->vec[i+1] >> (W - 1));
   a->vec[i] <<= 1;
@@ -181,4 +182,9 @@ void poly_free(Poly *p) {
 
 uint16_t poly_degree(const Poly *p) {
   return binary_degree(p->vec[0]) + (W * (p->t-1));
+}
+
+Poly* poly_create_poly_from_coeffs(const uint8_t *v, uint8_t n) {
+  // TODO: finish this
+  return NULL;
 }

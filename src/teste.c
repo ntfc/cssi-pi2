@@ -88,5 +88,19 @@ int main() {
   poly_free(b);
   poly_free(c);
   
+  // generate challenge
+  Challenge ch = lapin_gen_c(SEC_PARAM);
+  for(i = 0; i < 3; i++) {
+    printf("%s", binary_uint32_to_char(ch[i], w));
+  }
+  printf("\n");
+  uint32_t sh[2] = {0x0F, 0x00000000};
+  printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
+  binary_array_shift_right(sh, 2);
+  printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
+  
+  lapin_pimapping_irreduc(ch, SEC_PARAM);
+
+  free(ch);
   return 0;
 }

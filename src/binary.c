@@ -112,3 +112,22 @@ uint8_t binary_get_bit(uint32_t w, uint8_t i) {
   uint8_t set = (w & (1 << i)) != 0;
   return set;
 }
+
+// t: array size
+void binary_array_shift_left(uint32_t *a, uint8_t t) {
+  int8_t i = 0;
+  for(i = 0; i < (t - 1); i++)
+    a[i] = (a[i] << 1) | (a[i+1] >> (W - 1));
+  a[i] <<= 1;
+}
+
+// t: array size
+void binary_array_shift_right(uint32_t *a, uint8_t t) {
+  int8_t i = 0;
+  for(i = t-1; i > 0; i--)
+    a[i] = (a[i] >> 1) | (a[i-1] << (W - 1));
+  a[i] >>= 1;
+  /*for(i = 0; i < (t - 1); i++)
+    a[i] = (a[i] >> 1) | (a[i+1] << (W - 1));
+  a[i] >>= 1;*/
+}

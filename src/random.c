@@ -48,19 +48,4 @@ uint32_t random_bernoulli_uint32(double tau) {
   return n;
 }
 
-// n: security parameter in bits
-// returns an array with 3 elements. 16 leftmost bits are set to 0
-// NOTE: Challenge must be free'd in the end
-Challenge random_gen_c(uint8_t n) {
-  uint8_t words = n/8; // convert SEC_PARAM to bytes
-  Challenge c = calloc(words, sizeof(uint32_t));
-  uint8_t i = 0;
-  
-  uint8_t pad = n - (words * W);
-  
-  for(i = 0; i < words; i++) {
-    c[i] = random_uniform_uint32();
-  }
-  c[0] &= (0xFFFFFFFF >> pad);
-  return c;
-}
+

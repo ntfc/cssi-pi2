@@ -6,6 +6,8 @@
 
 #define SEC_PARAM 80
 
+typedef uint32_t *Challenge;
+
 static uint32_t F_IRREDUCIBLE[17] = {
   0x100000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3
@@ -27,6 +29,10 @@ static uint32_t F_REDUCIBLE[20] = { // degree = 621
   0x3406728f, 0xce000000, 0x00000000, 0x000003b9, 0x42fa4143
 };
 
-//void lapin_pimapping_reduc(const unsigned char* c);
-
+Challenge lapin_gen_c(uint8_t n);
+void lapin_pimapping_reduc(const Challenge c, uint8_t n);
+Poly* lapin_pimapping_irreduc(const Challenge c, uint8_t n);
+Poly* lapin_reader_step1(uint8_t n);
+Poly* lapin_tag_step2();
+void lapin_reader_step3();
 #endif
