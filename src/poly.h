@@ -3,26 +3,29 @@
 
 #include <stdint.h>
 
-typedef uint32_t* Poly;
-typedef uint32_t PolyElem;
+// TODO: more polynomial info
+typedef struct s_poly {
+  uint8_t t;
+  uint8_t s;
+  uint8_t m;
+  uint32_t *vec; // actual polynomial, with t words
+} Poly;
 
-uint32_t poly_random_uniform_32bit_word();
-Poly poly_random_uniform_poly(const Poly f, uint8_t t);
-uint32_t poly_random_bernoulli_32bit_word(double tau);
-Poly poly_random_bernoulli_poly(const Poly f, uint8_t t, double tau);
-Poly poly_add(const Poly a, const Poly b, uint8_t t);
-uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t);
+Poly* poly_rand_uniform_poly(const Poly *f);
+Poly* poly_rand_bernoulli_poly(const Poly *f, double tau);
+
+Poly* poly_add(const Poly *a, const Poly *b);
+uint16_t poly_degree(const Poly *p);
+uint8_t poly_mult(const Poly *a, const Poly *b, Poly *c);
 // return a mod f
-Poly poly_mod(const Poly a, uint8_t t, const Poly f);
+Poly* poly_mod(const Poly *a, const Poly *f);
 
-uint16_t poly_hamming_weight(const Poly a, uint8_t t);
+uint16_t poly_hamming_weight(const Poly *a);
 
-Poly poly_shift_left(Poly a, uint8_t t);
-Poly poly_shift_right(Poly a, uint8_t t);
+Poly* poly_shift_left(Poly *a);
+Poly* poly_shift_right(Poly *a);
 
-
-
-Poly poly_alloc(uint8_t t);
-void poly_free(Poly p);
+Poly* poly_alloc(uint8_t m);
+void poly_free(Poly *p);
 
 #endif

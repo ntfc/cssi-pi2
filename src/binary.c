@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h> //TODO: remove
 #include "binary.h"
 
 // to count the bits
@@ -18,16 +19,16 @@ uint8_t binary_hamming_weight(uint32_t n) {
 }
 
 
+// NOTE: does not return the polynomial degree!! Use poly_degree() for that!!
 // p: 1st word in the polynomial // ATTENTION: by 1st, we mean the MSB
-// t: number of 32bit words in the polynomial
 // http://graphics.stanford.edu/~seander/bithacks.html
-uint16_t binary_degree(const uint32_t* p, uint32_t t) {
+//uint16_t binary_degree(const uint32_t* p, uint32_t t) {
+uint16_t binary_degree(uint32_t p) {
   uint8_t deg = 0;
-  uint32_t p0 = *p;
-  while(p0 >>= 1)
+  while(p >>= 1)
     deg++;
   // TODO: define the word size. And this muliplication can be more efficient
-  return deg + (W * (t-1));
+  return deg; // + (W * (t-1));
 }
 
 // reverses all bits from a number: reverse_number(0b01001) = 0b10010
@@ -57,8 +58,26 @@ uint32_t binary_char_to_uint(const unsigned char *c) {
 // convert a uint32_t to its binary representation
 // saves the result in dst and returns it
 // http://stackoverflow.com/a/16313354/1975046
-unsigned char* binary_uint32_to_char(const uint32_t w, unsigned char *dst) {
+unsigned char* binary_uint32_to_char(uint32_t w, unsigned char *dst) {
   uint32_t n = w;
+  int8_t i = 0, c = 0, w_size = sizeof(w) * 8;
+  
+  
+  for(i = w_size - 1; i >= 0; i--) {
+    n = w >> i;
+    *(dst + c) = (n & 0x1) ? '1' : '0';
+    c++;
+  }
+  *(dst + c) = 0;
+  
+  return dst;
+}
+
+// convert a uint16_t to its binary representation
+// saves the result in dst and returns it
+// http://stackoverflow.com/a/16313354/1975046
+unsigned char* binary_uint16_to_char(uint16_t w, unsigned char *dst) {
+  uint16_t n = w;
   int8_t i = 0, c = 0, w_size = sizeof(w)*8;
   
   for(i = w_size - 1; i >= 0; i--) {
@@ -73,7 +92,7 @@ unsigned char* binary_uint32_to_char(const uint32_t w, unsigned char *dst) {
 // convert a uint8_t to its binary representation
 // saves the result in dst and returns it
 // http://stackoverflow.com/a/16313354/1975046
-unsigned char* binary_uint8_to_char(const uint8_t w, unsigned char *dst) {
+unsigned char* binary_uint8_to_char(uint8_t w, unsigned char *dst) {
   uint8_t n = w;
   int8_t i = 0, c = 0, w_size = sizeof(w)*8;
   

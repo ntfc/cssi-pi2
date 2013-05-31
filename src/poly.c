@@ -6,58 +6,42 @@
 
 // TODO: ignore the s rightmost bits
 
-// generate a random number between
-uint32_t poly_random_uniform_32bit_word() {
-  unsigned char word[W] = {0};
-  int i = 0;
-  for(; i < W; i++) {
-    // convert (int)0 to '0' or (int)1 to '1'
-    word[i] = '0'+random_uniform_range(0, 1);
-  }
-  return binary_char_to_uint(word);
-}
 
-// t words
-Poly poly_random_uniform_poly(const Poly f, uint8_t t) {
+// f: polynomial of degree m
+Poly* poly_rand_uniform_poly(const Poly *f) {
   // TODO: receive s as parameter?
-  uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
-  Poly p = malloc(sizeof(uint32_t) * t);
+  //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
+  uint8_t t = f->t;
+  //Poly p = malloc(sizeof(uint32_t) * t);
+  Poly *p = poly_alloc(t);
   while(t--)
-    p[t] = poly_random_uniform_32bit_word();
-  p[0] &= (0xffffffff >> s); // align last word
+    p->vec[t] = random_uniform_uint32();
+  p->vec[0] &= (0xffffffff >> p->s); // align last word
   return p;
 }
 
-// generate a random word, according to bernoulli distribution
-uint32_t poly_random_bernoulli_32bit_word(double tau) {
-  unsigned char word[W] = {0};
-  int i = 0;
-  for(; i < W; i++) {
-    // convert (int)0 to '0' or (int)1 to '1'
-    word[i] = '0'+random_bernoulli(tau);
-  }
-  return binary_char_to_uint(word);
-}
-
 // f: polynomial of degree m
-// t: number of words in f
-Poly poly_random_bernoulli_poly(const Poly f, uint8_t t, double tau) {
-  // TODO: receive s as parameter?
-  uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
-  uint32_t *p = malloc(sizeof(uint32_t) * t);
-
+Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
+  //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
+  uint8_t t = f->t;
+  //uint32_t *p = malloc(sizeof(uint32_t) * t);
+  Poly *p = poly_alloc(t);
   while(t--)
-    p[t] = poly_random_bernoulli_32bit_word(tau);
-  p[0] &= (0xffffffff >> s); // align last word
+    p->vec[t] = random_bernoulli_uint32(tau);
+  p->vec[0] &= (0xffffffff >> p->s); // align last word
   return p;
 }
 
 // t: number of words
 // returns c = a + b
-Poly poly_add(const Poly a, const Poly b, uint8_t t) {
-  Poly c = malloc(sizeof(uint32_t) * t);
+Poly* poly_add(const Poly *a, const Poly *b) {
+  if(a->t != b->t) {
+    return NULL;
+  }
+  Poly *c = poly_alloc(a->t);
+  uint8_t t = a->t;
   while(t--) {
-    c[t] = a[t] ^ b[t];
+    c->vec[t] = a->vec[t] ^ b->vec[t];
   }
   return c;
 }
@@ -66,7 +50,7 @@ Poly poly_add(const Poly a, const Poly b, uint8_t t) {
 // returns the number of words in C
 // C is written to *c. c is allocated here
 // TODO: should c be allocated here? becuase we have to return the number of words in C
-uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
+/*uint8_t poly_mult(const Poly a, const Poly be Poly *c, uint8_t t) {
   // TODO: not sure about this value.. might be just 2*t
   size_t c_words = 2*t - 1; // number of words in C
   uint8_t k, j, actual_j;
@@ -112,47 +96,63 @@ uint8_t poly_mult(const Poly a, const Poly b, Poly *c, uint8_t t) {
   // because poly_add creates a new poly, we need to re-set c's address
   *c = C;
   return c_words;
-}
+}*/
 
 // NOTE: the Poly a is changed, and the value returned is the same as a
+// TODO: return a copy or return the same address?
 // addapted from here and from prof: http://stackoverflow.com/questions/2773890/efficient-bitshifting-an-array-of-int
-Poly poly_shift_left(Poly a, uint8_t t) {
+Poly* poly_shift_left(Poly *a) {
   uint8_t i = 0;
+  uint8_t t = a->t;
   for(i = 0; i < (t - 1); i++)
-    a[i] = (a[i] << 1) | (a[i+1] >> (W - 1));
-  a[i] <<= 1;
+    a->vec[i] = (a->vec[i] << 1) | (a->vec[i+1] >> (W - 1));
+  a->vec[i] <<= 1;
   return a;
 }
 
-Poly poly_shift_right(Poly a, uint8_t t) {
+Poly* poly_shift_right(Poly *a) {
   uint8_t i = 0;
+  uint8_t t = a->t;
   for(i = 0; i < (t - 1); i++)
-    a[i] = (a[i] >> 1) | (a[i+1] << (W - 1));
-  a[i] >>= 1;
+    a->vec[i] = (a->vec[i] >> 1) | (a->vec[i+1] << (W - 1));
+  a->vec[i] >>= 1;
   return a;
 }
 
-uint16_t poly_hamming_weight(const Poly a, uint8_t t) {
+uint16_t poly_hamming_weight(const Poly *a) {
   uint16_t wt = 0;
+  uint8_t t = a->t;
   while(t--)
-    wt += binary_hamming_weight(a[t]);
+    wt += binary_hamming_weight(a->vec[t]);
   return wt;
 }
 
 // return a mod f
-Poly poly_mod(const Poly a, uint8_t t, const Poly f) {
+Poly* poly_mod(const Poly *a, const Poly *f) {
   //TODO: implement Algorithm 2.40 or the more efficient one's
   return NULL;
 }
 
-Poly poly_alloc(uint8_t t) {
-  Poly p = calloc(t, sizeof(uint32_t));
+// m: degree of the irreducible polynomial
+Poly* poly_alloc(uint8_t m) {
+  Poly *p = malloc(sizeof(Poly));
   if(p == NULL) // TODO: deal with errors
     return NULL;
+  p->m = m;
+  p->t = NUMBER_OF_WORDS(m);
+  p->s = W*p->t - p->m;
+  p->vec = calloc(p->t, sizeof(uint32_t));
+  if(p->vec == NULL) {
+    free(p);
+    return NULL;
+  }
   return p;
 }
 
-void poly_free(Poly p) {
-  if(p != NULL)
+void poly_free(Poly *p) {
+  if(p != NULL) {
+    if(p->vec != NULL)
+      free(p->vec);
     free(p);
+  }
 }
