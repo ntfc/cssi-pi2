@@ -158,7 +158,7 @@ Poly* poly_alloc(uint16_t m, uint16_t t) {
 
 // coefs: array representing the coefficients
 // note: allocates a new p->vec only if necessary
-void poly_set_coefs(Poly *p, const uint32_t *coefs) {
+void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs) {
   int16_t t = p->t;
   // TODO: validate coeffs, ie, if degree >= m, truncate it
   if(p->vec == NULL) {
@@ -181,7 +181,16 @@ uint16_t poly_degree(const Poly *p) {
   return binary_degree(p->vec[0]) + (W * (p->t-1));
 }
 
-Poly* poly_create_poly_from_coeffs(const uint8_t *v, uint8_t n) {
-  // TODO: finish this
-  return NULL;
+// v: ordered from smallest to biggest
+Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n) {
+  Poly *p = poly_alloc(f->m, f->t);
+  uint16_t toShift = 0;
+  uint16_t word;
+  uint8_t pos;
+  while(n--) {
+    word = v[n] / W; // word to xor with. NOTE: word=0 <=> p->vec[p->t-1]
+    pos = v[n] - (word * W); // bit position to xor
+    p->vec[(p->t - 1) - word] ^= (0x1 << v[n]); // actual xor
+  }
+  return p;
 }
