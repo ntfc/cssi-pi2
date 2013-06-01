@@ -35,7 +35,7 @@ Poly* lapin_pimapping_irreduc(const Challenge c, uint8_t n) {
   for(j = 0; j < words; j++)
     tmpC[j] = c[j];
     
-  uint8_t coeffs[16];
+  uint16_t coeffs[16];
   for(i = 16 - 1, j = 0; i >= 0; i--, j++) {
     cj = tmpC[words - 1] & 0x1F;    
     // here we use j instead of the (j-1) indicated in the paper because
