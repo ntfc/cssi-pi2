@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "random.h"
 #include "binary.h"
@@ -32,10 +33,10 @@ Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
   return p;
 }
 
-// t: number of words
 // returns c = a + b
 Poly* poly_add(const Poly *a, const Poly *b) {
   if(a->t != b->t) {
+    fprintf(stderr, "ERROR poly_add\n");
     return NULL;
   }
   Poly *c = poly_alloc(a->m, a->t);
@@ -53,26 +54,27 @@ Poly* poly_add(const Poly *a, const Poly *b) {
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
   if(a->t != b->t) {
+    fprintf(stderr, "ERRO poly_mult\n");
     return 0;
   }
   uint16_t t = a->t;
   uint16_t m = a->m;
-  size_t c_words = 2*t; // number of words in C
-  size_t c_max_deg = 2*m; // C is of degree at most m-1
-  uint8_t k, j, actual_j;
-  uint8_t i = 0;
+  uint16_t c_words = 2*t; // number of words in C
+  uint16_t c_max_deg = 2*m; // C is of degree at most m-1 // TODO: see this m-1
+  uint8_t k, i = 0;
+  uint16_t j, actual_j;
 
   Poly *c = poly_alloc(c_max_deg, c_words);
-  //C = poly_alloc(c_words);
-  Poly *B = poly_alloc(m, t);
+  Poly *B = poly_alloc(b->m, b->t);
+  
   for(i = 0; i < t; i++)
     B->vec[i] = b->vec[i];
+  
   for(k = 0; k < W; k++) {
     for(j = 0; j < t; j++) {
       // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
       actual_j = (t - j) - 1;
       uint8_t kthBit = binary_get_bit(a->vec[actual_j], k);
-      
       if(kthBit == 1) {
         // TODO: find a way to not use poly_alloc for newB, but instead use only the B
         Poly *newB = poly_alloc(c_max_deg, c_words);
@@ -80,8 +82,9 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
         for(i = 0; i < t; i++)
           newB->vec[i + (c_words - t)] = B->vec[i];
         
-        // add j words to newB == shift j
-        uint16_t toShift = j;
+        // add j words to newB == shift j*W
+        uint16_t toShift = j*W;
+
         while(toShift > 0) {
           newB = poly_shift_left(newB);
           toShift--;
@@ -100,8 +103,7 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   }
   // free B
   poly_free(B);
-  // TODO: ignore s leftmost bits now
-  // c->vec[0] &= (0xFFFFFFFF << c->s);
+  //c->vec[0] &= (0xFFFFFFFF << c->s);
   return c;
 }
 
@@ -193,14 +195,16 @@ Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n) 
 
 // returns only the first word
 uint32_t poly_get_r(const Poly *a) {
-  uint8_t i = 0;
-  while(i < W && binary_get_bit(a->vec[0], i) == 0)
-    i++;
-  return (1 << i) & a->vec[0];
+  uint32_t i = W;
+  while(i != 0 && binary_get_bit(a->vec[0], i) != 1)
+    i--;
+  return (1 << i) ^ a->vec[0];
 }
 
 Poly* poly_mod(Poly *a, const Poly *f) {
-  uint32_t r[17] = {0};
-  r[16] = 0x3;
-  return NULL;
+  uint16_t t = f->t, i = 0;
+  uint16_t m = f->m;
+  uint8_t k = 0;
+  
+  return a;
 }

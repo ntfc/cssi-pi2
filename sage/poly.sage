@@ -140,7 +140,13 @@ class BinaryPolynomial:
     
   # return a mod self.f
   def polyMod(self, a):
+    binA = polyToBin(a, self.var).zfill(self.W * self.t)
+    binF = polyToBin(self.f, self.var)
+    i = a.degree()
+    binF = self.addWordsToRight(binF, i-self.m)
+    c = self.polyAddition(binA.zfill(len(binF)), binF.zfill(len(binF)))
     
+    return (c[len(c) - self.m : ])
 
 
 """ End of class Binary Polynomial """
@@ -176,3 +182,12 @@ def shiftLeft(a):
   toShift.append('0')
   # return as string
   return ''.join(toShift)
+
+def polyToBin(a, x):
+  aList = a.list()
+  # reverse list
+  aList.reverse()
+  # convert list to str
+  A = ''.join(str(ch) for ch in aList)
+  # return str A with t W-bit words
+  return A

@@ -8,9 +8,12 @@
 #define NUMBER_OF_WORDS(m) CEILING((double)m / (double)W)
 
 // http://stackoverflow.com/a/6556588/1975046
+// TODO: check if this is really correct
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
 #define CEILING_NEG(X) ((X-(int)(X)) < 0 ? (int)(X-1) : (int)(X))
 #define CEILING(X) ( ((X) > 0) ? CEILING_POS(X) : CEILING_NEG(X) )
+
+#define FLOOR(X) ( CEILING(X) - 1 )
 
 uint8_t binary_hamming_weight(uint32_t n);
 uint16_t binary_degree(uint32_t p); // TODO: 8bytes version

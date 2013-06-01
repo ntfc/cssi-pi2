@@ -82,7 +82,6 @@ int main() {
   printf("b = ");poly_print_poly(b);
   Poly *c = poly_mult(a, b);
   printf("a*b = ");poly_print_poly(c);
-  printf("%d\n", c->t);
   
   poly_free(a);
   poly_free(b);
@@ -103,7 +102,16 @@ int main() {
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
   Poly *pi = lapin_pimapping_irreduc(f, ch, SEC_PARAM);
   poly_print_poly(pi);
-  printf("%d\n", 64/32);
   free(ch);
+  
+  uint16_t coeffs1[] = {128, 54, 1, 0, 3};
+  uint16_t coeffs2[] = {500, 148, 128, 32, 64, 56, 87, 74, 52, 10, 111, 12, 15, 25, 0};
+  Poly *a1 = poly_create_poly_from_coeffs(f, coeffs1, 5);
+  Poly *a2 = poly_create_poly_from_coeffs(f, coeffs2, 15);
+  Poly *c1 = poly_mult(a1, a2);
+  poly_print_poly(a1); poly_print_poly(a2);
+  //poly_print_poly(c1);
+  poly_mod(c1, f);
+  poly_print_poly(c1);
   return 0;
 }
