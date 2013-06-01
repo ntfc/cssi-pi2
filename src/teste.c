@@ -110,8 +110,8 @@ int main() {
   Poly *a2 = poly_create_poly_from_coeffs(f, coeffs2, 15);
   Poly *c1 = poly_mult(a1, a2);
   poly_print_poly(a1); poly_print_poly(a2);
-  //poly_print_poly(c1);
-  poly_mod(c1, f);
-  poly_print_poly(c1);
+  printf("Before mod=");poly_print_poly(c1);
+  c1 = poly_mod(c1, f);
+  printf(" After mod=");poly_print_poly(c1);
   return 0;
 }

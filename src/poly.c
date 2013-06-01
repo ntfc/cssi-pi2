@@ -154,6 +154,15 @@ Poly* poly_alloc(uint16_t m, uint16_t t) {
   return p;
 }
 
+// clone poly p, but use new_t words instead of a->t
+Poly* poly_clone(const Poly *p, uint16_t new_t) {
+  Poly *c = poly_alloc(p->m, new_t);
+  uint16_t i = 0;
+  for(i = 0; i < p->t; i++)
+    c->vec[i + (new_t - p->t)] = p->vec[i];
+  return c;
+}
+
 // coefs: array representing the coefficients
 // note: allocates a new p->vec only if necessary
 void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs) {
@@ -205,6 +214,45 @@ Poly* poly_mod(Poly *a, const Poly *f) {
   uint16_t t = f->t, i = 0;
   uint16_t m = f->m;
   uint8_t k = 0;
+  Poly *u[W];
   
-  return a;
+  // pre computation
+  u[0] = poly_clone(f, a->t);
+  for(k = 1; k < W; k++) {
+    u[k] = poly_clone(u[k-1], a->t);
+    u[k] = poly_shift_left(u[k]);
+  }
+  
+  // reduction
+  for(i = 2*m; i > m; i--) {
+    //uint16_t word = i/W; // NOTE: word =  0 <=> p->vec[p->t-1]
+    uint16_t word = (a->t - 1) - i/W;
+    uint16_t pos = i - (word * W);
+    uint8_t ci = binary_get_bit(a->vec[word], pos);
+    if(ci == 1) {
+      uint16_t j = (i - m) / W;
+      k = (i - m) - W*j;
+      uint16_t toShift = j * W;
+      while(toShift > 0) {
+        u[k] = poly_shift_left(u[k]);
+        toShift--;
+      }
+      // c(x) = c(x) + u_k(x)*x^{j*W}
+      Poly *c = poly_add(a, u[k]);
+      poly_free(a);
+      a = c;
+    }
+  }
+  
+  // frees
+  for(k = 0; k < W; k++)
+    poly_free(u[k]);
+  
+  // delete unnecessary bits
+  Poly *c = poly_alloc(f->m, f->t);
+  for(i = 0; i < f->t; i++) {
+    c->vec[i] = a->vec[c->t + i];
+  }
+  poly_free(a);
+  return c;
 }

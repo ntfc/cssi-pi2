@@ -35,4 +35,6 @@ uint32_t poly_get_r(const Poly *a);
 // n: length of v
 Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n);
 
+Poly* poly_clone(const Poly *p, uint16_t new_t);
+
 #endif
