@@ -63,35 +63,28 @@ void lapin_pimapping_reduc(const unsigned char *c) {
     toPad = binary_degree(F_PROD_REDUCIBLE[i], 4) - SEC_PARAM;
     printf("%d\n", toPad);
   }
-}
-
-//TODO: confirmar isto
+}*/
+/*
 //generate c
-//uint8_t security parameter
-Poly lapin_reader_step1(uint8_t n){
-  //n/8 é o número de palavras??
-  // convert SEC_PARAM to bytes
-  uint8_t w = n/8;
-  Poly c = malloc(sizeof(uint32_t) * w);
-  u_char* genc = random_gen_c(uint8_t n);
-  for(i = 0; i < w; i++) {
-      uint32_t u = binary_char_to_uint(genc[i]);
-      c[i] = u;
-    }
-    return c;
+//uint8_t n security parameter
+Challenge lapin_reader_step1(uint8_t n){
+  //TODO: confirmar se tenho que incializar c
+  Challenge c;
+  c = lapin_gen_c(n);
+  return c;
 }
 
-//TODO:
 //generate r, e
 //calculate z
-Poly lapin_tag_step2(){
+Poly lapin_tag_step2(const Challenge c){
+
 
 
 }
 
-//TODO:
 //verifyication
 void lapin_reader_step3(){
 
 
-}*/
+}
+*/
