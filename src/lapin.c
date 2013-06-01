@@ -3,6 +3,7 @@
 #include "lapin.h"
 #include "random.h"
 #include "binary.h"
+#include "poly.h"
 
 // n: security parameter in bits
 // NOTE: Challenge must be free'd in the end
@@ -64,11 +65,21 @@ void lapin_pimapping_reduc(const unsigned char *c) {
     printf("%d\n", toPad);
   }
 }*/
-/*
+
+
+//TODO: É assim que é suposto gerar as chaves?
+//KeyGen
+void generate_keys(const Poly *f, const Poly *s, const Poly *s1){
+
+  s = poly_rand_uniform_poly(f);
+  //poly s'
+  s1 = poly_rand_uniform_poly(f);
+
+}
+
 //generate c
 //uint8_t n security parameter
 Challenge lapin_reader_step1(uint8_t n){
-  //TODO: confirmar se tenho que incializar c
   Challenge c;
   c = lapin_gen_c(n);
   return c;
@@ -76,15 +87,30 @@ Challenge lapin_reader_step1(uint8_t n){
 
 //generate r, e
 //calculate z
-Poly lapin_tag_step2(const Challenge c){
+void lapin_tag_step2(const Poly *f, const Challenge c, const Poly *s,const Poly *z, const Poly *r, const Poly *s1, double tau, uint8_t n){ // m = grau, n security parameter
+  
+  r = poly_rand_uniform_poly(f);
+  Poly *e = poly_rand_bernoulli_poly(f, tau);
 
-
+  Poly *pi = lapin_pimapping_irreduc(f, c, n);
+  // r * (s * pi(c) + s') + e
+  z = poly_add(poly_mult(r, poly_add(poly_mult(s, pi), s1)), e);
 
 }
 
-//verifyication
-void lapin_reader_step3(){
+//verification
+int lapin_reader_step3(const Poly *f, const Challenge c, const Poly *z, const Poly *r, const Poly *s, const Poly *s1, double tau1, uint8_t n){
+  //TODO: IF R PERTENCE A R^*
 
+  Poly *pi = lapin_pimapping_irreduc(f, c, n);
+  Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(s, pi), s1));
 
+  if(poly_hamming_weight(e1) > n*tau1){
+    return 0;
+  }
+
+  return 1;
 }
-*/
+
+
+
