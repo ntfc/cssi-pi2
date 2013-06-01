@@ -100,6 +100,8 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   }
   // free B
   poly_free(B);
+  // TODO: ignore s leftmost bits now
+  // c->vec[0] &= (0xFFFFFFFF << c->s);
   return c;
 }
 
@@ -131,12 +133,6 @@ uint16_t poly_hamming_weight(const Poly *a) {
   while(t--)
     wt += binary_hamming_weight(a->vec[t]);
   return wt;
-}
-
-// return a mod f
-Poly* poly_mod(const Poly *a, const Poly *f) {
-  //TODO: implement Algorithm 2.40 or the more efficient one's
-  return NULL;
 }
 
 // m: degree of the irreducible polynomial
@@ -193,4 +189,18 @@ Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n) 
     p->vec[(p->t - 1) - word] ^= (0x1 << v[n]); // actual xor
   }
   return p;
+}
+
+// returns only the first word
+uint32_t poly_get_r(const Poly *a) {
+  uint8_t i = 0;
+  while(i < W && binary_get_bit(a->vec[0], i) == 0)
+    i++;
+  return (1 << i) & a->vec[0];
+}
+
+Poly* poly_mod(Poly *a, const Poly *f) {
+  uint32_t r[17] = {0};
+  r[16] = 0x3;
+  return NULL;
 }

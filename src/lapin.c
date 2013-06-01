@@ -17,7 +17,6 @@ Challenge lapin_gen_c(uint8_t n) {
   for(i = 0; i < words; i++) {
     c[i] = random_uniform_uint32();
   }
-  printf("pad = %u\n", pad);
   c[0] &= (0xFFFFFFFF >> pad);
   return c;
 }

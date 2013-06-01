@@ -137,6 +137,10 @@ class BinaryPolynomial:
       s += a[(i * self.W) : ((i * self.W )+ self.W)]
       s += ' | '
     return s
+    
+  # return a mod self.f
+  def polyMod(self, a):
+    
 
 
 """ End of class Binary Polynomial """

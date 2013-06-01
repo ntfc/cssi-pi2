@@ -33,9 +33,9 @@ class Lapin:
       """
       " Irreducible
       """
-      r = protocol.genR()
-      e = protocol.genE(self.tau)
-      pi = protocol.pimapping(c)
+      r = self.protocol.genR()
+      e = self.protocol.genE(self.tau)
+      pi = self.protocol.pimapping(c)
       z = r * (self.key1 * pi + self.key2) + e
       return (r,z)
     elif self.reducible == True:
@@ -66,7 +66,8 @@ class Lapin:
       if r.gcd(self.protocol.f) != 1:
         print "reject R*"
         return False
-      e2 = (z - r * (self.key1 * protocol.pimapping(c) + self.key2)).mod(self.protocol.f)
+      e2 = (z - r * (self.key1 * self.protocol.pimapping(c) + self.key2)).mod(self.protocol.f)
+      #e2 = (z + r * (self.key1 * protocol.pimapping(c) + self.key2)).mod(self.protocol.f)
       if e2.hamming_weight() > (self.n * self.tau2):
         print "reject wt"
         return False
