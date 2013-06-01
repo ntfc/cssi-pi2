@@ -99,8 +99,11 @@ int main() {
   binary_array_shift_right(sh, 2);
   printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
   
-  lapin_pimapping_irreduc(ch, SEC_PARAM);
-
+  Poly *f = poly_alloc(532, 17);
+  poly_set_coefs(f, F_IRREDUCIBLE);
+  Poly *pi = lapin_pimapping_irreduc(f, ch, SEC_PARAM);
+  poly_print_poly(pi);
+  printf("%d\n", 64/32);
   free(ch);
   return 0;
 }

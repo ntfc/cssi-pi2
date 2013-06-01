@@ -24,7 +24,7 @@ Challenge lapin_gen_c(uint8_t n) {
 
 //PiMapping irreducible
 //return poly
-Poly* lapin_pimapping_irreduc(const Challenge c, uint8_t n) {
+Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t n) {
   int8_t j = 0, k = 0, i = 0;
   uint8_t cj;
   Poly *p;
@@ -35,7 +35,7 @@ Poly* lapin_pimapping_irreduc(const Challenge c, uint8_t n) {
   for(j = 0; j < words; j++)
     tmpC[j] = c[j];
     
-  uint16_t coeffs[16];
+  uint16_t coeffs[16]; // ordered from smallest to biggest
   for(i = 16 - 1, j = 0; i >= 0; i--, j++) {
     cj = tmpC[words - 1] & 0x1F;    
     // here we use j instead of the (j-1) indicated in the paper because
@@ -49,7 +49,7 @@ Poly* lapin_pimapping_irreduc(const Challenge c, uint8_t n) {
     }    
   }
   free(tmpC);
-  p = poly_create_poly_from_coeffs(coeffs, 16);
+  p = poly_create_poly_from_coeffs(f, coeffs, 16);
   return p;
 }
 
