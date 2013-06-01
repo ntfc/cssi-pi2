@@ -7,6 +7,9 @@
 #define SEC_PARAM 80
 
 typedef uint32_t *Challenge;
+typedef struct s_key {
+  Poly *s, *s1;
+} Key;
 
 static uint32_t F_IRREDUCIBLE[17] = {
   0x100000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
@@ -32,8 +35,8 @@ static uint32_t F_REDUCIBLE[20] = { // degree = 621
 Challenge lapin_gen_c(uint8_t n);
 void lapin_pimapping_reduc(const Poly *f, const Challenge c, uint8_t n);
 Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t n);
-void generate_keys(const Poly *f, Poly *s, Poly *s1);
+Key* generate_keys(const Poly *f);
 Challenge lapin_reader_step1(uint8_t n);
-void lapin_tag_step2(const Poly *f, const Challenge c, const Poly *s, Poly *z, Poly *r, const Poly *s1, double tau, uint8_t n);
-int lapin_reader_step3(const Poly *f, const Challenge c, const Poly *z, const Poly *r, const Poly *s, const Poly *s1, double tau1, uint8_t n);
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly *z, Poly *r, double tau, uint8_t n);
+int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t n);
 #endif

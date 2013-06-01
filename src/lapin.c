@@ -68,12 +68,13 @@ void lapin_pimapping_reduc(const unsigned char *c) {
 
 //TODO: É assim que é suposto gerar as chaves?
 //KeyGen
-void generate_keys(const Poly *f, Poly *s, Poly *s1){
-
-  s = poly_rand_uniform_poly(f);
+Key* generate_keys(const Poly *f) {
+  Key *key = malloc(sizeof(Key));
+  key->s = poly_rand_uniform_poly(f);
   //poly s'
-  s1 = poly_rand_uniform_poly(f);
-
+  key->s1 = poly_rand_uniform_poly(f);
+  
+  return key;
 }
 
 //generate c
@@ -86,23 +87,23 @@ Challenge lapin_reader_step1(uint8_t n){
 
 //generate r, e
 //calculate z
-void lapin_tag_step2(const Poly *f, const Challenge c, const Poly *s, Poly *z, Poly *r, const Poly *s1, double tau, uint8_t n){ // m = grau, n security parameter
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly *z, Poly *r, double tau, uint8_t n) {
   
   r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
 
   Poly *pi = lapin_pimapping_irreduc(f, c, n);
   // r * (s * pi(c) + s') + e
-  z = poly_add(poly_mult(r, poly_add(poly_mult(s, pi), s1)), e);
+  z = poly_add(poly_mult(r, poly_add(poly_mult(key->s, pi), key->s1)), e);
 
 }
 
 //verification
-int lapin_reader_step3(const Poly *f, const Challenge c, const Poly *z, const Poly *r, const Poly *s, const Poly *s1, double tau1, uint8_t n){
+int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t n) {
   //TODO: IF R PERTENCE A R^*
 
   Poly *pi = lapin_pimapping_irreduc(f, c, n);
-  Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(s, pi), s1));
+  Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(key->s, pi), key->s1));
 
   if(poly_hamming_weight(e1) > n*tau1){
     return 0;
