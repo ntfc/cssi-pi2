@@ -188,16 +188,16 @@ uint16_t poly_degree(const Poly *p) {
   return binary_degree(p->vec[0]) + (W * (p->t-1));
 }
 
-// v: ordered from smallest to biggest
 Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n) {
   Poly *p = poly_alloc(f->m, f->t);
-  uint16_t toShift = 0;
   uint16_t word;
   uint8_t pos;
   while(n--) {
     word = v[n] / W; // word to xor with. NOTE: word=0 <=> p->vec[p->t-1]
     pos = v[n] - (word * W); // bit position to xor
-    p->vec[(p->t - 1) - word] ^= (0x1 << v[n]); // actual xor
+    // why does this work?
+    //p->vec[(p->t - 1) - word] ^= (0x1 << v[n]); // actual xor
+    p->vec[(p->t - 1) - word] ^= (0x1 << pos); // actual xor
   }
   return p;
 }
@@ -211,7 +211,7 @@ uint32_t poly_get_r(const Poly *a) {
 }
 
 Poly* poly_mod(Poly *a, const Poly *f) {
-  uint16_t t = f->t, i = 0;
+  uint16_t i = 0;
   uint16_t m = f->m;
   uint8_t k = 0;
   Poly *u[W];

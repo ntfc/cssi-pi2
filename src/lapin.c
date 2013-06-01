@@ -7,7 +7,7 @@
 
 // n: security parameter in bits
 // NOTE: Challenge must be free'd in the end
-Challenge lapin_gen_c(uint8_t n) {
+Challenge challenge_generate(uint8_t n) {
   uint8_t words = CEILING(((double)n/(double)8) / (double)sizeof(uint32_t)); // convert SEC_PARAM to bytes
   printf("w = %u\n", words);
   Challenge c = calloc(words, sizeof(uint32_t));
@@ -21,6 +21,12 @@ Challenge lapin_gen_c(uint8_t n) {
   c[0] &= (0xFFFFFFFF >> pad);
   return c;
 }
+
+void challenge_free(Challenge c) {
+  if(c != NULL)
+    free(c);
+}
+
 
 //PiMapping irreducible
 //return poly
@@ -66,9 +72,8 @@ void lapin_pimapping_reduc(const unsigned char *c) {
 }*/
 
 
-//TODO: É assim que é suposto gerar as chaves?
 //KeyGen
-Key* generate_keys(const Poly *f) {
+Key* key_generate(const Poly *f) {
   Key *key = malloc(sizeof(Key));
   key->s = poly_rand_uniform_poly(f);
   //poly s'
@@ -77,39 +82,82 @@ Key* generate_keys(const Poly *f) {
   return key;
 }
 
+void key_free(Key *k) {
+  if(k != NULL) {
+    if(k->s != NULL)
+      poly_free(k->s);
+    if(k->s1 != NULL)
+      poly_free(k->s1);
+    free(k);
+  }
+}
+
 //generate c
 //uint8_t n security parameter
 Challenge lapin_reader_step1(uint8_t n){
   Challenge c;
-  c = lapin_gen_c(n);
+  c = challenge_generate(n);
   return c;
 }
 
 //generate r, e
 //calculate z
-void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly *z, Poly *r, double tau, uint8_t n) {
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t n) {
   
-  r = poly_rand_uniform_poly(f);
+  *r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
 
   Poly *pi = lapin_pimapping_irreduc(f, c, n);
+  
+  // NOTE: this way all the memory can be free'd
   // r * (s * pi(c) + s') + e
-  z = poly_add(poly_mult(r, poly_add(poly_mult(key->s, pi), key->s1)), e);
+  Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
+  //sTimesPi = poly_mod(sTimesPi, f);
+  Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
+  poly_free(sTimesPi);
 
+  Poly *rTimesRest = poly_mod(poly_mult(*r, sTimesPiPlusS1), f);
+  //rTimesRest = poly_mod(rTimesRest, f);
+  poly_free(sTimesPiPlusS1);
+  
+  *z = poly_add(rTimesRest, e);
+  poly_free(rTimesRest);
+  
+  //*z = poly_mod(poly_add(poly_mod(poly_mult(*r, poly_add(poly_mod(poly_mult(key->s, pi), f), key->s1)), f), e), f);
+  
+  // free
+  poly_free(pi);
+  poly_free(e);
 }
 
 //verification
 int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t n) {
   //TODO: IF R PERTENCE A R^*
-
+  
   Poly *pi = lapin_pimapping_irreduc(f, c, n);
-  Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(key->s, pi), key->s1));
+  Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
+  Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
+  poly_free(sTimesPi);
+  
+  Poly *rTimesRest = poly_mod(poly_mult(r, sTimesPiPlusS1), f);
+  poly_free(sTimesPiPlusS1);
+  
+  Poly *e1 = poly_add(z, rTimesRest);
+  poly_free(rTimesRest);
+  //Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(key->s, pi), key->s1));
 
-  if(poly_hamming_weight(e1) > n*tau1){
-    return 0;
-  }
+  int8_t ret = 0;
 
-  return 1;
+  if((double)poly_hamming_weight(e1) > (double)(n*tau1))
+    ret = 0;
+  else
+    ret = 1;
+  
+  // free
+  poly_free(pi);
+  poly_free(e1);
+  
+  return ret;
 }
 
 

@@ -32,11 +32,13 @@ static uint32_t F_REDUCIBLE[20] = { // degree = 621
   0x3406728f, 0xce000000, 0x00000000, 0x000003b9, 0x42fa4143
 };
 
-Challenge lapin_gen_c(uint8_t n);
+Challenge challenge_generate(uint8_t n);
+void challenge_free(Challenge c);
 void lapin_pimapping_reduc(const Poly *f, const Challenge c, uint8_t n);
 Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t n);
-Key* generate_keys(const Poly *f);
 Challenge lapin_reader_step1(uint8_t n);
-void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly *z, Poly *r, double tau, uint8_t n);
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t n);
 int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t n);
+Key* key_generate(const Poly *f);
+void key_free(Key *k);
 #endif

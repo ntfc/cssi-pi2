@@ -51,13 +51,11 @@ void test_print_char_word(const unsigned char *c) {
 
 void poly_print_poly(Poly *f) {
   
-  uint8_t i = 0;
-  uint8_t t = f->t;
-   
+  uint16_t i = 0;
+  uint16_t t = f->t;
   unsigned char w[W+1];
   
   while(i < t) {
-    binary_uint32_to_char(f->vec[i], w);
     printf("%s", binary_uint32_to_char(f->vec[i], w));
     i++;
   }
@@ -65,8 +63,7 @@ void poly_print_poly(Poly *f) {
 
 }
 
-int main() {
-  srand((unsigned)time(NULL));
+void teste2() {
 
   unsigned char w[32];
   int i = 0;
@@ -88,7 +85,7 @@ int main() {
   poly_free(c);
   
   // generate challenge
-  Challenge ch = lapin_gen_c(SEC_PARAM);
+  Challenge ch = challenge_generate(SEC_PARAM);
   for(i = 0; i < 3; i++) {
     printf("%s", binary_uint32_to_char(ch[i], w));
   }
@@ -113,5 +110,25 @@ int main() {
   printf("Before mod=");poly_print_poly(c1);
   c1 = poly_mod(c1, f);
   printf(" After mod=");poly_print_poly(c1);
+}
+
+int main() {
+  srand((unsigned)time(NULL));
+
+  
+  Poly *f = poly_alloc(532, 17);
+  poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
+  Challenge c = challenge_generate(SEC_PARAM);
+  Poly *r, *z;
+  Key *key = key_generate(f);
+  lapin_tag_step2(key, f, c, &z, &r, (double)1/(double)8, SEC_PARAM);
+  printf("r=");poly_print_poly(r);
+  printf("z=");poly_print_poly(z);
+  printf("Vrfy = %d\n", lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM));
+  poly_free(f);
+  poly_free(z);
+  poly_free(r);
+  challenge_free(c);
+  key_free(key);
   return 0;
 }
