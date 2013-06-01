@@ -69,7 +69,7 @@ void lapin_pimapping_reduc(const unsigned char *c) {
 
 //TODO: É assim que é suposto gerar as chaves?
 //KeyGen
-void generate_keys(const Poly *f, const Poly *s, const Poly *s1){
+void generate_keys(const Poly *f, Poly *s, Poly *s1){
 
   s = poly_rand_uniform_poly(f);
   //poly s'
@@ -87,7 +87,7 @@ Challenge lapin_reader_step1(uint8_t n){
 
 //generate r, e
 //calculate z
-void lapin_tag_step2(const Poly *f, const Challenge c, const Poly *s,const Poly *z, const Poly *r, const Poly *s1, double tau, uint8_t n){ // m = grau, n security parameter
+void lapin_tag_step2(const Poly *f, const Challenge c, const Poly *s, Poly *z, Poly *r, const Poly *s1, double tau, uint8_t n){ // m = grau, n security parameter
   
   r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
