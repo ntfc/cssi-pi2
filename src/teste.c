@@ -74,8 +74,8 @@ int main() {
   Poly *b = poly_alloc(128, 4);
   uint32_t A[4] = {0x0, 0x0, 0x0, 0x324};
   uint32_t B[4] = {0x0, 0xF, 0xC, 0xCF12};
-  poly_set_coefs(a, A);
-  poly_set_coefs(b, B);
+  poly_set_coeffs_from_uint32(a, A);
+  poly_set_coeffs_from_uint32(b, B);
   
   
   printf("a = ");poly_print_poly(a);
@@ -100,7 +100,7 @@ int main() {
   printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
   
   Poly *f = poly_alloc(532, 17);
-  poly_set_coefs(f, F_IRREDUCIBLE);
+  poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
   Poly *pi = lapin_pimapping_irreduc(f, ch, SEC_PARAM);
   poly_print_poly(pi);
   printf("%d\n", 64/32);

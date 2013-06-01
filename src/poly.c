@@ -158,7 +158,7 @@ Poly* poly_alloc(uint16_t m, uint16_t t) {
 
 // coefs: array representing the coefficients
 // note: allocates a new p->vec only if necessary
-void poly_set_coefs(Poly *p, const uint32_t *coefs) {
+void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs) {
   int16_t t = p->t;
   // TODO: validate coeffs, ie, if degree >= m, truncate it
   if(p->vec == NULL) {

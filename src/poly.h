@@ -27,7 +27,7 @@ Poly* poly_shift_right(Poly *a);
 
 Poly* poly_alloc(uint16_t m, uint16_t t);
 // TODO: careful with this one!!
-void poly_set_coefs(Poly *p, const uint32_t *coefs);
+void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs);
 void poly_free(Poly *p);
 
 // n: length of v
