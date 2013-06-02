@@ -121,17 +121,10 @@ int main() {
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
   printf("f=");poly_print_poly(f);
   
-  uint32_t ch[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
-  printf("ch=");
-  for(i = 0; i < 3; i++) {
-    printf("%s", binary_uint32_to_char(ch[i], w));
-  }
-  printf("\n");
+  // TODO: this challenge produces a pimapping with only 14 coeffs
+  //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
   
-  
-  Poly *pi = lapin_pimapping_irreduc(f, ch, SEC_PARAM);
-  printf("pi=");poly_print_poly(pi);
-  /*Challenge c = challenge_generate(SEC_PARAM);
+  Challenge c = challenge_generate(SEC_PARAM);
   printf("c=");
   for(i = 0; i < 3; i++) {
     printf("%s", binary_uint32_to_char(c[i], w));
@@ -149,6 +142,6 @@ int main() {
   poly_free(z);
   poly_free(r);
   challenge_free(c);
-  key_free(key);*/
+  key_free(key);
   return 0;
 }

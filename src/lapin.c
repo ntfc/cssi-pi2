@@ -7,13 +7,12 @@
 
 // n: security parameter in bits
 // NOTE: Challenge must be free'd in the end
-Challenge challenge_generate(uint8_t n) {
-  uint8_t words = CEILING(((double)n/(double)8) / (double)sizeof(uint32_t)); // convert SEC_PARAM to bytes
-  printf("w = %u\n", words);
+Challenge challenge_generate(uint8_t sec_param) {
+  uint8_t words = CEILING(((double)sec_param/(double)8) / (double)sizeof(uint32_t)); // convert SEC_PARAM to bytes
   Challenge c = calloc(words, sizeof(uint32_t));
   uint8_t i = 0;
   
-  uint8_t pad = (words * W) - n;
+  uint8_t pad = (words * W) - sec_param;
   
   for(i = 0; i < words; i++) {
     c[i] = random_uniform_uint32();
@@ -30,11 +29,11 @@ void challenge_free(Challenge c) {
 
 //PiMapping irreducible
 //return poly
-Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t n) {
-  int8_t j = 0, k = 0, i = 0;
+Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_param) {
+  int8_t j = 0, k = 0;
   uint8_t cj;
   Poly *p;
-  uint8_t words = CEILING(((double)n/(double)8) / (double)sizeof(*c)); // ceil((n/8) / 4)
+  uint8_t words = CEILING(((double)sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
 
   // tmp copy of c
   Challenge tmpC = calloc(words, sizeof(*c)); // TODO: does it make sense?
@@ -94,21 +93,21 @@ void key_free(Key *k) {
 
 //generate c
 //uint8_t n security parameter
-Challenge lapin_reader_step1(uint8_t n){
+Challenge lapin_reader_step1(uint8_t sec_param){
   Challenge c;
-  c = challenge_generate(n);
+  c = challenge_generate(sec_param);
   return c;
 }
 
 //generate r, e
 //calculate z
-void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t n) {
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t sec_param) {
   
   *r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
-  printf("e=");poly_print_poly(e);
-  Poly *pi = lapin_pimapping_irreduc(f, c, n);
-  printf("pi=");poly_print_poly(pi);
+  
+  Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
+  
   // NOTE: this way all the memory can be free'd
   // r * (s * pi(c) + s') + e
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
@@ -131,11 +130,11 @@ void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
 }
 
 //verification
-int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t n) {
+int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t sec_param) {
   //TODO: IF R PERTENCE A R^*
   
-  Poly *pi = lapin_pimapping_irreduc(f, c, n);
-  printf("pi=");poly_print_poly(pi);
+  Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
+  
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
   Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
   poly_free(sTimesPi);
@@ -144,13 +143,13 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const P
   poly_free(sTimesPiPlusS1);
   
   Poly *e1 = poly_add(z, rTimesRest);
-  printf("e1=");poly_print_poly(e1);
+  
   poly_free(rTimesRest);
   //Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(key->s, pi), key->s1));
 
   int8_t ret = 0;
 
-  if((double)poly_hamming_weight(e1) > (double)(n*tau1))
+  if((double)poly_hamming_weight(e1) > (double)(poly_degree(f)*tau1))
     ret = 0;
   else
     ret = 1;
