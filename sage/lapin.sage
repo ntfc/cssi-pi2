@@ -36,8 +36,8 @@ class Lapin:
       r = self.protocol.genR()
       e = self.protocol.genE(self.tau)
       pi = self.protocol.pimapping(c)
-      z = r * (self.key1 * pi + self.key2) + e
-      return (r,z)
+      z = r * ((self.key1 * pi).mod(self.protocol.f) + self.key2) + e
+      return (r,z.mod(self.protocol.f))
     elif self.reducible == True:
       """
       " Reducible

@@ -135,12 +135,13 @@ int main() {
   printf("key1=");poly_print_poly(key->s);
   printf("key2=");poly_print_poly(key->s1);
   lapin_tag_step2(key, f, c, &z, &r, (double)1/(double)8, SEC_PARAM);
-  printf("r=");poly_print_poly(r);
-  printf("z=");poly_print_poly(z);
-  printf("Vrfy = %d\n", lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM));
+  //printf("r=");poly_print_poly(r);
+  //printf("z=");poly_print_poly(z);
+  //printf("Vrfy = %d\n", lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM));
+  
   poly_free(f);
-  poly_free(z);
-  poly_free(r);
+  //poly_free(z);
+  //poly_free(r);
   challenge_free(c);
   key_free(key);
   return 0;

@@ -139,14 +139,19 @@ class BinaryPolynomial:
     return s
     
   # return a mod self.f
+  # a must be in binary
   def polyMod(self, a):
-    binA = polyToBin(a, self.var).zfill(self.W * self.t)
-    binF = polyToBin(self.f, self.var)
-    i = a.degree()
-    binF = self.addWordsToRight(binF, i-self.m)
-    c = self.polyAddition(binA.zfill(len(binF)), binF.zfill(len(binF)))
+    # pre-computation
+    r = f - (self.var**f.degree())
+    u = []
+    for i in xrange(0, self.W):
+      u.append(self.polyToBin(r * self.var**i).zfill(len(a)))
     
-    return (c[len(c) - self.m : ])
+    for i in xrange(self.m * 2, self.m, -1):
+      if a[i] == '1':
+        j = floor( (i-self.m) / 32) # isto esta bem?
+        print j
+    
 
 
 """ End of class Binary Polynomial """

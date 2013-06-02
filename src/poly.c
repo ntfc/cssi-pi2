@@ -253,6 +253,7 @@ Poly* poly_mod(Poly *a, const Poly *f) {
   for(i = 0; i < f->t; i++) {
     c->vec[i] = a->vec[c->t + i];
   }
+  c->vec[0] &= (0xffffffff >> c->s);
   poly_free(a);
   return c;
 }

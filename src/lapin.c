@@ -105,22 +105,28 @@ void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
   
   *r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
+  printf("e=");poly_print_poly(e);
   
   Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
-  
+  printf("pi=");poly_print_poly(pi);
   // NOTE: this way all the memory can be free'd
   // r * (s * pi(c) + s') + e
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
+  printf("s*pi mod f=");poly_print_poly(sTimesPi);
   //sTimesPi = poly_mod(sTimesPi, f);
-  Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
+  /*Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
+  printf("s*pi + s1=");poly_print_poly(sTimesPiPlusS1);
   poly_free(sTimesPi);
 
   Poly *rTimesRest = poly_mod(poly_mult(*r, sTimesPiPlusS1), f);
+  printf("r * (s*pi + s1)="); poly_print_poly(rTimesRest);
   //rTimesRest = poly_mod(rTimesRest, f);
   poly_free(sTimesPiPlusS1);
   
   *z = poly_add(rTimesRest, e);
-  poly_free(rTimesRest);
+  printf("r * (s*pi + s1)+e="); poly_print_poly(*z);
+  poly_free(rTimesRest);*/
+  
   
   //*z = poly_mod(poly_add(poly_mod(poly_mult(*r, poly_add(poly_mod(poly_mult(key->s, pi), f), key->s1)), f), e), f);
   
