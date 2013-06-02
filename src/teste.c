@@ -113,14 +113,34 @@ void teste2() {
 }
 
 int main() {
+  uint16_t i = 0;
   srand((unsigned)time(NULL));
-
+  unsigned char w[32];
   
   Poly *f = poly_alloc(532, 17);
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
-  Challenge c = challenge_generate(SEC_PARAM);
+  printf("f=");poly_print_poly(f);
+  
+  uint32_t ch[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
+  printf("ch=");
+  for(i = 0; i < 3; i++) {
+    printf("%s", binary_uint32_to_char(ch[i], w));
+  }
+  printf("\n");
+  
+  
+  Poly *pi = lapin_pimapping_irreduc(f, ch, SEC_PARAM);
+  printf("pi=");poly_print_poly(pi);
+  /*Challenge c = challenge_generate(SEC_PARAM);
+  printf("c=");
+  for(i = 0; i < 3; i++) {
+    printf("%s", binary_uint32_to_char(c[i], w));
+  }
+  printf("\n");
   Poly *r, *z;
   Key *key = key_generate(f);
+  printf("key1=");poly_print_poly(key->s);
+  printf("key2=");poly_print_poly(key->s1);
   lapin_tag_step2(key, f, c, &z, &r, (double)1/(double)8, SEC_PARAM);
   printf("r=");poly_print_poly(r);
   printf("z=");poly_print_poly(z);
@@ -129,6 +149,6 @@ int main() {
   poly_free(z);
   poly_free(r);
   challenge_free(c);
-  key_free(key);
+  key_free(key);*/
   return 0;
 }

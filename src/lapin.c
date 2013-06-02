@@ -40,13 +40,13 @@ Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t n) {
   Challenge tmpC = calloc(words, sizeof(*c)); // TODO: does it make sense?
   for(j = 0; j < words; j++)
     tmpC[j] = c[j];
-    
-  uint16_t coeffs[16]; // ordered from smallest to biggest
-  for(i = 16 - 1, j = 0; i >= 0; i--, j++) {
-    cj = tmpC[words - 1] & 0x1F;    
+  uint16_t coeffs[16];
+
+  for(j = 15; j >= 0; j--) {
+    cj = tmpC[words - 1] & 0x1F;
     // here we use j instead of the (j-1) indicated in the paper because
     //we're in 0-index mode
-    coeffs[j] = 0xF * j + cj;
+    coeffs[j] = (0x10 * j) + cj;
     // now, bj is a poly coefficient
     // shift tmpC
     k = 5; // 0x1F is 5 bits
@@ -106,9 +106,9 @@ void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
   
   *r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
-
+  printf("e=");poly_print_poly(e);
   Poly *pi = lapin_pimapping_irreduc(f, c, n);
-  
+  printf("pi=");poly_print_poly(pi);
   // NOTE: this way all the memory can be free'd
   // r * (s * pi(c) + s') + e
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
@@ -135,6 +135,7 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const P
   //TODO: IF R PERTENCE A R^*
   
   Poly *pi = lapin_pimapping_irreduc(f, c, n);
+  printf("pi=");poly_print_poly(pi);
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
   Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
   poly_free(sTimesPi);
@@ -143,6 +144,7 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const P
   poly_free(sTimesPiPlusS1);
   
   Poly *e1 = poly_add(z, rTimesRest);
+  printf("e1=");poly_print_poly(e1);
   poly_free(rTimesRest);
   //Poly *e1 = poly_mult(poly_add(z, r), poly_add(poly_mult(key->s, pi), key->s1));
 
