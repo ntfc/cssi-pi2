@@ -112,7 +112,8 @@ void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
   // NOTE: this way all the memory can be free'd
   // r * (s * pi(c) + s') + e
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
-  printf("s*pi mod f=");poly_print_poly(sTimesPi);
+  
+  printf("s*pi=");poly_print_poly(sTimesPi);
   //sTimesPi = poly_mod(sTimesPi, f);
   /*Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
   printf("s*pi + s1=");poly_print_poly(sTimesPiPlusS1);

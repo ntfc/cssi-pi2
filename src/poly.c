@@ -59,7 +59,7 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   }
   uint16_t t = a->t;
   uint16_t m = a->m;
-  uint16_t c_words = 2*t; // number of words in C
+  uint16_t c_words = 2*t - 1; // number of words in C
   uint16_t c_max_deg = 2*m; // C is of degree at most m-1 // TODO: see this m-1
   uint8_t k, i = 0;
   uint16_t j, actual_j;
@@ -214,15 +214,20 @@ Poly* poly_mod(Poly *a, const Poly *f) {
   uint16_t i = 0;
   uint16_t m = f->m;
   uint8_t k = 0;
+  Poly *r = poly_clone(f, f->t);
+  // obtain r(x) such that f(x) = x^m + r(x) 
+  r->vec[0] = r->vec[0] ^ (1 << f->m);
+  printf("r(x)="); poly_print_poly(r);
   Poly *u[W];
-  
+  Poly *c;
+
   // pre computation
   u[0] = poly_clone(f, a->t);
   for(k = 1; k < W; k++) {
     u[k] = poly_clone(u[k-1], a->t);
     u[k] = poly_shift_left(u[k]);
   }
-  
+    
   // reduction
   for(i = 2*m; i > m; i--) {
     //uint16_t word = i/W; // NOTE: word =  0 <=> p->vec[p->t-1]
@@ -238,7 +243,7 @@ Poly* poly_mod(Poly *a, const Poly *f) {
         toShift--;
       }
       // c(x) = c(x) + u_k(x)*x^{j*W}
-      Poly *c = poly_add(a, u[k]);
+      c = poly_add(a, u[k]);
       poly_free(a);
       a = c;
     }
@@ -249,11 +254,11 @@ Poly* poly_mod(Poly *a, const Poly *f) {
     poly_free(u[k]);
   
   // delete unnecessary bits
-  Poly *c = poly_alloc(f->m, f->t);
+  Poly *d = poly_alloc(f->m, f->t);
   for(i = 0; i < f->t; i++) {
-    c->vec[i] = a->vec[c->t + i];
+    d->vec[i] = a->vec[d->t + i];
   }
-  c->vec[0] &= (0xffffffff >> c->s);
+  d->vec[0] &= (0xffffffff >> d->s);
   poly_free(a);
-  return c;
+  return d;
 }

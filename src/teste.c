@@ -112,18 +112,17 @@ void teste2() {
   printf(" After mod=");poly_print_poly(c1);
 }
 
-int main() {
+void test_mult(const Poly *f) {
+  
+}
+
+void test_mod(const Poly *f) {
+  
+}
+
+void test_lapin(const Poly *f) {
   uint16_t i = 0;
-  srand((unsigned)time(NULL));
   unsigned char w[32];
-  
-  Poly *f = poly_alloc(532, 17);
-  poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
-  printf("f=");poly_print_poly(f);
-  
-  // TODO: this challenge produces a pimapping with only 14 coeffs
-  //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
-  
   Challenge c = challenge_generate(SEC_PARAM);
   printf("c=");
   for(i = 0; i < 3; i++) {
@@ -139,10 +138,24 @@ int main() {
   //printf("z=");poly_print_poly(z);
   //printf("Vrfy = %d\n", lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM));
   
-  poly_free(f);
   //poly_free(z);
   //poly_free(r);
   challenge_free(c);
   key_free(key);
+}
+
+int main() {
+  srand((unsigned)time(NULL));
+  
+  Poly *f = poly_alloc(532, 17);
+  poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
+  printf("f=");poly_print_poly(f);
+  
+  // TODO: this challenge produces a pimapping with only 14 coeffs
+  //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
+  //test_lapin(f);
+
+
+  poly_free(f);
   return 0;
 }

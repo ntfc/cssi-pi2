@@ -97,24 +97,42 @@ class BinaryPolynomial:
     if len(a) != len(b):
       print "Polynomials must be of same length"
       return
-    # TODO: confirmar que len(C) = 2*t - 1 palavras de W-bits
+    
     # work with C as a list, because python string are immutable
-    C = list('0' * ((2*self.t) * self.W))
+    m = (self.m*2) - 1 # c->m
+    t = ceil(m / self.W) # c->t
+    s = self.W*t - m
+    #C = list('0' * (t * self.W))
+    C = '0' * (t * self.W)
+
     for k in xrange(0, self.W):
       for j in xrange(0, self.t): 
         if int(self.getBit(a, j, k)) == 1:
-          # bAux = b with j words appended to the right
+          """# bAux = b with j words appended to the right
           bAux = self.addWordsToRight(b, j)
           # difference of W-bit words between C and bAux
-          diffWords = (len(C) - len(bAux)) // self.W
+          diffWords = floor((len(C) - len(bAux)) / self.W)
           # cAux is the adition between C and bAux
           cAux = self.polyAddition(''.join(C[(self.W * diffWords) : ]), bAux)
           # concat disaligned C with calculated cAux
-          C = list(''.join(C[ : self.W * diffWords]) + cAux)
+          C = list(''.join(C[ : self.W * diffWords]) + cAux)"""
+          newB = self.addWordsToRight(b, j).zfill(t * self.W)
+          newB = ('0'*self.s) + (newB[self.s:])
+          C = ('0'*s) + (self.polyAddition(C, newB)[s:])
       if k != (self.W - 1):
-        b = shiftLeft(b)
+        b = self.shiftLeft(b)
     # return as str
     return ''.join(C)
+    
+  # shift left by one bit
+  # all we need to to is delete the left-most bit and add one 0 to to the right
+  # IMPORTANT: when shifting left, we cannot use the s leftmost bits
+  def shiftLeft(self, a):
+    # delete the left-most bit
+    toShift = list(a[1:]) # work with list instead of string
+    toShift.append('0')
+    # return as string
+    return ('0'*self.s) + (''.join(toShift))[self.s:]
     
   # add j W-bit words to the left of array of words c
   def addWordsToLeft(self, c, j):
@@ -127,7 +145,7 @@ class BinaryPolynomial:
   def addWordsToRight(self, c, j):
     if j <= 0:
       return c
-    return c + '0' * (j * self.W)
+    return c + ('0' * (j * self.W))
     
   def polyToString(self, a):
     # TODO: a must be binary string
