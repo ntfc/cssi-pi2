@@ -373,14 +373,17 @@ class BinaryPolynomial:
         T_shifted = shiftRight(T_shifted)
         toShift -= 1
       Ci = bitwiseXor(Ci, T_shifted)
-      # set A[i - 7]
+      # set A[i - 16]
       A = list(a)
       start = len(a) - (W * word)
       end = start - W
       A[end : start] = list(Ci)
       a = ''.join(str(bit) for bit in A)
       
-    T = self.getWord(a, 16)
+    print self.getWord(a, 22)
+      
+    word = 16
+    T = self.getWord(a, word)
     
     # C[16] >> 20
     toShift = 20
@@ -397,9 +400,24 @@ class BinaryPolynomial:
     A[end : start] = list(Ci)
     a = ''.join(str(bit) for bit in A)
     
+    # T << 1
+    T_shifted = T
+    toShift = 1
+    while (toShift > 0):
+      T_shifted = shiftLeft(T_shifted)
+      toShift -= 1
+    word = 2
+    Ci = self.getWord(a, word)
+    Ci = bitwiseXor(Ci, T_shifted)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+    
     # C[16] & 0xFFFF
-    toAnd = ('1'*20).zfill(32)
     word = 16
+    toAnd = ('1'*20).zfill(32)
     Ci = self.getWord(a, word)
     Ci = bitwiseAnd(Ci, toAnd)
     A = list(a)
