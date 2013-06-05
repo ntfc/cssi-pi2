@@ -210,6 +210,16 @@ uint32_t poly_get_r(const Poly *a) {
   return (1 << i) ^ a->vec[0];
 }
 
+
+// reduction modulo x^233 + x^74 + 1
+Poly *poly_fast_mod_reduction(Poly *a) {
+  Poly *f = poly_alloc(233, 8);
+  
+  
+  
+  poly_free(f);
+}
+
 Poly* poly_mod(Poly *a, const Poly *f) {
   uint16_t i = 0;
   uint16_t m = f->m;

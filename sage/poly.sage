@@ -43,12 +43,27 @@ class BinaryPolynomial:
   # get the i-th W-bit word from an array
   def getWord(self, A, i):
     if i >= (len(A) // self.W) or i < 0:
-      print "Error: cant found {0}-th word. Allowed: 0 .. {1}".format(i, len(A)-1)
+      print "Error: cant found {0}-th word. Allowed: 0 .. {1}".format(i, (len(A)//self.W)-1)
       return
     start = len(A) - (self.W * i)
     end = start - self.W
     return A[end : start]
 
+  # set the word i. the new value is then returned
+  def setWord(self, A, i, new_word):
+    if i >= (len(A) // self.W) or i < 0:
+      print "Error: cant found {0}-th word. Allowed: 0 .. {1}".format(i, (len(A) // self.W)-1)
+      return
+    if len(new_word) != self.W:
+      print "Wrong word length. Found {0}, needed {1}".format(len(new_word), self.W)
+    start = len(A) - (self.W * i)
+    end = start - self.W
+
+    C = A[ : end]
+    C += new_word
+    C += A[start : ]
+    return C
+    
   # get the k-th bit of the j-th W-bit word of polynomial a
   def getBit(self, a, j, k):
     # TODO: validate j and k and a
@@ -170,8 +185,232 @@ class BinaryPolynomial:
         j = floor( (i-self.m) / 32) # isto esta bem?
         print j
     
+  # fast reduction modulo x**233 + x**74 + 1
+  def polyFastMod(self, a):
+    if type(a) != type(self.var):
+      print "Type must be {0}".format(type(self.var))
+    t = 8
+    W = 32
+    m = 233
+    s = 23
+    a_t = 16
+    if type(a) == type(self.var):
+      a = polyToBin(a, self.var).zfill(a_t * W)
+      
+    
+    for i in xrange(15, 8 - 1, -1):
+      T = self.getWord(a, i)
+      
+      word = i - 8
+      Ci = self.getWord(a, word)
+      # T << 23
+      toShift = 23
+      T_shifted = T
+      while toShift > 0:
+        T_shifted = shiftLeft(T_shifted)
+        toShift -= 1
+      Ci = bitwiseXor(Ci, T_shifted)
+      # set A[i - 8]
+      A = list(a)
+      start = len(a) - (W * word)
+      end = start - W
+      A[end : start] = list(Ci)
+      a = ''.join(str(bit) for bit in A)
+      
+      
+      word = i - 7
+      Ci = self.getWord(a, word)
+      # T >> 9
+      toShift = 9
+      T_shifted = T
+      while toShift > 0:
+        T_shifted = shiftRight(T_shifted)
+        toShift -= 1
+      Ci = bitwiseXor(Ci, T_shifted)
+      # set A[i - 7]
+      A = list(a)
+      start = len(a) - (W * word)
+      end = start - W
+      A[end : start] = list(Ci)
+      a = ''.join(str(bit) for bit in A)
+      
+      
+      word = i - 5
+      Ci = self.getWord(a, word)
+      # T << 1
+      toShift = 1
+      T_shifted = T
+      while toShift > 0:
+        T_shifted = shiftLeft(T_shifted)
+        toShift -= 1
+      Ci = bitwiseXor(Ci, T_shifted)
+      # set A[i - 5]
+      A = list(a)
+      start = len(a) - (W * word)
+      end = start - W
+      A[end : start] = list(Ci)
+      a = ''.join(str(bit) for bit in A)
+      
+      
+      word = i - 4
+      Ci = self.getWord(a, word)
+      # T >> 31
+      toShift = 31
+      T_shifted = T
+      while toShift > 0:
+        T_shifted = shiftRight(T_shifted)
+        toShift -= 1
+      Ci = bitwiseXor(Ci, T_shifted)
+      # set A[i - 4]
+      A = list(a)
+      start = len(a) - (W * word)
+      end = start - W
+      A[end : start] = list(Ci)
+      a = ''.join(str(bit) for bit in A)
 
-
+    T = self.getWord(a, 7)
+    
+    # C[7] >> 9
+    toShift = 9
+    while toShift > 0:
+      T = shiftRight(T)
+      toShift -= 1
+    
+    word = 0
+    Ci = self.getWord(a, word)
+    Ci = bitwiseXor(Ci, T)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+      
+      
+    # T << 10
+    T_shifted = T
+    toShift = 10
+    while (toShift > 0):
+      T_shifted = shiftLeft(T_shifted)
+      toShift -= 1
+    word = 2
+    Ci = self.getWord(a, word)
+    Ci = bitwiseXor(Ci, T_shifted)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+    
+    
+    # T >> 22
+    T_shifted = T
+    toShift = 22
+    while (toShift > 0):
+      T_shifted = shiftRight(T_shifted)
+      toShift -= 1
+    word = 3
+    Ci = self.getWord(a, word)
+    Ci = bitwiseXor(Ci, T_shifted)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+    
+    # C[7] & 0x1FF
+    toAnd = '111111111'.zfill(32)
+    word = 7
+    Ci = self.getWord(a, word)
+    Ci = bitwiseAnd(Ci, toAnd)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+    
+    # return C[7], C[6], .. C[0]
+    return a[ (t*2 *W) - (t * W) : ]
+    
+  # fast reduction modulo x**532 + x**1 + 1
+  def polyFastMod_lapin(self, a):
+    if type(a) != type(self.var):
+      print "Type must be {0}".format(type(self.var))
+    t = 17
+    W = 32
+    m = 532
+    s = 12
+    a_t = 34
+    if type(a) == type(self.var):
+      a = polyToBin(a, self.var).zfill(a_t * W)
+      
+    
+    for i in xrange(33, 17 - 1, -1):
+      T = self.getWord(a, i)
+      
+      word = i - 17
+      Ci = self.getWord(a, word)
+      # T << 12
+      toShift = 12
+      T_shifted = T
+      while toShift > 0:
+        T_shifted = shiftLeft(T_shifted)
+        toShift -= 1
+      Ci = bitwiseXor(Ci, T_shifted)
+      # set A[i - 17]
+      A = list(a)
+      start = len(a) - (W * word)
+      end = start - W
+      A[end : start] = list(Ci)
+      a = ''.join(str(bit) for bit in A)
+      
+      
+      word = i - 16
+      Ci = self.getWord(a, word)
+      # T >> 20
+      toShift = 20
+      T_shifted = T
+      while toShift > 0:
+        T_shifted = shiftRight(T_shifted)
+        toShift -= 1
+      Ci = bitwiseXor(Ci, T_shifted)
+      # set A[i - 7]
+      A = list(a)
+      start = len(a) - (W * word)
+      end = start - W
+      A[end : start] = list(Ci)
+      a = ''.join(str(bit) for bit in A)
+      
+    T = self.getWord(a, 16)
+    
+    # C[16] >> 20
+    toShift = 20
+    while toShift > 0:
+      T = shiftRight(T)
+      toShift -= 1
+    
+    word = 0
+    Ci = self.getWord(a, word)
+    Ci = bitwiseXor(Ci, T)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+    
+    # C[16] & 0xFFFF
+    toAnd = ('1'*20).zfill(32)
+    word = 16
+    Ci = self.getWord(a, word)
+    Ci = bitwiseAnd(Ci, toAnd)
+    A = list(a)
+    start = len(a) - (W * word)
+    end = start - W
+    A[end : start] = list(Ci)
+    a = ''.join(str(bit) for bit in A)
+    
+    
+    return a[ (t*2 *W) - (t * W) : ]
+    
 """ End of class Binary Polynomial """
 
 """ Auxiliary functions """
@@ -196,6 +435,13 @@ def bitwiseXor(a, b):
     return
   c = ''.join(map(lambda x,y : str(int(x).__xor__(int(y))), a, b))
   return c
+  
+def bitwiseAnd(a, b):
+  if len(a) != len(b):
+    print "String must be of same size"
+    return
+  c = ''.join(map(lambda x,y : str(int(x).__and__(int(y))), a, b))
+  return c
 
 # shift left by one bit
 # all we need to to is delete the left-most bit and add one 0 to to the right
@@ -203,6 +449,15 @@ def shiftLeft(a):
   # delete the left-most bit
   toShift = list(a[1:]) # work with list instead of string
   toShift.append('0')
+  # return as string
+  return ''.join(toShift)
+  
+# shift right by one bit
+# all we need to to is delete the right-most bit and add one 0 to to the left
+def shiftRight(a):
+  # delete the right-most bit
+  toShift = list(a[ : len(a) - 1]) # work with list instead of string
+  toShift.insert(0, '0')
   # return as string
   return ''.join(toShift)
 

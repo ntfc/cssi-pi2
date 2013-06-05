@@ -117,7 +117,8 @@ void test_mult(const Poly *f) {
 }
 
 void test_mod(const Poly *f) {
-  
+  Poly *a = poly_rand_uniform_poly(f);
+  poly_free(a);
 }
 
 void test_lapin(const Poly *f) {
@@ -153,6 +154,8 @@ int main() {
   
   // TODO: this challenge produces a pimapping with only 14 coeffs
   //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
+  
+  test_mod(f);
   //test_lapin(f);
 
 
