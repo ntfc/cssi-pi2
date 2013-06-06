@@ -293,12 +293,16 @@ class BinaryPolynomial:
     
     A = list(a) # work on list
     for i in xrange(33, 17 - 1, -1):
+
       T = self.getWord(A, i)
-      
+
       word = i - 17
       Ci = self.getWord(A, word)
+      #### C[i - 17] = C[i - 17] XOR (T << 12) XOR (T << 13)
       # C[i - 17] = C[i - 17] XOR (T << 12)
       Ci = self.polyFastModXorAndShift(Ci, T, 12, 0)
+      # C[i - 17] = C[i - 17] XOR (T << 13)
+      Ci = self.polyFastModXorAndShift(Ci, T, 13, 0)
       # save Ci to A[i-17]
       end = len(A) - (W * word)
       start = end - W
@@ -306,44 +310,32 @@ class BinaryPolynomial:
       
       word = i - 16
       Ci = self.getWord(A, word)
+      #### C[i - 16] = C[i - 16] XOR (T >> 20) XOR (T << 19)
       # C[i - 16] = C[i - 16] XOR (T >> 20)
       Ci = self.polyFastModXorAndShift(Ci, T, 20, 1)
+      # C[i - 16] = C[i - 16] XOR (T >> 19)
+      Ci = self.polyFastModXorAndShift(Ci, T, 19, 1)
       # save Ci to A[i-16]
       end = len(A) - (W * word)
       start = end - W
       A[start : end] = list(Ci)
       
     T = self.getWord(A, 16)
-    # T = C[16] >> 20
+    """# T = C[16] >> 20
     toShift = 20
     while toShift > 0:
       T = shiftRight(T)
-      toShift -= 1
+      toShift -= 1"""
       
     word = 0
     Ci = self.getWord(A, word)
-    # C[0] = C[0] XOR T
-    Ci = self.polyFastModXorAndShift(Ci, T, 0, 0)
+    # C[0] = C[0] XOR (T >> 20)
+    Ci = self.polyFastModXorAndShift(Ci, T, 20, 1)
+    # C[0] = C[0] XOR (T >> 19)
+    Ci = self.polyFastModXorAndShift(Ci, T, 19, 1)
     end = len(A) - (W * word)
     start = end - W
     A[start : end] = list(Ci)
-    
-    """ isto e para meter?
-    word = 2
-    Ci = self.getWord(A, word)
-    # C[2] = C[2] XOR (T << 1)
-    Ci = self.polyFastModXorAndShift(Ci, T, 1, 0)
-    end = len(A) - (W * word)
-    start = end - W
-    A[start : end] = list(Ci)
-    
-    word = 3
-    Ci = self.getWord(A, word)
-    # C[3] = C[3] XOR (T >> 31)
-    Ci = self.polyFastModXorAndShift(Ci, T, 31, 1)
-    end = len(A) - (W * word)
-    start = end - W
-    A[start : end] = list(Ci)"""
     
     word = 16
     Ci = self.getWord(A, word)
