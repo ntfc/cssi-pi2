@@ -125,7 +125,43 @@ class BinaryPolynomial:
         b = self.shiftLeft(b)
     # return as str
     return ''.join(C)
-    
+
+  # return a mod self.f
+  # c must be in binary
+  def polyMod(self, c):    
+    if type(c) != str:
+      c = polyToBin(c, self.var)
+      
+    m_2 = (self.m*2) - 1 # c->m. means that deg(c) <= c->m - 1
+    t_2 = ceil(m_2 / self.W) # c->t
+    c = c.zfill(t_2 * self.W) # zfill c
+    # pre-computation u_k = f * x^k
+    u = []
+    # append f in binary form, with one extra word!
+    # NOTE: all elements in u have self.t + 1 words
+    u.append(polyToBin(f, self.var).zfill((self.t + 1) * self.W))
+    for k in xrange(1, self.W):
+      u.append(self.shiftLeft(u[k - 1]))   
+    # work with lists
+    c = list(c)
+    for i in xrange((2 * self.m) - 2, self.m - 1, -1):
+      if int(c[(len(c) - i) - 1]) == 1:
+        j = floor((i - self.m) / self.W)
+        k = (i - self.m) - (self.W * j)
+        j_aux = j
+        while (j_aux < t_2) and ((j_aux - j) <= self.t):
+          # C{j_aux} = C{j_aux} XOR u[k]
+          ci = self.getWord(c, j_aux)
+          ci = bitwiseXor(ci, self.getWord(u[k], j_aux - j))
+          # save ci to c[i]
+          end = len(c) - (self.W * j_aux)
+          start = end - self.W
+          c[start : end] = list(ci)
+          j_aux += 1
+    c = ''.join(c)
+    # return only C[t - 1] .. C[0]
+    return c[(self.t - 1) * self.W : ]
+
   # shift left by one bit
   # all we need to to is delete the left-most bit and add one 0 to to the right
   def shiftLeft(self, a):
@@ -159,20 +195,6 @@ class BinaryPolynomial:
       s += a[(i * self.W) : ((i * self.W )+ self.W)]
       s += ' | '
     return s
-    
-  # return a mod self.f
-  # a must be in binary
-  def polyMod(self, a):
-    # pre-computation
-    r = f - (self.var**f.degree())
-    u = []
-    for i in xrange(0, self.W):
-      u.append(self.polyToBin(r * self.var**i).zfill(len(a)))
-    
-    for i in xrange(self.m * 2, self.m, -1):
-      if a[i] == '1':
-        j = floor( (i-self.m) / 32) # isto esta bem?
-        print j
     
   # aux method for polyFastMod
   # word: in binary

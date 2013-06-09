@@ -20,6 +20,7 @@ Poly* poly_rand_bernoulli_poly(const Poly *f, double tau);
 
 Poly* poly_add(const Poly *a, const Poly *b);
 uint16_t poly_degree(const Poly *p);
+// TODO: poly_mult_scalar(const Poly *a, uint32_t s); ??
 Poly* poly_mult(const Poly *a, const Poly *b);
 // return a mod f. changes values of a
 Poly* poly_mod(Poly *a, const Poly *f);

@@ -62,7 +62,7 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   uint16_t m = a->m;
   uint16_t c_max_degree = 2*m - 1; // C is of degree at most m-1
   uint16_t c_words = CEILING((double)c_max_degree / (double)W); // number of words in C
-  uint8_t c_unused = W*c_words - c_max_degree;  
+  //uint8_t c_unused = W*c_words - c_max_degree;  
   Poly *c = poly_alloc(c_max_degree, c_words);
   // B is a copy of b, but with one more word
   uint32_t *B = calloc(b->t + 1, sizeof(uint32_t));
