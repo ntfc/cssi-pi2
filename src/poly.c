@@ -50,104 +50,46 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   return c;
 }
 
-/*// TODO: reorganize this. poly_alloc is being called wrong
-// right-to-left comb method
-Poly* poly_mult(const Poly *a, const Poly *b) {
-  if(a->t != b->t) {
-    fprintf(stderr, "ERRO poly_mult\n");
-    return 0;
-  }
-  uint16_t t = a->t;
-  uint16_t m = a->m;
-  uint16_t c_words = 2*t - 1; // number of words in C
-  uint16_t c_max_deg = 2*m; // C is of degree at most m-1 // TODO: see this m-1
-  uint8_t k, i = 0;
-  uint16_t j, actual_j;
-
-  Poly *c = poly_alloc(c_max_deg, c_words);
-  Poly *B = poly_alloc(b->m, b->t);
-  
-  for(i = 0; i < t; i++)
-    B->vec[i] = b->vec[i];
-  
-  for(k = 0; k < W; k++) {
-    for(j = 0; j < t; j++) {
-      // in our representation, (t - j) - 1 is the same as j in the right-to-left comb method
-      actual_j = (t - j) - 1;
-      uint8_t kthBit = binary_get_bit(a->vec[actual_j], k);
-      if(kthBit == 1) {
-        // TODO: find a way to not use poly_alloc for newB, but instead use only the B
-        Poly *newB = poly_alloc(c_max_deg, c_words);
-        // put the B in newB
-        for(i = 0; i < t; i++)
-          newB->vec[i + (c_words - t)] = B->vec[i];
-        
-        // add j words to newB == shift j*W
-        uint16_t toShift = j*W;
-
-        while(toShift > 0) {
-          newB = poly_shift_left(newB);
-          toShift--;
-        }
-        // add newB to C. save to tmp in order to free old C
-        Poly *tmp = poly_add(c, newB);
-        poly_free(c);
-        c = tmp;
-        // free newB
-        poly_free(newB);
-      }
-    }
-    if(k != (W-1)) {
-      B = poly_shift_left(B);
-    }
-  }
-  // free B
-  poly_free(B);
-  //c->vec[0] &= (0xFFFFFFFF << c->s);
-  return c;
-}*/
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
   if(a->m != a->m || a->t != b->t) {
     fprintf(stderr, "ERRO poly_mult\n");
     return 0;
   }
-
+  uint16_t j, i;
+  uint8_t k;
   uint16_t t = a->t;
   uint16_t m = a->m;
   uint16_t c_max_degree = 2*m - 1; // C is of degree at most m-1
   uint16_t c_words = CEILING((double)c_max_degree / (double)W); // number of words in C
-  uint8_t c_unused = W*c_words - c_max_degree;
-  
-  uint16_t j_index, j, i;
-  uint8_t k;
-  
+  uint8_t c_unused = W*c_words - c_max_degree;  
   Poly *c = poly_alloc(c_max_degree, c_words);
-  
+  // B is a copy of b, but with one more word
   uint32_t *B = calloc(b->t + 1, sizeof(uint32_t));
   // b[0] is already zero'd
   for(j = 0; j < b->t; j++) {
     B[j+1] = b->vec[j];
   }
   for(k = 0; k < W; k++) {
-    for(j_index = 0; j_index < t; j_index++) {
-      // in our representation, (t - j_index) - 1 is the same as j in the right-to-left comb method
-      j = (t - j_index) - 1;
+    for(j = 0; j < t; j++) {
       // get k-th bit of A[j]
-      if(binary_get_bit(a->vec[j], k) == 1) {
-        i = j_index;
-        while((i < c_words) && ((i - j_index) <= t)) {
-          // i == A[(c_words - i) - 1]
-          c->vec[(c_words - i) - 1] ^= B[((b->t + 1) - (i - j_index)) - 1];
+      if(binary_get_bit(a->vec[GET_WORD_INDEX(a->t, j)], k) == 1) {
+        i = j;
+        // C{j} = C{j} + B
+        while((i < c_words) && ((i - j) <= t)) {
+          // C[i] = C[i] ^ B[i - j]
+          c->vec[GET_WORD_INDEX(c_words, i)] ^= B[GET_WORD_INDEX(b->t + 1, i - j)];
           i++;
         }
       }
     }
     if(k != W - 1) {
+      // B = B * x
       binary_array_shift_left(B, t+1);
     }
   }
-  
+  // free B
+  free(B);
   return c;
 }
 

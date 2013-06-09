@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-// returns the i-th word from an array
-#define GET_WORD_INDEX(t,i) (t - i) - 1
+// returns the i-th word from an array with t-words, according to our representation
+#define GET_WORD_INDEX(t,i) ((( t ) - ( i )) - 1)
 
 
 // TODO: more polynomial info

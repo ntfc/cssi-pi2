@@ -120,8 +120,10 @@ void test_mult(const Poly *f) {
   printf("a=");poly_print_poly(a);
   printf("b=");poly_print_poly(b);
   printf("a*b=");poly_print_poly(c);
-  free(a);
-  free(b);
+
+  poly_free(a);
+  poly_free(b);
+  poly_free(c);
 }
 
 void test_mod(const Poly *f) {
@@ -179,6 +181,7 @@ int main() {
   
   // TODO: this challenge produces a pimapping with only 14 coeffs
   //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
+  
   
   test_mult(f);
   //test_mod(f);
