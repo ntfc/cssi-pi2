@@ -300,10 +300,12 @@ Poly* poly_mod(const Poly *a, const Poly *f) {
     word = floor((double)i / (double)W);
     bit = W - (i - (word * W)) - 1;
     if(binary_get_bit(C[GET_WORD_INDEX(a->t, word)], bit) == 1) {
+      // TODO: sera que de cada vez que entra e mesmo porque c_i = 1?
       j = floor((double)(i - f->m) / (double)W);
       k = (i - f->m) - (W * j);
       j_aux = j;
       while( (j_aux < a->t) && ((j_aux - j) <= f->t)) {
+        // TODO: verificar que o resultado do XOR esta realmente certo
         // C{j_aux} = C{j_aux} ^ u[k]
         C[GET_WORD_INDEX(a->t, j_aux)] ^= u[k][GET_WORD_INDEX(f->t + 1, j_aux - j)];
         j_aux++;
@@ -312,9 +314,10 @@ Poly* poly_mod(const Poly *a, const Poly *f) {
   }
   printf("\n");
   
-  printf("C = ");
+  printf("C mod = ");
   for(i = 0; i < a->t; i++) {
     printf("0x%.8x ", C[i]);
+    //printf("bin(Integer('%.8x',16))[2:].zfill(32) + ");
   }
   printf("\n");
   //free(C);
