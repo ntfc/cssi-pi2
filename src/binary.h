@@ -28,6 +28,6 @@ unsigned char* binary_uint16_to_char(uint16_t w, unsigned char *dst);
 unsigned char* binary_uint8_to_char(uint8_t w, unsigned char *dst);
 uint8_t binary_get_bit(uint32_t w, uint8_t i);
 
-void binary_array_shift_left(uint32_t *a, uint8_t t);
-void binary_array_shift_right(uint32_t *a, uint8_t t);
+void binary_array_shift_left(uint32_t *a, uint16_t t);
+void binary_array_shift_right(uint32_t *a, uint16_t t);
 #endif

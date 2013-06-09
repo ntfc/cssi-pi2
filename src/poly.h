@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+// returns the i-th word from an array
+#define GET_WORD_INDEX(t,i) (t - i) - 1
+
+
 // TODO: more polynomial info
 typedef struct s_poly {
   uint16_t t;
@@ -19,7 +23,8 @@ uint16_t poly_degree(const Poly *p);
 Poly* poly_mult(const Poly *a, const Poly *b);
 // return a mod f. changes values of a
 Poly* poly_mod(Poly *a, const Poly *f);
-
+// fast mod reduction
+Poly* poly_fast_mod_reduction(Poly *a);
 uint16_t poly_hamming_weight(const Poly *a);
 
 Poly* poly_shift_left(Poly *a);

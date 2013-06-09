@@ -86,34 +86,41 @@ class BinaryPolynomial:
   # return the multiplication between a and b, not modulo!!
   def polyMult(self, a, b):
     if type(a) != str or type(b) != str:
-      print "Polynomials must be in binary form!"
-      return
+      #print "Polynomials must be in binary form! Converting to poly form.."
+      a = self.polyToBin(a)
+      b = self.polyToBin(b)
     if len(a) != len(b):
       print "Polynomials must be of same length"
       return
-    
-    # work with C as a list, because python string are immutable
-    m = (self.m*2) - 1 # c->m
-    t = ceil(m / self.W) # c->t
-    s = self.W*t - m
-    #C = list('0' * (t * self.W))
-    C = '0' * (t * self.W)
+    if len(a) > self.t*self.W:
+      print "polynomial must be of length {0}".format(self.t * self.W)
 
-    """ THIS MIGHT BE WRONG. C IMPLEMENTATION IS THE CORRECT ONE! """
+    a = a.zfill(self.t * self.W)
+    b = b.zfill(self.t * self.W)    
+    
+    m_2 = (self.m*2) - 1 # c->m. means that deg(c) <= c->m - 1
+    t_2 = ceil(m_2 / self.W) # c->t
+    s_2 = (self.W * t_2) - m_2 # c->s
+
+    ## work with C as a list, because python string are immutable
+    C = list('0' * (t_2  * self.W))
+    
+    # b needs an extra word because of the shifts
+    b = b.zfill(len(b) + self.W)
     for k in xrange(0, self.W):
       for j in xrange(0, self.t): 
         if int(self.getBit(a, j, k)) == 1:
-          """# bAux = b with j words appended to the right
-          bAux = self.addWordsToRight(b, j)
-          # difference of W-bit words between C and bAux
-          diffWords = floor((len(C) - len(bAux)) / self.W)
-          # cAux is the adition between C and bAux
-          cAux = self.polyAddition(''.join(C[(self.W * diffWords) : ]), bAux)
-          # concat disaligned C with calculated cAux
-          C = list(''.join(C[ : self.W * diffWords]) + cAux)"""
-          newB = self.addWordsToRight(b, j).zfill(t * self.W)
-          newB = ('0'*self.s) + (newB[self.s:])
-          C = ('0'*s) + (self.polyAddition(C, newB)[s:])
+          i = j
+          # since b has an extra word, we can have (i-j) <= self.t instead of < self.t
+          while (i < t_2) and (i-j <= self.t):
+            # C[i] = C[i] XOR B[i-j]
+            Ci = self.getWord(C, i)
+            Ci = bitwiseXor(Ci, self.getWord(b, i-j))
+            # save Ci to C[i]
+            end = len(C) - (self.W * i)
+            start = end - self.W
+            C[start : end] = list(Ci)
+            i += 1
       if k != (self.W - 1):
         b = self.shiftLeft(b)
     # return as str
@@ -121,13 +128,15 @@ class BinaryPolynomial:
     
   # shift left by one bit
   # all we need to to is delete the left-most bit and add one 0 to to the right
-  # IMPORTANT: when shifting left, we cannot use the s leftmost bits
   def shiftLeft(self, a):
     # delete the left-most bit
     toShift = list(a[1:]) # work with list instead of string
     toShift.append('0')
     # return as string
-    return ('0'*self.s) + (''.join(toShift))[self.s:]
+    ## IMPORTANT: when shifting left, we cannot use the s leftmost bits
+    #return ('0'*self.s) + (''.join(toShift))[self.s:]
+    
+    return ''.join(toShift)
     
   # add j W-bit words to the left of array of words c
   def addWordsToLeft(self, c, j):

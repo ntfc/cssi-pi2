@@ -50,7 +50,7 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   return c;
 }
 
-// TODO: reorganize this. poly_alloc is being called wrong
+/*// TODO: reorganize this. poly_alloc is being called wrong
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
   if(a->t != b->t) {
@@ -104,6 +104,50 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   // free B
   poly_free(B);
   //c->vec[0] &= (0xFFFFFFFF << c->s);
+  return c;
+}*/
+// right-to-left comb method
+Poly* poly_mult(const Poly *a, const Poly *b) {
+  if(a->m != a->m || a->t != b->t) {
+    fprintf(stderr, "ERRO poly_mult\n");
+    return 0;
+  }
+
+  uint16_t t = a->t;
+  uint16_t m = a->m;
+  uint16_t c_max_degree = 2*m - 1; // C is of degree at most m-1
+  uint16_t c_words = CEILING((double)c_max_degree / (double)W); // number of words in C
+  uint8_t c_unused = W*c_words - c_max_degree;
+  
+  uint16_t j_index, j, i;
+  uint8_t k;
+  
+  Poly *c = poly_alloc(c_max_degree, c_words);
+  
+  uint32_t *B = calloc(b->t + 1, sizeof(uint32_t));
+  // b[0] is already zero'd
+  for(j = 0; j < b->t; j++) {
+    B[j+1] = b->vec[j];
+  }
+  for(k = 0; k < W; k++) {
+    for(j_index = 0; j_index < t; j_index++) {
+      // in our representation, (t - j_index) - 1 is the same as j in the right-to-left comb method
+      j = (t - j_index) - 1;
+      // get k-th bit of A[j]
+      if(binary_get_bit(a->vec[j], k) == 1) {
+        i = j_index;
+        while((i < c_words) && ((i - j_index) <= t)) {
+          // i == A[(c_words - i) - 1]
+          c->vec[(c_words - i) - 1] ^= B[((b->t + 1) - (i - j_index)) - 1];
+          i++;
+        }
+      }
+    }
+    if(k != W - 1) {
+      binary_array_shift_left(B, t+1);
+    }
+  }
+  
   return c;
 }
 
@@ -211,13 +255,56 @@ uint32_t poly_get_r(const Poly *a) {
 }
 
 
-// reduction modulo x^233 + x^74 + 1
-Poly *poly_fast_mod_reduction(Poly *a) {
-  Poly *f = poly_alloc(233, 8);
+
+Poly* poly_fast_mod_reduction(Poly *a) {
+  // TODO: validate a->t and a->m!!!!
+  int16_t i = 0;
+  uint32_t T = 0;
+  uint16_t word_index;
+
+  for(i = a->t; i > (a->t / 2); i--) {
+    T = a->vec[GET_WORD_INDEX(a->t, i)];
+    printf("i = %u, a->t = %u\n", i, a->t);
+    printf("%u\n", GET_WORD_INDEX(a->t, i - 8));
+    // reduction modulo x^233 + x^74 + 1
+    // C[i-8]
+    /*word_index = GET_WORD_INDEX(a->t, i - 8);
+    a->vec[word_index] = a->vec[word_index] ^ (T << 23);
+    // C[i-7]
+    word_index = GET_WORD_INDEX(a->t, i - 7);
+    a->vec[word_index] = a->vec[word_index] ^ (T >> 9);
+    // C[i-5]
+    word_index = GET_WORD_INDEX(a->t, i - 5);
+    a->vec[word_index] = a->vec[word_index] ^ (T << 1);
+    // C[i-4]
+    word_index = GET_WORD_INDEX(a->t, i - 4);
+    a->vec[word_index] = a->vec[word_index] ^ (T >> 31);*/
+  }
+  /*T = a->vec[GET_WORD_INDEX(a->t, 7)] >> 9;
+  // C[0]
+  word_index = GET_WORD_INDEX(a->t, 0);
+  a->vec[word_index] = a->vec[word_index] ^ T;
+  // C[2]
+  word_index = GET_WORD_INDEX(a->t, 2);
+  a->vec[word_index] = a->vec[word_index] ^ (T << 10);
+  // C[3]
+  word_index = GET_WORD_INDEX(a->t, 3);
+  a->vec[word_index] = a->vec[word_index] ^ (T >> 22);
+  // C[7]
+  word_index = GET_WORD_INDEX(a->t, 7);
+  a->vec[word_index] = a->vec[word_index] & 0x1FF;
   
+  a->t /= 2;
+  a->m /= 2;
+  a->s = W*a->t - a->m;
   
+  uint32_t *new_poly = calloc(a->t, sizeof(uint32_t));
+  for(i = 0; i < a->t; i++) {
+    new_poly[GET_WORD_INDEX(a->t, i)] = a->vec[GET_WORD_INDEX((a->t * 2), i)];
+  }
+  a->vec = new_poly;*/
   
-  poly_free(f);
+  return a;
 }
 
 Poly* poly_mod(Poly *a, const Poly *f) {

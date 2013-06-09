@@ -113,12 +113,37 @@ void teste2() {
 }
 
 void test_mult(const Poly *f) {
+  Poly *a = poly_rand_uniform_poly(f);
+  Poly *b = poly_rand_uniform_poly(f);
   
+  Poly *c = poly_mult(a, b);
+  printf("a=");poly_print_poly(a);
+  printf("b=");poly_print_poly(b);
+  printf("a*b=");poly_print_poly(c);
+  free(a);
+  free(b);
 }
 
 void test_mod(const Poly *f) {
-  Poly *a = poly_rand_uniform_poly(f);
+  // x^233 + x^74 + 1
+  uint32_t new_f_coefs[] = {0x200, 0x0, 0x0, 0x0, 0x0, 0x400, 0x0, 0x1};
+  Poly *new_f = poly_alloc(233, 8);
+  poly_set_coeffs_from_uint32(new_f, new_f_coefs);
+  Poly *a = poly_rand_uniform_poly(new_f);
+  Poly *b = poly_rand_uniform_poly(new_f);
+  printf("new f=");poly_print_poly(new_f);
+  printf("a=");poly_print_poly(a);
+  printf("b=");poly_print_poly(b);
+  
+  Poly *c = poly_mult(a, b);
+  printf("c=");poly_print_poly(c);
+  //c = poly_fast_mod_reduction(c);
+  
+  //printf("c mod=");poly_print_poly(c);
   poly_free(a);
+  poly_free(b);
+  poly_free(c);
+  poly_free(new_f);
 }
 
 void test_lapin(const Poly *f) {
@@ -155,7 +180,8 @@ int main() {
   // TODO: this challenge produces a pimapping with only 14 coeffs
   //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
   
-  test_mod(f);
+  test_mult(f);
+  //test_mod(f);
   //test_lapin(f);
 
 
