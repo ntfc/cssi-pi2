@@ -1,5 +1,6 @@
 #include <stdio.h> // TODO: remove
 #include <stdlib.h>
+#include <math.h>
 #include "lapin.h"
 #include "random.h"
 #include "binary.h"
@@ -8,7 +9,8 @@
 // n: security parameter in bits
 // NOTE: Challenge must be free'd in the end
 Challenge challenge_generate(uint8_t sec_param) {
-  uint8_t words = CEILING(((double)sec_param/(double)8) / (double)sizeof(uint32_t)); // convert SEC_PARAM to bytes
+  //uint8_t words = CEILING(((double)sec_param/(double)8) / (double)sizeof(uint32_t)); // convert SEC_PARAM to bytes
+  uint8_t words = ceil(((double)sec_param/(double)8) / (double)sizeof(uint32_t)); // convert SEC_PARAM to bytes
   Challenge c = calloc(words, sizeof(uint32_t));
   uint8_t i = 0;
   
@@ -33,7 +35,8 @@ Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_para
   int8_t j = 0, k = 0;
   uint8_t cj;
   Poly *p;
-  uint8_t words = CEILING(((double)sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
+  //uint8_t words = CEILING(((double)sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
+  uint8_t words = ceil(((double)sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
 
   // tmp copy of c
   Challenge tmpC = calloc(words, sizeof(*c)); // TODO: does it make sense?

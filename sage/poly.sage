@@ -145,7 +145,13 @@ class BinaryPolynomial:
     # work with lists
     c = list(c)
     for i in xrange((2 * self.m) - 2, self.m - 1, -1):
+      """ alternative way. use this in C """
+      word = floor(i / self.W)
+      bit = self.W - (i - (word * self.W)) - 1
+      """if int(self.getWord(c, word)[bit]) == 1:"""
       if int(c[(len(c) - i) - 1]) == 1:
+        #print "Word = {0}, bit = {1}".format(word, bit)
+        #print self.getWord(c, word)[(self.W - bit) - 1]
         j = floor((i - self.m) / self.W)
         k = (i - self.m) - (self.W * j)
         j_aux = j
@@ -168,10 +174,7 @@ class BinaryPolynomial:
     # delete the left-most bit
     toShift = list(a[1:]) # work with list instead of string
     toShift.append('0')
-    # return as string
-    ## IMPORTANT: when shifting left, we cannot use the s leftmost bits
-    #return ('0'*self.s) + (''.join(toShift))[self.s:]
-    
+    # return as string    
     return ''.join(toShift)
     
   # add j W-bit words to the left of array of words c
