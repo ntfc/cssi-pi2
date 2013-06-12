@@ -1,11 +1,8 @@
-#TODO:
-#falta o q - random_element(q)
-#o mod nao esta direito
 
 
-def genMatrix(n,m):
-	matx = MatrixSpace(ZZ, n, m)
-	return matx.random_element()
+def genMatrix(n,m,q):
+	matx = random_matrix(ZZ, n, m, x=0, y=q)
+	return matx
 
 
 def matrixMult(a, s, q):
@@ -24,7 +21,7 @@ def matrixAdd(a, s):
 
 def genVectorY(sigma, m):
 	dist = RealDistribution('gaussian', sigma)
-	randvector = random_vector(m)
+	randvector = random_vector(ZZ, m)
 	sumpZ = sum(map(lambda x : dist.distribution_function(x), randvector))
 	randvector = randvector.apply_map(lambda x: dist.get_random_element()/sumpZ)
 	return randvector.transpose()
