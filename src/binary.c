@@ -121,6 +121,19 @@ void binary_array_shift_left(uint32_t *a, uint16_t t) {
   a[i] <<= 1;
 }
 
+// b = (a << 1)
+void binary_array_shift_left2(const uint32_t *a, uint16_t t, uint32_t* b) {
+  int16_t i = 0;
+  if(b == NULL) {
+    fprintf(stderr, "ERROR: b is NULL\n");
+    return;
+  }
+  for(i = 0; i < t; i++) {
+    b[i] = a[i];
+  }
+  binary_array_shift_left(b, t);
+}
+
 // t: array size
 void binary_array_shift_right(uint32_t *a, uint16_t t) {
   int16_t i = 0;

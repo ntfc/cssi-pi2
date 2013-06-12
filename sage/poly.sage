@@ -147,6 +147,7 @@ class BinaryPolynomial:
     for i in xrange((2 * self.m) - 2, self.m - 1, -1):
       """ alternative way. use this in C """
       word = floor(i / self.W)
+      #word = ceil(((t_2 * self.W) - i) / self.W) - 1
       bit = self.W - (i - (word * self.W)) - 1
       """if int(self.getWord(c, word)[bit]) == 1:"""
       if int(c[(len(c) - i) - 1]) == 1:

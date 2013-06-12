@@ -75,12 +75,12 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   for(k = 0; k < W; k++) {
     for(j = 0; j < t; j++) {
       // get k-th bit of A[j]
-      if(binary_get_bit(a->vec[GET_WORD_INDEX(a->t, j)], k) == 1) {
+      if(binary_get_bit(a->vec[GET_VEC_WORD_INDEX(a->t, j)], k) == 1) {
         i = j;
         // C{j} = C{j} + B
         while((i < c_words) && ((i - j) <= t)) {
           // C[i] = C[i] ^ B[i - j]
-          c->vec[GET_WORD_INDEX(c_words, i)] ^= B[GET_WORD_INDEX(b->t + 1, i - j)];
+          c->vec[GET_VEC_WORD_INDEX(c_words, i)] ^= B[GET_VEC_WORD_INDEX(b->t + 1, i - j)];
           i++;
         }
       }
@@ -151,6 +151,46 @@ Poly* poly_clone(const Poly *p, uint16_t new_t) {
   return c;
 }
 
+// TODO: return in case of error. Use errno
+uint8_t poly_get_bit(const Poly *a, uint32_t b) {
+  if(b >= (a->t * W)) {
+    fprintf(stderr, "ERROR: bit %u is out of range (max: %u - 1)\n", b, (a->t * W));
+    return 2;
+  }
+  uint16_t word = GET_WORD_FROM_BIT(b);
+  uint8_t bit = b % W; // bit position in the word
+  return binary_get_bit(a->vec[GET_VEC_WORD_INDEX(a->t, word)], bit);
+}
+
+Poly* poly_get_r(const Poly *f) {
+  // TODO: f must be irreducible
+  uint16_t i = 0, j = 0;
+  // position of the MSB set in f->vec
+  uint16_t m = binary_degree(f->vec[0]);
+  
+  uint32_t first_r_word = f->vec[0] ^ (1 << m);
+  
+  Poly *r = NULL;
+  if(first_r_word != 0) {
+    // r has f->t words
+    r = poly_clone(f, f->t);
+    r->vec[0] = first_r_word;
+  }
+  else {
+    // traverse f->vec until we find the last word of r
+    for(i = 1; i < f->t && (f->vec[i] == 0); i++)
+      ;
+    // get first word of r
+    m = binary_degree(f->vec[i]);
+    // create poly = r(x)
+    r = poly_alloc(m, f->t - i);
+    for(j = i; j < f->t; j++) {
+      r->vec[j - i] = f->vec[j];
+    }
+  }
+  return r;
+}
+
 // coefs: array representing the coefficients
 // note: allocates a new p->vec only if necessary
 void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs) {
@@ -197,35 +237,35 @@ Poly* poly_fast_mod_reduction(Poly *a) {
   uint16_t word_index;
 
   for(i = a->t; i > (a->t / 2); i--) {
-    T = a->vec[GET_WORD_INDEX(a->t, i)];
+    T = a->vec[GET_VEC_WORD_INDEX(a->t, i)];
     printf("i = %u, a->t = %u\n", i, a->t);
-    printf("%u\n", GET_WORD_INDEX(a->t, i - 8));
+    printf("%u\n", GET_VEC_WORD_INDEX(a->t, i - 8));
     // reduction modulo x^233 + x^74 + 1
     // C[i-8]
-    /*word_index = GET_WORD_INDEX(a->t, i - 8);
+    /*word_index = GET_VEC_WORD_INDEX(a->t, i - 8);
     a->vec[word_index] = a->vec[word_index] ^ (T << 23);
     // C[i-7]
-    word_index = GET_WORD_INDEX(a->t, i - 7);
+    word_index = GET_VEC_WORD_INDEX(a->t, i - 7);
     a->vec[word_index] = a->vec[word_index] ^ (T >> 9);
     // C[i-5]
-    word_index = GET_WORD_INDEX(a->t, i - 5);
+    word_index = GET_VEC_WORD_INDEX(a->t, i - 5);
     a->vec[word_index] = a->vec[word_index] ^ (T << 1);
     // C[i-4]
-    word_index = GET_WORD_INDEX(a->t, i - 4);
+    word_index = GET_VEC_WORD_INDEX(a->t, i - 4);
     a->vec[word_index] = a->vec[word_index] ^ (T >> 31);*/
   }
-  /*T = a->vec[GET_WORD_INDEX(a->t, 7)] >> 9;
+  /*T = a->vec[GET_VEC_WORD_INDEX(a->t, 7)] >> 9;
   // C[0]
-  word_index = GET_WORD_INDEX(a->t, 0);
+  word_index = GET_VEC_WORD_INDEX(a->t, 0);
   a->vec[word_index] = a->vec[word_index] ^ T;
   // C[2]
-  word_index = GET_WORD_INDEX(a->t, 2);
+  word_index = GET_VEC_WORD_INDEX(a->t, 2);
   a->vec[word_index] = a->vec[word_index] ^ (T << 10);
   // C[3]
-  word_index = GET_WORD_INDEX(a->t, 3);
+  word_index = GET_VEC_WORD_INDEX(a->t, 3);
   a->vec[word_index] = a->vec[word_index] ^ (T >> 22);
   // C[7]
-  word_index = GET_WORD_INDEX(a->t, 7);
+  word_index = GET_VEC_WORD_INDEX(a->t, 7);
   a->vec[word_index] = a->vec[word_index] & 0x1FF;
   
   a->t /= 2;
@@ -234,99 +274,95 @@ Poly* poly_fast_mod_reduction(Poly *a) {
   
   uint32_t *new_poly = calloc(a->t, sizeof(uint32_t));
   for(i = 0; i < a->t; i++) {
-    new_poly[GET_WORD_INDEX(a->t, i)] = a->vec[GET_WORD_INDEX((a->t * 2), i)];
+    new_poly[GET_VEC_WORD_INDEX(a->t, i)] = a->vec[GET_VEC_WORD_INDEX((a->t * 2), i)];
   }
   a->vec = new_poly;*/
   
   return a;
 }
 
-Poly* poly_mod(const Poly *a, const Poly *f) {
-  // TODO: validate a->t and a->m
-  uint16_t i, i_aux;
-  uint8_t j, k, bit, j_aux;
-  uint16_t word;
+Poly* poly_mod(const Poly *c, const Poly *f, uint32_t **table) {
+  Poly *r = poly_get_r(f);
   
-  uint32_t *C = calloc(a->t, sizeof(uint32_t));
-  // copy a->vec to C
-  for(i = 0; i < a->t; i++) {
-    C[i] = a->vec[i];
+  if(table == NULL) {
+    // pre-compute table
+    table = poly_compute_mod_table(r);
   }
   
   
-  ////////////////////////// start pre-computation
-  uint32_t *(u[W]);
-  // calculate array
-  for(i = 0; i < W; i++) {
-    if(i == 0) {
-      // alloc for u[0] = f->vec[0] + 1 word
-      u[0] = (uint32_t*)calloc(f->t + 1, sizeof(uint32_t));
-      //printf("u[0] = 0x%.8x ", u[0][0]);
-      // copy f->vec to u[0]
-      for(i_aux = 1; i_aux <= f->t; i_aux++) {
-        u[0][i_aux] = f->vec[i_aux - 1];
-        //printf("0x%.8x ", u[i][i_aux]);
-      }
-      //printf("\n");
-    }
-    else {
-      // alloc for u[i] = f->vec[i] << i
-      u[i] = calloc(f->t + 1, sizeof(uint32_t));
-      // ATTENTION: u[i] has one more word than f->vec
-      for(i_aux = 0; i_aux <= f->t; i_aux++) {
-        u[i][i_aux] = u[i - 1][i_aux];
-      }
-      //binary_array_shift_left(u[i], f->t + 1);
-      // TODO: why? do the shift here, otherwise valgrind crashes
-      int16_t ii = 0;
-      for(ii = 0; ii < ((f->t + 1) - 1); ii++)
-        u[i][ii] = (u[i][ii] << 1) | (u[i][ii+1] >> (W - 1));
-      u[i][ii] <<= 1;
-      /*// prints
-      printf("u[%u] = ", i);
-      for(i_aux = 0; i_aux <= f->t; i_aux++) {
-        printf("0x%.8x ", u[i][i_aux]);
-      }
-      printf("\n");*/
-    }
+  uint16_t j, i;
+  uint8_t k;
+  uint16_t m = f->m;
+  uint16_t j_aux;
+  
+  // TODO: validate c->t and c->m  
+  Poly *C = poly_alloc(c->m , c->t);
+  
+  // copy c->vec to C->vec
+  for(i = 0; i < c->t; i++) {
+    C->vec[i] = c->vec[i];
   }
-  ////////////////////////// end of pre-computation
-  printf("C = ");
-  for(i = 0; i < a->t; i++) {
-    printf("0x%.8x ", C[i]);
-  }
-  printf("\n");
+  
   for(i = (2 * f->m) - 2; i >= f->m; i--) {
-    word = floor((double)i / (double)W);
-    bit = W - (i - (word * W)) - 1;
-    if(binary_get_bit(C[GET_WORD_INDEX(a->t, word)], bit) == 1) {
-      // TODO: sera que de cada vez que entra e mesmo porque c_i = 1?
-      j = floor((double)(i - f->m) / (double)W);
-      k = (i - f->m) - (W * j);
+    uint8_t ci = poly_get_bit(C, i);
+    if(ci == 1) {
+      j = floor(((double)i - (double)m) / (double)W);
+      k = (i - m) - (W * j);
+   
       j_aux = j;
-      while( (j_aux < a->t) && ((j_aux - j) <= f->t)) {
-        // TODO: verificar que o resultado do XOR esta realmente certo
+      while( (j_aux < c->t) && ((j_aux - j) <= r->t)) {
         // C{j_aux} = C{j_aux} ^ u[k]
-        C[GET_WORD_INDEX(a->t, j_aux)] ^= u[k][GET_WORD_INDEX(f->t + 1, j_aux - j)];
+        C->vec[GET_VEC_WORD_INDEX(C->t, j_aux)] ^= table[k][GET_VEC_WORD_INDEX(r->t + 1, j_aux - j)];
         j_aux++;
       }
     }
   }
-  printf("\n");
-  
-  printf("C mod = ");
-  for(i = 0; i < a->t; i++) {
-    printf("0x%.8x ", C[i]);
-    //printf("bin(Integer('%.8x',16))[2:].zfill(32) + ");
+
+  Poly *cMod = poly_alloc(f->m, f->t);
+  for(i = 0; i < cMod->t; i++) {
+    cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
   }
-  printf("\n");
-  //free(C);
+  cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
   
-  /*Poly *b = poly_alloc(f->m, f->t);
+  poly_free(r);
+  poly_free(C);
+  return cMod;
+}
+
+uint32_t** poly_compute_mod_table(const Poly *r) {
+  uint8_t k = 0;
+  uint16_t i = 0;
+  uint32_t **table; // 2-dimension array = table
+  // TODO: confirm this number!!
+  uint16_t t = r->t + 1; // number of word in u_k
+  table = malloc(sizeof(uint32_t*) * W);
   
-  for(i = 0; i < b->t; i++) {
-    b->vec[i] = C[(f->t - i) - 1];
+  uint32_t *u0 = calloc(t, sizeof(uint32_t));
+  // copy r->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
+  for(i = 1; i < t; i++) {
+    u0[1] = r->vec[i-1];
   }
-  //b->vec[0] &= (0xffffffff >> b->s);*/
-  return a;
+  table[0] = u0;
+  
+  k = 1;
+  while(k < W) {
+    table[k] = calloc(t, sizeof(uint32_t));
+    binary_array_shift_left2(table[k - 1], t, table[k]);
+    k++;
+  }
+  return table;
+}
+
+// t: length of table
+void poly_free_table(uint32_t **t, uint8_t n) {
+  uint8_t i = 0;
+  if(t != NULL) {
+    for(i = 0; i < n; i++) {
+      if(t[i] != NULL) {
+        free(t[i]);
+      }
+    }
+    free(t);
+  }
+  
 }

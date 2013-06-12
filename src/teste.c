@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "random.h"
 #include "poly.h"
@@ -65,7 +66,7 @@ void poly_print_poly(Poly *f) {
 
 void teste2() {
 
-  unsigned char w[32];
+  /*unsigned char w[32];
   int i = 0;
   Poly *a = poly_alloc(128, 4);
   Poly *b = poly_alloc(128, 4);
@@ -109,7 +110,17 @@ void teste2() {
   poly_print_poly(a1); poly_print_poly(a2);
   printf("Before mod=");poly_print_poly(c1);
   c1 = poly_mod(c1, f);
-  printf(" After mod=");poly_print_poly(c1);
+  printf(" After mod=");poly_print_poly(c1);*/
+}
+
+void test_get_bit(const Poly *f) {
+  printf("bit 600 = %u\n", poly_get_bit(f, 600));
+  printf("bit 544 = %u\n", poly_get_bit(f, 544));
+  printf("bit 532 = %u\n", poly_get_bit(f, 532));
+  printf("bit 500 = %u\n", poly_get_bit(f, 500));
+  printf("bit 2 = %u\n", poly_get_bit(f, 2));
+  printf("bit 1 = %u\n", poly_get_bit(f, 1));
+  printf("bit 0 = %u\n", poly_get_bit(f, 0));
 }
 
 void test_mult(const Poly *f) {
@@ -138,11 +149,99 @@ void test_mod(const Poly *f) {
   
   Poly *c = poly_mult(a, b);
   printf("c=");poly_print_poly(c);
-  Poly *d = poly_mod(c, f);
+  uint32_t **table = NULL;
+  Poly *d = poly_mod(c, f, table);
   printf("c mod=");poly_print_poly(d);
   //poly_free(a);
   //poly_free(b);
   //poly_free(c);
+}
+
+// f must be the irreducible polynomial
+uint32_t** compute_table(const Poly *r) {
+  uint8_t k = 0;
+  uint16_t i = 0;
+  uint32_t **table; // 2-dimension array = table
+  uint16_t t = r->t + 1; // number of word in u_k
+  table = malloc(sizeof(uint32_t*) * W);
+  
+  uint32_t *u0 = calloc(t, sizeof(uint32_t));
+  // copy r->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
+  for(i = 1; i < t; i++) {
+    u0[1] = r->vec[i-1];
+  }
+  table[0] = u0;
+  
+  k = 1;
+  while(k < W) {
+    printf("Computing x^%u . r(x)\n", k);
+    table[k] = calloc(t, sizeof(uint32_t));
+    binary_array_shift_left2(table[k - 1], t, table[k]);
+    k++;
+  }
+  return table;
+}
+
+void test_mod2(const Poly *f) {
+  Poly *r = poly_get_r(f);
+  printf("r=");poly_print_poly(r);
+  
+  // compute table. save it for future use
+  //uint32_t **table = compute_table(r);
+  uint32_t **table = poly_compute_mod_table(r);
+  uint16_t i = 0;
+  
+  
+  Poly *a = poly_rand_uniform_poly(f);
+  Poly *b = poly_rand_uniform_poly(f);
+  //printf("a=");poly_print_poly(a);
+  //printf("b=");poly_print_poly(b);
+  
+  Poly *c = poly_mult(a, b);
+  printf("c=");poly_print_poly(c);
+  
+  Poly *C = poly_alloc(c->m , c->t);
+  
+  // copy c->vec to C->vec
+  for(i = 0; i < c->t; i++) {
+    C->vec[i] = c->vec[i];
+  }
+  printf("C=");poly_print_poly(C);
+  
+  uint16_t j;
+  uint8_t k;
+  uint16_t m = f->m;
+  uint16_t j_aux;
+  for(i = (2 * f->m) - 2; i >= f->m; i--) {
+    uint8_t ci = poly_get_bit(C, i);
+    if(ci == 1) {
+      j = floor(((double)i - (double)m) / (double)W);
+      k = (i - m) - (W * j);
+      //printf("j = %u, i = %u\n", j, k);
+      j_aux = j;
+      while( (j_aux < c->t) && ((j_aux - j) <= r->t)) {
+        // C{j_aux} = C{j_aux} ^ u[k]
+        C->vec[GET_VEC_WORD_INDEX(C->t, j_aux)] ^= table[k][GET_VEC_WORD_INDEX(r->t + 1, j_aux - j)];
+        j_aux++;
+      }
+    }
+  }
+  printf("C almost mod=");poly_print_poly(C);
+  Poly *cMod = poly_alloc(a->m, a->t);
+  for(i = 0; i < cMod->t; i++) {
+    cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
+  }
+  cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
+  printf("c mod f=");poly_print_poly(cMod);
+  poly_free(cMod);
+  
+  
+  poly_free_table(table, W);
+  poly_free(r);
+  poly_free(a);
+  poly_free(b);
+  poly_free(c);
+  poly_free(C);
 }
 
 void test_lapin(const Poly *f) {
@@ -174,6 +273,7 @@ int main() {
   
   Poly *f = poly_alloc(532, 17);
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
+  
   printf("f=");poly_print_poly(f);
   
   // TODO: this challenge produces a pimapping with only 14 coeffs
@@ -182,6 +282,7 @@ int main() {
   
   //test_mult(f);
   test_mod(f);
+  //test_mod2(f);
   //test_lapin(f);
 
 

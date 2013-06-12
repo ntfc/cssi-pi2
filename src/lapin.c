@@ -106,7 +106,7 @@ Challenge lapin_reader_step1(uint8_t sec_param){
 //calculate z
 void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t sec_param) {
   
-  *r = poly_rand_uniform_poly(f);
+  /**r = poly_rand_uniform_poly(f);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
   printf("e=");poly_print_poly(e);
   
@@ -116,7 +116,7 @@ void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
   // r * (s * pi(c) + s') + e
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
   
-  printf("s*pi=");poly_print_poly(sTimesPi);
+  printf("s*pi=");poly_print_poly(sTimesPi);*/
   //sTimesPi = poly_mod(sTimesPi, f);
   /*Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
   printf("s*pi + s1=");poly_print_poly(sTimesPiPlusS1);
@@ -135,15 +135,15 @@ void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
   //*z = poly_mod(poly_add(poly_mod(poly_mult(*r, poly_add(poly_mod(poly_mult(key->s, pi), f), key->s1)), f), e), f);
   
   // free
-  poly_free(pi);
-  poly_free(e);
+  //poly_free(pi);
+  //poly_free(e);
 }
 
 //verification
 int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t sec_param) {
   //TODO: IF R PERTENCE A R^*
   
-  Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
+  /*Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
   
   Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
   Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
@@ -168,7 +168,7 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const P
   poly_free(pi);
   poly_free(e1);
   
-  return ret;
+  return ret;*/
 }
 
 

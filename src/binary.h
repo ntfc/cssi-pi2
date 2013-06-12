@@ -29,5 +29,6 @@ unsigned char* binary_uint8_to_char(uint8_t w, unsigned char *dst);
 uint8_t binary_get_bit(uint32_t w, uint8_t i);
 
 void binary_array_shift_left(uint32_t *a, uint16_t t);
+void binary_array_shift_left2(const uint32_t *a, uint16_t t, uint32_t* b); // TODO: change name..
 void binary_array_shift_right(uint32_t *a, uint16_t t);
 #endif
