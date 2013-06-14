@@ -30,7 +30,7 @@ def genVectorY(sigma, m):
 #Knuth-Yao algotithm for distribution
 
 
-#isto é para fazer sobre q ou m??!!!!!
+#TODO:isto é para fazer sobre q ou m??!!!!!
 
 #somatorio de p(Zm)
 def sumPZ(sigma, m):
@@ -54,36 +54,53 @@ def genListProb(sigma, m):
 	return binaryList
 
 #criar tabela YAO
+#TODO:ver se isto ta certo com o exemplo pequeno que tem no paper
 def genYAOTable(sigma, m):
 	binaryList = genListProb(sigma, m)
-	
+
 	#binaryList[i][x] ; i = indice da lista de probabilidades; x = caracter da probabilidade
-	tableYAO = matrix(ZZ, len(binaryList)+1, len(binaryList[0])-2)
+
+	#tableYAO = matrix(ZZ, len(binaryList)+1, len(binaryList[0])-2)
+	#isto em vez do de cima por causa das matrizes ser imutaveis
+	tableYAO = vector(ZZ, len(binaryList)+1)
+	tableYAO = map(lambda x: vector(ZZ, len(binaryList[0])-2), tableYAO)
 	#funçao que vai fazer map na tabela para por tudo a -1
 	f(x) = -1
-	tableYAO.apply_map(f)
+	for b in range(len(tableYAO)):
+		tableYAO[b] = tableYAO[b].apply_map(f)
 
 	#ciclo que vai meter os valores na tabela
 	#quando encontrar -1 vai para coluna seguinte
 
 
+	#para tirar o 0.-- usei o j-2 para alinhar isso
 
+	for i in range(len(binaryList)-1):
+		for j in range(len(binaryList[i])-1):
+			if(binaryList[i][j] == '1'):
+				#preserva -1 no principio da coluna
+				p = 1
+				#se for o ultimo nivel nao tem -1 no principio da coluna
+				if j == len(binaryList[i])-1:
+					p = 0
+				#no caso da coluna ainda estar vazia
+				if tableYAO[p][j-2] == -1:
+					tableYAO[p][j-2] = i
+				#no caso de ja ter valores vai se para p primeiro vazio
+				else:
+					while tableYAO[p][j-2] != -1:
+						p+=1
+					tableYAO[p][j-2] = i
 
-	return tableYAO	
-
-
-
-
-
-
-
-
-
-
-
-
+	return matrix(tableYAO)	
 	
 
+def randomBit():
+	return Integer(getrandbits(1))
+
+#gerar vector Y
+def sampleYAO(sigma, m):
+	
 
 
 
