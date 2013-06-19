@@ -281,14 +281,11 @@ Poly* poly_fast_mod_reduction(Poly *a) {
   return a;
 }
 
-Poly* poly_mod(const Poly *c, const Poly *f, uint32_t **table) {
-  Poly *r = poly_get_r(f);
-  
-  if(table == NULL) {
+Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
+  if(*table == NULL) {
     // pre-compute table
-    table = poly_compute_mod_table(r);
+    *table = poly_compute_mod_table(f);
   }
-  
   
   uint16_t j, i;
   uint8_t k;
@@ -308,39 +305,49 @@ Poly* poly_mod(const Poly *c, const Poly *f, uint32_t **table) {
     if(ci == 1) {
       j = floor(((double)i - (double)m) / (double)W);
       k = (i - m) - (W * j);
-   
+      
       j_aux = j;
-      while( (j_aux < c->t) && ((j_aux - j) <= r->t)) {
-        // C{j_aux} = C{j_aux} ^ u[k]
-        C->vec[GET_VEC_WORD_INDEX(C->t, j_aux)] ^= table[k][GET_VEC_WORD_INDEX(r->t + 1, j_aux - j)];
+      while( (j_aux < C->t) && ((j_aux - j) <= f->t)) {
+         // C{j_aux} = C{j_aux} ^ u[k]
+        uint16_t ci_i = GET_VEC_WORD_INDEX(C->t, j_aux);
+        uint32_t ci = C->vec[ci_i];
+        
+        uint32_t uk_k = GET_VEC_WORD_INDEX(f->t+1, j_aux - j);
+        uint32_t uk = (*table)[k][uk_k];
+        // C[j_aux] = C[j_aux] ^ u[k][j_aux - j]
+        C->vec[ci_i] = ci ^ uk;
+        
         j_aux++;
       }
     }
+    
   }
 
   Poly *cMod = poly_alloc(f->m, f->t);
   for(i = 0; i < cMod->t; i++) {
     cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
   }
-  cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
+  // not necessary
+  //cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
   
-  poly_free(r);
   poly_free(C);
   return cMod;
 }
 
-uint32_t** poly_compute_mod_table(const Poly *r) {
+// this table uses f(x) instead of r(x)
+// TODO: use r(x) instead of f(x)!!!!
+uint32_t** poly_compute_mod_table(const Poly *f) {
   uint8_t k = 0;
   uint16_t i = 0;
   uint32_t **table; // 2-dimension array = table
-  // TODO: confirm this number!!
-  uint16_t t = r->t + 1; // number of word in u_k
+  // one more word than f
+  uint16_t t = f->t + 1; // number of words in each u_k
   table = malloc(sizeof(uint32_t*) * W);
   
   uint32_t *u0 = calloc(t, sizeof(uint32_t));
-  // copy r->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
+  // copy f->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
   for(i = 1; i < t; i++) {
-    u0[1] = r->vec[i-1];
+    u0[i] = f->vec[i-1];
   }
   table[0] = u0;
   
@@ -350,12 +357,22 @@ uint32_t** poly_compute_mod_table(const Poly *r) {
     binary_array_shift_left2(table[k - 1], t, table[k]);
     k++;
   }
+  
+  // print table  
+  /*for(k = 0; k < W; k++) {
+    printf("u[%u] = ", k);
+    for(i = 0; i < t; i++) {
+      printf("0x%.8x ", table[k][i]);
+    }
+    printf("\n");
+  }*/
   return table;
 }
 
 // t: length of table
 void poly_free_table(uint32_t **t, uint8_t n) {
   uint8_t i = 0;
+  
   if(t != NULL) {
     for(i = 0; i < n; i++) {
       if(t[i] != NULL) {
