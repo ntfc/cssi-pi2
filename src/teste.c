@@ -194,8 +194,8 @@ void test_mod2(const Poly *f) {
   
   Poly *a = poly_rand_uniform_poly(f);
   Poly *b = poly_rand_uniform_poly(f);
-  //printf("a=");poly_print_poly(a);
-  //printf("b=");poly_print_poly(b);
+  printf("a=");poly_print_poly(a);
+  printf("b=");poly_print_poly(b);
   
   Poly *c = poly_mult(a, b);
   printf("c=");poly_print_poly(c);
@@ -244,6 +244,106 @@ void test_mod2(const Poly *f) {
   poly_free(C);
 }
 
+uint32_t** test_table(const Poly *r) {
+  uint8_t k = 0;
+  uint16_t i = 0;
+  uint32_t **table; // 2-dimension array = table
+  // TODO: confirm this number!!
+  uint16_t t = r->t + 1; // number of word in u_k
+  table = malloc(sizeof(uint32_t*) * W);
+  
+  uint32_t *u0 = calloc(t, sizeof(uint32_t));
+  // copy r->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
+  for(i = 1; i < t; i++) {
+    u0[1] = r->vec[i-1];
+  }
+  table[0] = u0;
+  
+  k = 1;
+  while(k < W) {
+    table[k] = calloc(t, sizeof(uint32_t));
+    binary_array_shift_left2(table[k - 1], t, table[k]);
+    k++;
+  }
+  return table;
+}
+
+void test_mod3(const Poly *f) {
+  // a = x^231 + x^230 + x^229 + x^227 + x^224 + x^221 + x^215 + x^213 + x^210 + x^209 + x^207 + x^206 + x^204 + x^200 + x^199 + x^198 + x^194 + x^193 + x^192 + x^191 + x^190 + x^188 + x^187 + x^183 + x^178 + x^171 + x^169 + x^167 + x^166 + x^164 + x^163 + x^162 + x^158 + x^156 + x^155 + x^152 + x^150 + x^146 + x^144 + x^143 + x^142 + x^141 + x^138 + x^137 + x^136 + x^135 + x^133 + x^130 + x^127 + x^125 + x^124 + x^123 + x^122 + x^121 + x^117 + x^115 + x^113 + x^110 + x^105 + x^104 + x^103 + x^102 + x^101 + x^98 + x^95 + x^93 + x^92 + x^91 + x^89 + x^87 + x^84 + x^82 + x^81 + x^80 + x^78 + x^75 + x^72 + x^69 + x^66 + x^65 + x^63 + x^62 + x^59 + x^58 + x^54 + x^51 + x^50 + x^47 + x^46 + x^43 + x^42 + x^40 + x^38 + x^36 + x^34 + x^32 + x^29 + x^28 + x^27 + x^26 + x^25 + x^19 + x^14 + x^11 + x^8 + x^5 + x^3 + x
+  uint16_t aCoeffs[108] = {1, 3, 5, 8, 11, 14, 19, 25, 26, 27, 28, 29, 32, 34, 36, 38, 40, 42, 43, 46, 47, 50, 51, 54, 58, 59, 62, 63, 65, 66, 69, 72, 75, 78, 80, 81, 82, 84, 87, 89, 91, 92, 93, 95, 98, 101, 102, 103, 104, 105, 110, 113, 115, 117, 121, 122, 123, 124, 125, 127, 130, 133, 135, 136, 137, 138, 141, 142, 143, 144, 146, 150, 152, 155, 156, 158, 162, 163, 164, 166, 167, 169, 171, 178, 183, 187, 188, 190, 191, 192, 193, 194, 198, 199, 200, 204, 206, 207, 209, 210, 213, 215, 221, 224, 227, 229, 230, 231 };
+  // b = x^232 + x^231 + x^230 + x^229 + x^225 + x^224 + x^222 + x^219 + x^218 + x^216 + x^215 + x^214 + x^213 + x^212 + x^211 + x^208 + x^206 + x^205 + x^204 + x^199 + x^198 + x^196 + x^194 + x^193 + x^192 + x^191 + x^190 + x^187 + x^184 + x^183 + x^181 + x^180 + x^178 + x^177 + x^174 + x^173 + x^172 + x^169 + x^168 + x^162 + x^160 + x^159 + x^158 + x^155 + x^153 + x^151 + x^150 + x^149 + x^148 + x^144 + x^139 + x^138 + x^137 + x^136 + x^134 + x^129 + x^125 + x^124 + x^123 + x^118 + x^117 + x^115 + x^113 + x^111 + x^109 + x^106 + x^102 + x^100 + x^99 + x^97 + x^95 + x^94 + x^93 + x^92 + x^87 + x^85 + x^84 + x^79 + x^78 + x^73 + x^70 + x^66 + x^65 + x^63 + x^60 + x^58 + x^57 + x^55 + x^54 + x^53 + x^51 + x^50 + x^49 + x^48 + x^47 + x^43 + x^42 + x^41 + x^39 + x^35 + x^34 + x^32 + x^31 + x^29 + x^28 + x^26 + x^25 + x^24 + x^22 + x^20 + x^19 + x^18 + x^17 + x^13 + x^9 + x^5 + x^4 + x^2
+  uint16_t bCoeffs[118] = {2, 4, 5, 9, 13, 17, 18, 19, 20, 22, 24, 25, 26, 28, 29, 31, 32, 34, 35, 39, 41, 42, 43, 47, 48, 49, 50, 51, 53, 54, 55, 57, 58, 60, 63, 65, 66, 70, 73, 78, 79, 84, 85, 87, 92, 93, 94, 95, 97, 99, 100, 102, 106, 109, 111, 113, 115, 117, 118, 123, 124, 125, 129, 134, 136, 137, 138, 139, 144, 148, 149, 150, 151, 153, 155, 158, 159, 160, 162, 168, 169, 172, 173, 174, 177, 178, 180, 181, 183, 184, 187, 190, 191, 192, 193, 194, 196, 198, 199, 204, 205, 206, 208, 211, 212, 213, 214, 215, 216, 218, 219, 222, 224, 225, 229, 230, 231, 232 };
+  Poly *a = poly_create_poly_from_coeffs(f, aCoeffs, 108);
+  Poly *b = poly_create_poly_from_coeffs(f, bCoeffs, 118);
+  Poly *c = poly_mult(a, b);
+  Poly *r = poly_get_r(f);
+  printf("a=");poly_print_poly(a);
+  printf("b=");poly_print_poly(b);
+  printf("c=");poly_print_poly(c);
+  printf("r=");poly_print_poly(r);
+  // pre-compute table
+  uint32_t **table = test_table(r);
+  
+  
+  uint16_t j, i;
+  uint8_t k;
+  uint16_t m = f->m;
+  uint16_t j_aux;
+  for(k = 0; k < W; k++) {
+    printf("u[%u] = ", k);
+    for(i = 0; i < r->t; i++) {
+      printf("0x%.8x ",table[k][i]);
+    }
+    printf("\n");    
+  }
+  // TODO: validate c->t and c->m  
+  Poly *C = poly_alloc(c->m , c->t);
+  
+  // copy c->vec to C->vec
+  for(i = 0; i < c->t; i++) {
+    C->vec[i] = c->vec[i];
+  }
+  
+  for(i = (2 * f->m) - 2; i >= f->m; i--) {
+    uint8_t ci = poly_get_bit(C, i);
+    if(ci == 1) {
+      j = floor(((double)i - (double)m) / (double)W);
+      
+      k = (i - m) - (W * j);
+      //printf("c->m = %u, c->t = %u, f->t = %u, r->t = %u\n", c->m, c->t, f->t, r->t);
+      
+   
+      j_aux = j;
+      while( (j_aux < c->t) && ((j_aux - j) <= f->t)) {
+ //print "C[{0}] = {1}, u[{2}] = {3}".format(j_aux, hex(Integer(ci,2)).zfill(len(ci)/4), k, hex(Integer(uk,2)).zfill(len(uk)/4))
+        // C{j_aux} = C{j_aux} ^ u[k]
+        uint16_t ci_i = GET_VEC_WORD_INDEX(C->t, j_aux);
+        uint32_t ci = C->vec[ci_i];
+        
+        uint32_t uk_k = GET_VEC_WORD_INDEX(r->t, j_aux - j);
+        uint32_t uk = table[k][uk_k];
+        
+        //printf("uk_k = %d, r->t = %u\n", j_aux - j, r->t+1);
+        //printf("C[%u] = 0x%.8x, ", j_aux, ci);
+        //printf("u[%u] = 0x%.8x\n", uk_k, uk);
+        //C->vec[GET_VEC_WORD_INDEX(C->t, j_aux)] ^= table[k][GET_VEC_WORD_INDEX(r->t, j_aux - j)];
+        ci ^= uk;
+        j_aux++;
+      }
+    }
+    
+  }
+
+  Poly *cMod = poly_alloc(f->m, f->t);
+  for(i = 0; i < cMod->t; i++) {
+    cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
+  }
+  cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
+  printf("c mod = ");poly_print_poly(cMod);
+  poly_free(r);
+  poly_free(C);
+}
+
 void test_lapin(const Poly *f) {
   uint16_t i = 0;
   unsigned char w[32];
@@ -273,16 +373,22 @@ int main() {
   
   Poly *f = poly_alloc(532, 17);
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
+  //printf("f=");poly_print_poly(f);
   
-  printf("f=");poly_print_poly(f);
+  // x^233 + x^74 + 1
+  uint32_t new_f_coefs[] = {0x200, 0x0, 0x0, 0x0, 0x0, 0x400, 0x0, 0x1};
+  Poly *f2 = poly_alloc(233, 8);
+  poly_set_coeffs_from_uint32(f2, new_f_coefs);
+  printf("f2=");poly_print_poly(f2);
   
   // TODO: this challenge produces a pimapping with only 14 coeffs
   //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
   
   
   //test_mult(f);
-  test_mod(f);
-  //test_mod2(f);
+  //test_mod(f);
+  //test_mod2(f2);
+  test_mod3(f2);
   //test_lapin(f);
 
 

@@ -54,7 +54,7 @@ Poly* poly_add(const Poly *a, const Poly *b) {
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
   if(a->m != a->m || a->t != b->t) {
-    fprintf(stderr, "ERRO poly_mult\n");
+    fprintf(stderr, "ERROR poly_mult\n");
     return 0;
   }
   uint16_t j, i;

@@ -134,22 +134,27 @@ class BinaryPolynomial:
       
     m_2 = (self.m*2) - 1 # c->m. means that deg(c) <= c->m - 1
     t_2 = ceil(m_2 / self.W) # c->t
+    #print "c->m = {0}, c->t = {1}, f->t = {2}".format(m_2, t_2, self.t)
     c = c.zfill(t_2 * self.W) # zfill c
     # pre-computation u_k = f * x^k
     u = []
     # append f in binary form, with one extra word!
     # NOTE: all elements in u have self.t + 1 words
     u.append(polyToBin(f, self.var).zfill((self.t + 1) * self.W))
+    
     for k in xrange(1, self.W):
       u.append(self.shiftLeft(u[k - 1]))   
+    #for k in xrange(0, self.W):
+      #print "u[{0}] = {1}".format(k, polyToHex(u[k],x))
+      
     # work with lists
     c = list(c)
     for i in xrange((2 * self.m) - 2, self.m - 1, -1):
-      """ alternative way. use this in C """
+      ###"" alternative way. use this in C ""
       word = floor(i / self.W)
       #word = ceil(((t_2 * self.W) - i) / self.W) - 1
       bit = self.W - (i - (word * self.W)) - 1
-      """if int(self.getWord(c, word)[bit]) == 1:"""
+      ###""if int(self.getWord(c, word)[bit]) == 1:""
       if int(c[(len(c) - i) - 1]) == 1:
         #print "Word = {0}, bit = {1}".format(word, bit)
         #print self.getWord(c, word)[(self.W - bit) - 1]
@@ -159,7 +164,9 @@ class BinaryPolynomial:
         while (j_aux < t_2) and ((j_aux - j) <= self.t):
           # C{j_aux} = C{j_aux} XOR u[k]
           ci = self.getWord(c, j_aux)
-          ci = bitwiseXor(ci, self.getWord(u[k], j_aux - j))
+          uk = self.getWord(u[k], j_aux - j)
+          #print "C[{0}] = {1}, u[{2}] = {3}".format(j_aux, hex(Integer(ci,2)).zfill(len(ci)/4), k, hex(Integer(uk,2)).zfill(len(uk)/4))
+          ci = bitwiseXor(ci, uk)
           # save ci to c[i]
           end = len(c) - (self.W * j_aux)
           start = end - self.W
@@ -440,3 +447,22 @@ def polyToBin(a, x):
   # return str A with t W-bit words
   return A
 
+# convert a poly to an hex list
+# x = x**233 + x**74 + 1 => []
+def polyToHex(a, x, W=32):
+  # convert to bin if necessary
+  if type(a) == type(x):
+    a = polyToBin(a, x).zfill(t * W)
+  t = ceil(len(a) / W)
+  a = a.zfill(t * W)
+  start = len(a) - W
+  end = len(a)
+  p = []
+  nBytes = W/4
+  for i in xrange(t-1, -1, -1):
+    h = hex(Integer(a[start : end], 2))
+    p.append(h.zfill(nBytes))
+    start -= W
+    end -= W
+  p.reverse()
+  return p
