@@ -144,8 +144,12 @@ class BinaryPolynomial:
     
     for k in xrange(1, self.W):
       u.append(self.shiftLeft(u[k - 1]))   
-    #for k in xrange(0, self.W):
-      #print "u[{0}] = {1}".format(k, polyToHex(u[k],x))
+      
+    # print polys...
+    print "c = {0}".format(c)
+    # test table..
+    for k in xrange(0, self.W):
+      print "u[{0}] = {1}".format(k, polyToHex(u[k],x))
       
     # work with lists
     c = list(c)
@@ -161,12 +165,13 @@ class BinaryPolynomial:
         j = floor((i - self.m) / self.W)
         k = (i - self.m) - (self.W * j)
         j_aux = j
+        #print "C[{0}] = {1}".format(j, hex(Integer(''.join(self.getWord(c, j)), 2)).zfill(8))
         while (j_aux < t_2) and ((j_aux - j) <= self.t):
           # C{j_aux} = C{j_aux} XOR u[k]
-          ci = self.getWord(c, j_aux)
-          uk = self.getWord(u[k], j_aux - j)
-          #print "C[{0}] = {1}, u[{2}] = {3}".format(j_aux, hex(Integer(ci,2)).zfill(len(ci)/4), k, hex(Integer(uk,2)).zfill(len(uk)/4))
-          ci = bitwiseXor(ci, uk)
+          ci = self.getWord(c, j_aux) # warning: this is a list, not a str
+          uk = self.getWord(u[k], j_aux - j) # this is a str, not a list
+          ci = bitwiseXor(ci, uk) # str
+          print "C[{0}] = {1}, u[{2}] = {3}, {4}".format(j_aux, hex(Integer(''.join(self.getWord(c, j_aux)),2)).zfill(8), k, hex(Integer(uk,2)).zfill(8), hex(Integer(ci,2)).zfill(8))
           # save ci to c[i]
           end = len(c) - (self.W * j_aux)
           start = end - self.W

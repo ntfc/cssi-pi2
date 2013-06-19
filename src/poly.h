@@ -27,8 +27,8 @@ Poly* poly_add(const Poly *a, const Poly *b);
 uint16_t poly_degree(const Poly *p);
 // TODO: poly_mult_scalar(const Poly *a, uint32_t s); ??
 Poly* poly_mult(const Poly *a, const Poly *b);
-// return a mod f. changes values of a
-Poly* poly_mod(const Poly *c, const Poly *f, uint32_t **table);
+// return c mod f. does not change value of c
+Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table);
 // fast mod reduction
 Poly* poly_fast_mod_reduction(Poly *a);
 uint16_t poly_hamming_weight(const Poly *a);
@@ -50,7 +50,7 @@ uint8_t poly_get_bit(const Poly *a, uint32_t b);
 
 Poly* poly_get_r(const Poly *f);
 
-uint32_t** poly_compute_mod_table(const Poly *r);
+uint32_t** poly_compute_mod_table(const Poly *f);
 
 // t: length of table
 void poly_free_table(uint32_t **t, uint8_t n);
