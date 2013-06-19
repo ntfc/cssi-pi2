@@ -24,8 +24,9 @@ Challenge challenge_generate(uint8_t sec_param) {
 }
 
 void challenge_free(Challenge c) {
-  if(c != NULL)
+  if(c != NULL) {
     free(c);
+  }
 }
 
 
@@ -77,6 +78,9 @@ void lapin_pimapping_reduc(const unsigned char *c) {
 //KeyGen
 Key* key_generate(const Poly *f) {
   Key *key = malloc(sizeof(Key));
+  if(key == NULL) {
+    fprintf(stderr, "ERROR alloc key\n");
+  }
   key->s = poly_rand_uniform_poly(f);
   //poly s'
   key->s1 = poly_rand_uniform_poly(f);
@@ -86,10 +90,12 @@ Key* key_generate(const Poly *f) {
 
 void key_free(Key *k) {
   if(k != NULL) {
-    if(k->s != NULL)
+    if(k->s != NULL) {
       poly_free(k->s);
-    if(k->s1 != NULL)
+    }
+    if(k->s1 != NULL) {
       poly_free(k->s1);
+    }
     free(k);
   }
 }
@@ -104,52 +110,53 @@ Challenge lapin_reader_step1(uint8_t sec_param){
 
 //generate r, e
 //calculate z
-void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t sec_param) {
-  
-  /**r = poly_rand_uniform_poly(f);
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
+                     Poly **r, double tau, uint8_t sec_param, uint32_t ***table) {
+  // TODO: validate table
+  *r = poly_rand_uniform_poly(f);
+  //printf("r=");poly_print_poly(*r);
   Poly *e = poly_rand_bernoulli_poly(f, tau);
-  printf("e=");poly_print_poly(e);
+  //printf("e=");poly_print_poly(e);
   
   Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
-  printf("pi=");poly_print_poly(pi);
+  //printf("pi=");poly_print_poly(pi);
   // NOTE: this way all the memory can be free'd
   // r * (s * pi(c) + s') + e
-  Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
+  Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f, table);
   
-  printf("s*pi=");poly_print_poly(sTimesPi);*/
-  //sTimesPi = poly_mod(sTimesPi, f);
-  /*Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
-  printf("s*pi + s1=");poly_print_poly(sTimesPiPlusS1);
+  //printf("s*pi mod f=");poly_print_poly(sTimesPi);
+
+  Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
+  //printf("s*pi + s'=");poly_print_poly(sTimesPiPlusS1);
   poly_free(sTimesPi);
 
-  Poly *rTimesRest = poly_mod(poly_mult(*r, sTimesPiPlusS1), f);
-  printf("r * (s*pi + s1)="); poly_print_poly(rTimesRest);
+  Poly *rTimesRest = poly_mod(poly_mult(*r, sTimesPiPlusS1), f, table);
+  //printf("(r * (s*pi + s')) mod f="); poly_print_poly(rTimesRest);
   //rTimesRest = poly_mod(rTimesRest, f);
   poly_free(sTimesPiPlusS1);
   
   *z = poly_add(rTimesRest, e);
-  printf("r * (s*pi + s1)+e="); poly_print_poly(*z);
-  poly_free(rTimesRest);*/
-  
-  
-  //*z = poly_mod(poly_add(poly_mod(poly_mult(*r, poly_add(poly_mod(poly_mult(key->s, pi), f), key->s1)), f), e), f);
+  //printf("r * (s*pi + s')+e="); poly_print_poly(*z);
+  poly_free(rTimesRest);
   
   // free
-  //poly_free(pi);
-  //poly_free(e);
+  poly_free(pi);
+  poly_free(e);
 }
 
 //verification
-int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t sec_param) {
+int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c,
+                       const Poly *z, const Poly *r, double tau1,
+                       uint8_t sec_param, uint32_t ***table) {
   //TODO: IF R PERTENCE A R^*
   
-  /*Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
+  Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
   
-  Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f);
+  Poly *sTimesPi = poly_mod(poly_mult(key->s, pi), f, table);
   Poly *sTimesPiPlusS1 = poly_add(sTimesPi, key->s1);
   poly_free(sTimesPi);
   
-  Poly *rTimesRest = poly_mod(poly_mult(r, sTimesPiPlusS1), f);
+  Poly *rTimesRest = poly_mod(poly_mult(r, sTimesPiPlusS1), f, table);
   poly_free(sTimesPiPlusS1);
   
   Poly *e1 = poly_add(z, rTimesRest);
@@ -168,7 +175,7 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const P
   poly_free(pi);
   poly_free(e1);
   
-  return ret;*/
+  return ret;
 }
 
 

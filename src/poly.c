@@ -350,7 +350,6 @@ uint32_t** poly_compute_mod_table(const Poly *f) {
     u0[i] = f->vec[i-1];
   }
   table[0] = u0;
-  
   k = 1;
   while(k < W) {
     table[k] = calloc(t, sizeof(uint32_t));
@@ -374,6 +373,7 @@ void poly_free_table(uint32_t **t, uint8_t n) {
   uint8_t i = 0;
   
   if(t != NULL) {
+    
     for(i = 0; i < n; i++) {
       if(t[i] != NULL) {
         free(t[i]);

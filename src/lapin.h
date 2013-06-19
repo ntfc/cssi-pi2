@@ -37,8 +37,11 @@ void challenge_free(Challenge c);
 void lapin_pimapping_reduc(const Poly *f, const Challenge c, uint8_t sec_param);
 Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_param);
 Challenge lapin_reader_step1(uint8_t sec_param);
-void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z, Poly **r, double tau, uint8_t sec_param);
-int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c, const Poly *z, const Poly *r, double tau1, uint8_t sec_param);
+void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
+                    Poly **r, double tau, uint8_t sec_param, uint32_t ***table);
+int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c,
+                       const Poly *z, const Poly *r, double tau1,
+                       uint8_t sec_param, uint32_t ***table);
 Key* key_generate(const Poly *f);
 void key_free(Key *k);
 #endif
