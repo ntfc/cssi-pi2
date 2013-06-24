@@ -108,18 +108,22 @@ class Irreducible:
     f = x^532 + x + 1
     R = F.quotient(f, 'x')
     return (R, f, x)
-
+  
   # returns the list of coefficients of the new polynomial v
   # c must be in binary format
   def pimapping(self, c):
     # DUVIDA: retornar list de coefs ou poly?
     v = 0*self.x
-    for j in xrange(0, 16):
-      # 32 = 5 bits
-      cj = c[j*5 : (j*5) + 5]
-      # here we use x instead of the (x-1) indicated in the paper
+    for j in xrange(1, 16 + 1):
+      # 5 bits = number between 0 and 31
+      start = (j - 1) * 5
+      end = start + 5
+      cj = Integer(c[start : end], 2)
+      i = 16 * (j - 1) + cj
+      # here we use j instead of the (j-1) indicated in the paper
       # because we're in 0-index mode
-      i = (16 * j) + binToInt(cj) # TODO: use binary operations here as well
+      #i = 16 * (j) + Integer(cj,2)
+      #print "c[{0}] = {1} ({2}), coeffs[{0}] = {3}".format(j, Integer(cj, 2), cj, i)
       v += self.x**i
     return v
   

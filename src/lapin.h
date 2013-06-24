@@ -8,7 +8,7 @@
 
 typedef uint32_t *Challenge;
 typedef struct s_key {
-  Poly *s, *s1;
+  Poly *s1, *s2;
 } Key;
 
 static uint32_t F_IRREDUCIBLE[17] = {

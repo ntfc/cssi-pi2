@@ -32,7 +32,7 @@ uint32_t random_uniform_uint32(void) {
   uint32_t n = 0;
   for(i = 0; i < 32; i++) {
     n <<= 1;
-    n ^= random_uniform_range(0, 1);
+    n ^= (uint32_t)random_uniform_range(0, 1);
   }
   return n;
 }
@@ -43,7 +43,7 @@ uint32_t random_bernoulli_uint32(double tau) {
   uint32_t n = 0;
   for(; i < 32; i++) {
     n <<= 1;
-    n ^= random_bernoulli(tau);
+    n ^= (uint32_t)random_bernoulli(tau);
   }
   return n;
 }

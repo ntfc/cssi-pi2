@@ -16,8 +16,9 @@ Poly* poly_rand_uniform_poly(const Poly *f) {
   uint16_t t = f->t;
   //Poly p = malloc(sizeof(uint32_t) * t);
   Poly *p = poly_alloc(f->m, t);
-  while(t--)
+  while(t--) {
     p->vec[t] = random_uniform_uint32();
+  }
   p->vec[0] &= (0xffffffff >> p->s); // align last word
   return p;
 }

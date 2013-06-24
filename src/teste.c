@@ -262,20 +262,46 @@ void test_mod3(const Poly *f) {
 
 void test_lapin(const Poly *f) {
   Challenge c = challenge_generate(SEC_PARAM);
-
+  int i = 0;
+  unsigned char w[32+1];
+  /*printf("c=");
+  for(i = 0; i <= ceil(SEC_PARAM/W); i++)
+    printf("%s", binary_uint32_to_char(c[i], w));
+  printf("\n");
+  printf("0x%.8x\n", random_uniform_uint32());*/
   Key *key = key_generate(f);
+  /*printf("s1=");poly_print_poly(key->s1);
+  printf("s2=");poly_print_poly(key->s2);*/
     
   Poly *r, *z;
   uint32_t **table = NULL;
   lapin_tag_step2(key, f, c, &z, &r, (double)1/(double)8, SEC_PARAM, &table);
-  int vrfy = lapin_reader_step3(key, f, c, z, r, (double)1/(double)8, SEC_PARAM, &table);
-  printf("Vrfy = %d\n", vrfy);
+  
+  /*printf("r=");poly_print_poly(r);
+  printf("z=");poly_print_poly(z);*/
+  
+  int vrfy = lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM, &table);
+  //printf("Vrfy = %d\n", vrfy);
+  
+  
   // faltam fazer 4 free's
   poly_free(z);
   poly_free(r);
   challenge_free(c);
   key_free(key);
   poly_free_table(table, W);
+}
+
+void test_pi(const Poly *f) {
+  uint32_t c[3] = {0x3c49, 0xf7edb6e0, 0xbba10de5};
+  int i = 0;
+  unsigned char w[32+1];
+  printf("c=");
+  for(i = 0; i <= ceil(SEC_PARAM/W); i++)
+    printf("%s", binary_uint32_to_char(c[i], w));
+  printf("\n");
+  Poly *pi = lapin_pimapping_irreduc(f, c, SEC_PARAM);
+  printf("pi=");poly_print_poly(pi);
 }
 
 int main() {
@@ -300,6 +326,7 @@ int main() {
   //test_mod2(f2);
   //test_mod(f);
   test_lapin(f);
+  //test_pi(f);
 
 
   poly_free(f);
