@@ -15,7 +15,7 @@ Poly* poly_rand_uniform_poly(const Poly *f) {
   //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
   uint16_t t = f->t;
   //Poly p = malloc(sizeof(uint32_t) * t);
-  Poly *p = poly_alloc(f->m, t);
+  Poly *p = poly_alloc(f->m);
   while(t--) {
     p->vec[t] = random_uniform_uint32();
   }
@@ -28,7 +28,7 @@ Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
   //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
   uint16_t t = f->t;
   //uint32_t *p = malloc(sizeof(uint32_t) * t);
-  Poly *p = poly_alloc(f->m, t);
+  Poly *p = poly_alloc(f->m);
   while(t--)
     p->vec[t] = random_bernoulli_uint32(tau);
   p->vec[0] &= (0xffffffff >> p->s); // align last word
@@ -41,7 +41,7 @@ Poly* poly_add(const Poly *a, const Poly *b) {
     fprintf(stderr, "ERROR poly_add\n");
     return NULL;
   }
-  Poly *c = poly_alloc(a->m, a->t);
+  Poly *c = poly_alloc(a->m);
   uint16_t t = a->t;
   c->t = t;
   c->m = a->m;
@@ -66,7 +66,7 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   //uint16_t c_words = CEILING((double)c_max_degree / (double)W); // number of words in C
   uint16_t c_words = (uint16_t)ceil((double)c_max_degree / (double)W); // number of words in C
   //uint8_t c_unused = W*c_words - c_max_degree;  
-  Poly *c = poly_alloc(c_max_degree, c_words);
+  Poly *c = poly_alloc(c_max_degree);
   // B is a copy of b, but with one more word
   uint32_t *B = calloc(b->t + 1, sizeof(uint32_t));
   // b[0] is already zero'd
@@ -128,12 +128,12 @@ uint16_t poly_hamming_weight(const Poly *a) {
 
 // m: degree of the irreducible polynomial
 // t: number of words to allocate
-Poly* poly_alloc(uint16_t m, uint16_t t) {
+Poly* poly_alloc(uint16_t m) {
   Poly *p = malloc(sizeof(Poly));
   if(p == NULL) // TODO: deal with errors
     return NULL;
   p->m = m;
-  p->t = t;
+  p->t = ceil((double)m / (double)W);
   p->s = W*p->t - p->m;
   p->vec = calloc(p->t, sizeof(uint32_t));
   if(p->vec == NULL) {
@@ -143,9 +143,22 @@ Poly* poly_alloc(uint16_t m, uint16_t t) {
   return p;
 }
 
+// TODO: is it ok to use a new_t to define new polys??????
 // clone poly p, but use new_t words instead of a->t
 Poly* poly_clone(const Poly *p, uint16_t new_t) {
-  Poly *c = poly_alloc(p->m, new_t);
+  // TODO: validate new_t
+  Poly *c = malloc(sizeof(Poly));
+  if(c == NULL) // TODO: deal with errors
+    return NULL;
+  c->m = p->m;
+  c->t = new_t;
+  c->s = W*c->t - c->m;
+  c->vec = calloc(c->t, sizeof(uint32_t));
+  if(c->vec == NULL) {
+    free(c);
+    return NULL;
+  }
+  
   uint16_t i = 0;
   for(i = 0; i < p->t; i++)
     c->vec[i + (new_t - p->t)] = p->vec[i];
@@ -161,35 +174,6 @@ uint8_t poly_get_bit(const Poly *a, uint32_t b) {
   uint16_t word = GET_WORD_FROM_BIT(b);
   uint8_t bit = b % W; // bit position in the word
   return binary_get_bit(a->vec[GET_VEC_WORD_INDEX(a->t, word)], bit);
-}
-
-Poly* poly_get_r(const Poly *f) {
-  // TODO: f must be irreducible
-  uint16_t i = 0, j = 0;
-  // position of the MSB set in f->vec
-  uint16_t m = binary_degree(f->vec[0]);
-  
-  uint32_t first_r_word = f->vec[0] ^ (1 << m);
-  
-  Poly *r = NULL;
-  if(first_r_word != 0) {
-    // r has f->t words
-    r = poly_clone(f, f->t);
-    r->vec[0] = first_r_word;
-  }
-  else {
-    // traverse f->vec until we find the last word of r
-    for(i = 1; i < f->t && (f->vec[i] == 0); i++)
-      ;
-    // get first word of r
-    m = binary_degree(f->vec[i]);
-    // create poly = r(x)
-    r = poly_alloc(m, f->t - i);
-    for(j = i; j < f->t; j++) {
-      r->vec[j - i] = f->vec[j];
-    }
-  }
-  return r;
 }
 
 // coefs: array representing the coefficients
@@ -218,7 +202,8 @@ uint16_t poly_degree(const Poly *p) {
 }
 
 Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n) {
-  Poly *p = poly_alloc(f->m, f->t);
+  // TODO: v must be sorted!
+  Poly *p = poly_alloc(f->m);
   uint16_t word;
   uint8_t pos;
   while(n--) {
@@ -294,7 +279,7 @@ Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
   uint16_t j_aux;
   
   // TODO: validate c->t and c->m  
-  Poly *C = poly_alloc(c->m , c->t);
+  Poly *C = poly_alloc(c->m);
   
   // copy c->vec to C->vec
   for(i = 0; i < c->t; i++) {
@@ -324,7 +309,7 @@ Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
     
   }
 
-  Poly *cMod = poly_alloc(f->m, f->t);
+  Poly *cMod = poly_alloc(f->m);
   for(i = 0; i < cMod->t; i++) {
     cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
   }

@@ -36,7 +36,7 @@ uint16_t poly_hamming_weight(const Poly *a);
 Poly* poly_shift_left(Poly *a);
 Poly* poly_shift_right(Poly *a);
 
-Poly* poly_alloc(uint16_t m, uint16_t t);
+Poly* poly_alloc(uint16_t m);
 // TODO: careful with this one!!
 void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs);
 void poly_free(Poly *p);
@@ -48,7 +48,6 @@ Poly* poly_clone(const Poly *p, uint16_t new_t);
 
 uint8_t poly_get_bit(const Poly *a, uint32_t b);
 
-Poly* poly_get_r(const Poly *f);
 
 uint32_t** poly_compute_mod_table(const Poly *f);
 

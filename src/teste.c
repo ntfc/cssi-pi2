@@ -217,7 +217,7 @@ void test_mod3(const Poly *f) {
   uint16_t j_aux;
 
   // TODO: validate c->t and c->m  
-  Poly *C = poly_alloc(c->m , c->t);
+  Poly *C = poly_alloc(c->m);
   
   // copy c->vec to C->vec
   for(i = 0; i < c->t; i++) {
@@ -250,7 +250,7 @@ void test_mod3(const Poly *f) {
     
   }
 
-  Poly *cMod = poly_alloc(f->m, f->t);
+  Poly *cMod = poly_alloc(f->m);
   for(i = 0; i < cMod->t; i++) {
     cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
   }
@@ -260,7 +260,7 @@ void test_mod3(const Poly *f) {
   poly_free(C);
 }
 
-void test_lapin(const Poly *f) {
+void test_lapin_irr(const Poly *f) {
   Challenge c = challenge_generate(SEC_PARAM);
   int i = 0;
   unsigned char w[32+1];
@@ -281,7 +281,7 @@ void test_lapin(const Poly *f) {
   printf("z=");poly_print_poly(z);*/
   
   int vrfy = lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM, &table);
-  //printf("Vrfy = %d\n", vrfy);
+  printf("Vrfy = %d\n", vrfy);
   
   
   // faltam fazer 4 free's
@@ -292,7 +292,7 @@ void test_lapin(const Poly *f) {
   poly_free_table(table, W);
 }
 
-void test_pi(const Poly *f) {
+void test_pi_irr(const Poly *f) {
   uint32_t c[3] = {0x3c49, 0xf7edb6e0, 0xbba10de5};
   int i = 0;
   unsigned char w[32+1];
@@ -304,16 +304,42 @@ void test_pi(const Poly *f) {
   printf("pi=");poly_print_poly(pi);
 }
 
+void test_pi_red(const Poly **f) {
+  
+}
+
+// receives the degree, array with r, and the size of r
+Poly* poly_create_irreduc(uint16_t m, const uint16_t* r, uint8_t n) {
+  // TODO: check that this poly is indeed irreduc
+  // TODO: r must be sorted!
+  // TODO: size of r must be validated..
+  uint16_t word;
+  uint8_t pos;
+  Poly *p = poly_alloc(m);
+  
+  word = m / W;
+  pos = m - (word * W);
+  p->vec[(p->t - 1) - word] ^= (0x1 << pos);
+  while(n--) {
+    word = r[n] / W; // word to xor with. NOTE: word=0 <=> p->vec[p->t-1]
+    pos = r[n] - (word * W); // bit position to xor
+    // why does this work?
+    p->vec[(p->t - 1) - word] ^= (0x1 << pos); // actual xor
+  }
+  
+  return p;
+}
+
 int main() {
   srand((unsigned)time(NULL));
   
-  Poly *f = poly_alloc(532, 17);
+  Poly *f = poly_alloc(532);
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
   //printf("f=");poly_print_poly(f);
   
   // x^233 + x^74 + 1
   uint32_t new_f_coefs[] = {0x200, 0x0, 0x0, 0x0, 0x0, 0x400, 0x0, 0x1};
-  Poly *f2 = poly_alloc(233, 8);
+  Poly *f2 = poly_alloc(233);
   poly_set_coeffs_from_uint32(f2, new_f_coefs);
   printf("f2=");poly_print_poly(f2);
   
@@ -325,8 +351,13 @@ int main() {
   //test_mod(f);
   //test_mod2(f2);
   //test_mod(f);
-  test_lapin(f);
-  //test_pi(f);
+  test_lapin_irr(f);
+  
+  uint16_t r[] = {16, 2, 1};
+  Poly *f3 = poly_create_irreduc(129, r, 3);
+  printf("f3 = ");poly_print_poly(f3);
+  //test_lapin_red(f);
+  //test_pi_irr(f);
 
 
   poly_free(f);

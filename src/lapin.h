@@ -23,6 +23,13 @@ static uint32_t F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
   { 0x04000000, 0x0, 0x0, 0x099 }, // x^122+x^7+x^4+x^3+1
   { 0x02000000, 0x0, 0x0, 0x123 }  // x^121+x^8+x^5+ x +1
 };
+static uint16_t F_PROD_REDUCIBLE_COEFFS[5][5] = {
+  {127, 8, 7, 3, 0},
+  {126, 9, 6, 5, 0},
+  {125, 6, 7, 4, 0},
+  {122, 7, 4, 3, 0},
+  {121, 8, 5, 1, 0}
+};
 
 // pre-computed f reducible
 static uint32_t F_REDUCIBLE[20] = { // degree = 621
@@ -35,7 +42,7 @@ static uint32_t F_REDUCIBLE[20] = { // degree = 621
 Challenge challenge_generate(uint8_t sec_param);
 void challenge_free(Challenge c);
 void lapin_pimapping_reduc(const Poly *f, const Challenge c, uint8_t sec_param);
-Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_param);
+Poly* poly_pimapping_reduc(const Poly **f, uint8_t m, const Challenge c, uint8_t sec_param);
 Challenge lapin_reader_step1(uint8_t sec_param);
 void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
                     Poly **r, double tau, uint8_t sec_param, uint32_t ***table);

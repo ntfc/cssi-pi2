@@ -70,6 +70,14 @@ Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_para
   return p;
 }
 
+Poly* poly_pimapping_reduc(const Poly **f, uint8_t m, const Challenge c, uint8_t sec_param) {
+  uint8_t i = 0;
+  uint16_t toPad = 0;
+  for(i = 0; i < m; i++) {
+    toPad = poly_degree(f[i]) - 80;
+    printf("toPad = %u\n", toPad);
+  }
+}
 
 /*// TODO: implement pi-mappings
 // c must be an array with 80 elems
