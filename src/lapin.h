@@ -23,12 +23,13 @@ static uint32_t F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
   { 0x04000000, 0x0, 0x0, 0x099 }, // x^122+x^7+x^4+x^3+1
   { 0x02000000, 0x0, 0x0, 0x123 }  // x^121+x^8+x^5+ x +1
 };
-static uint16_t F_PROD_REDUCIBLE_COEFFS[5][5] = {
-  {127, 8, 7, 3, 0},
-  {126, 9, 6, 5, 0},
-  {125, 6, 7, 4, 0},
-  {122, 7, 4, 3, 0},
-  {121, 8, 5, 1, 0}
+static uint16_t F_PROD_REDUCIBLE_M[5] = {127, 126, 125, 122, 121};
+static uint16_t F_PROD_REDUCIBLE_R[5][4] = {
+  {8, 7, 3, 0},
+  {9, 6, 5, 0},
+  {9, 7, 4, 0},
+  {7, 4, 3, 0},
+  {8, 5, 1, 0}
 };
 
 // pre-computed f reducible

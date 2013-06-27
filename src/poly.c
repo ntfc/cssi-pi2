@@ -36,25 +36,36 @@ Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
 }
 
 // returns c = a + b
+// NOTE: a and c can have different lengths..
 Poly* poly_add(const Poly *a, const Poly *b) {
-  if(a->t != b->t) {
-    fprintf(stderr, "ERROR poly_add\n");
-    return NULL;
+  const Poly *bigger = a, *smaller = b;
+  if(a->t < b->t) {
+    bigger = b;
+    smaller = a;
   }
-  Poly *c = poly_alloc(a->m);
-  uint16_t t = a->t;
-  c->t = t;
-  c->m = a->m;
-  c->s = a->s;
+  uint16_t diff = bigger->t - smaller->t;
+  Poly *c = poly_alloc(bigger->m);
+  uint16_t t = bigger->t;
+
   while(t--) {
-    c->vec[t] = a->vec[t] ^ b->vec[t];
+    if(t >= diff) {
+      // xor commons words of both polys
+      c->vec[t] = bigger->vec[t] ^ smaller->vec[t - diff];
+    }
+    else {
+      // no need to xor, just copy
+      c->vec[t] = bigger->vec[t];
+    }
   }
+
   return c;
 }
 
+// TODO: handle poly with different t's?? 
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
-  if(a->m != a->m || a->t != b->t) {
+  //if(a->m != a->m || a->t != b->t) {
+  if(a->t != b->t) {
     fprintf(stderr, "ERROR poly_mult\n");
     return 0;
   }
@@ -163,6 +174,28 @@ Poly* poly_clone(const Poly *p, uint16_t new_t) {
   for(i = 0; i < p->t; i++)
     c->vec[i + (new_t - p->t)] = p->vec[i];
   return c;
+}
+
+// receives the degree, array with r, and the size of r
+Poly* poly_create_irreduc(uint16_t m, const uint16_t* r, uint8_t n) {
+  // TODO: check that this poly is indeed irreduc
+  // TODO: r must be sorted!
+  // TODO: size of r must be validated..
+  uint16_t word;
+  uint8_t pos;
+  Poly *p = poly_alloc(m);
+  
+  word = m / W;
+  pos = m - (word * W);
+  p->vec[(p->t - 1) - word] ^= (0x1 << pos);
+  while(n--) {
+    word = r[n] / W; // word to xor with. NOTE: word=0 <=> p->vec[p->t-1]
+    pos = r[n] - (word * W); // bit position to xor
+    // why does this work?
+    p->vec[(p->t - 1) - word] ^= (0x1 << pos); // actual xor
+  }
+  
+  return p;
 }
 
 // TODO: return in case of error. Use errno

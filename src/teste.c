@@ -51,7 +51,10 @@ void test_print_char_word(const unsigned char *c) {
 }
 
 void poly_print_poly(Poly *f) {
-  
+  if(!f) {
+    fprintf(stderr, "ERROR poly NULL\n");
+    return;
+  }
   uint16_t i = 0;
   uint16_t t = f->t;
   unsigned char w[W+1];
@@ -304,30 +307,50 @@ void test_pi_irr(const Poly *f) {
   printf("pi=");poly_print_poly(pi);
 }
 
-void test_pi_red(const Poly **f) {
-  
-}
-
-// receives the degree, array with r, and the size of r
-Poly* poly_create_irreduc(uint16_t m, const uint16_t* r, uint8_t n) {
-  // TODO: check that this poly is indeed irreduc
-  // TODO: r must be sorted!
-  // TODO: size of r must be validated..
-  uint16_t word;
-  uint8_t pos;
-  Poly *p = poly_alloc(m);
-  
-  word = m / W;
-  pos = m - (word * W);
-  p->vec[(p->t - 1) - word] ^= (0x1 << pos);
-  while(n--) {
-    word = r[n] / W; // word to xor with. NOTE: word=0 <=> p->vec[p->t-1]
-    pos = r[n] - (word * W); // bit position to xor
-    // why does this work?
-    p->vec[(p->t - 1) - word] ^= (0x1 << pos); // actual xor
+// NOTE: a and b can have diffent lengths..
+// right-to-left comb method
+Poly* test_poly_mult(const Poly *a, const Poly *b) {
+  const Poly *bigger = a, *smaller = b;
+  if(a->t < b->t) {
+    bigger = b;
+    smaller = a;
   }
+  uint16_t j, i;
+  uint8_t k;
+  uint16_t t = bigger->t;
+  uint16_t m = bigger->m;
+  uint16_t c_max_degree = (a->m + b->m) - 1;
   
-  return p;
+  uint16_t c_words = (uint16_t)ceil((double)c_max_degree / (double)W); // number of words in C
+  //uint8_t c_unused = W*c_words - c_max_degree;  
+  Poly *c = poly_alloc(c_max_degree);
+  // B is a copy of b, but with one more word
+  uint32_t *B = calloc(smaller->t + 1, sizeof(uint32_t));
+  // b[0] is already zero'd
+  for(j = 0; j < smaller->t; j++) {
+    B[j+1] = b->vec[j];
+  }
+  for(k = 0; k < W; k++) {
+    for(j = 0; j < t; j++) {
+      // get k-th bit of A[j]
+      if(binary_get_bit(a->vec[GET_VEC_WORD_INDEX(a->t, j)], k) == 1) {
+        i = j;
+        // C{j} = C{j} + B
+        while((i < c_words) && ((i - j) <= t)) {
+          // C[i] = C[i] ^ B[i - j]
+          c->vec[GET_VEC_WORD_INDEX(c_words, i)] ^= B[GET_VEC_WORD_INDEX(b->t + 1, i - j)];
+          i++;
+        }
+      }
+    }
+    if(k != W - 1) {
+      // B = B * x
+      binary_array_shift_left(B, smaller->t+1);
+    }
+  }
+  // free B
+  free(B);
+  return c;
 }
 
 int main() {
@@ -337,11 +360,11 @@ int main() {
   poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
   //printf("f=");poly_print_poly(f);
   
-  // x^233 + x^74 + 1
+  /*// x^233 + x^74 + 1
   uint32_t new_f_coefs[] = {0x200, 0x0, 0x0, 0x0, 0x0, 0x400, 0x0, 0x1};
   Poly *f2 = poly_alloc(233);
   poly_set_coeffs_from_uint32(f2, new_f_coefs);
-  printf("f2=");poly_print_poly(f2);
+  printf("f2=");poly_print_poly(f2);*/
   
   // TODO: this challenge produces a pimapping with only 14 coeffs
   //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
@@ -351,16 +374,29 @@ int main() {
   //test_mod(f);
   //test_mod2(f2);
   //test_mod(f);
-  test_lapin_irr(f);
+  uint8_t i = 0;
+  PolyVec ff[5];
+  while(i < 5) {
+    Poly *fi = poly_create_irreduc(F_PROD_REDUCIBLE_M[i], F_PROD_REDUCIBLE_R[i], 4);
+    printf("fi = ");poly_print_poly(fi);
+    ff[i++] = fi;
+  }
+  i = 0;
+  Poly *new_f = poly_mult(ff[0], ff[1]);
+  //printf("new_f=");poly_print_poly(new_f);
   
-  uint16_t r[] = {16, 2, 1};
-  Poly *f3 = poly_create_irreduc(129, r, 3);
-  printf("f3 = ");poly_print_poly(f3);
+  
+  Poly *a = poly_rand_uniform_poly(new_f);
+  Poly *b = poly_rand_uniform_poly(f);
+  printf("a="); poly_print_poly(a);
+  printf("b="); poly_print_poly(b);
+  Poly *test_mult = poly_add(a, b);
+  printf("test_mult=\n");poly_print_poly(test_mult);
+  //test_lapin_irr(f);
   //test_lapin_red(f);
   //test_pi_irr(f);
 
 
   poly_free(f);
-  poly_free(f2);
   return 0;
 }

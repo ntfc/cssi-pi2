@@ -65,7 +65,7 @@ Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_para
   p = poly_create_poly_from_coeffs(f, coeffs, 16);
   
   if(poly_hamming_weight(p) > 16) {
-    sprintf(stderr, "WARNING: wt(pi(c)) > 16!\n");
+    fprintf(stderr, "WARNING: wt(pi(c)) > 16!\n");
   }
   return p;
 }

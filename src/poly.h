@@ -20,6 +20,8 @@ typedef struct s_poly {
   uint32_t *vec; // actual polynomial, with t words
 } Poly;
 
+typedef Poly* PolyVec;
+
 Poly* poly_rand_uniform_poly(const Poly *f);
 Poly* poly_rand_bernoulli_poly(const Poly *f, double tau);
 
@@ -43,6 +45,8 @@ void poly_free(Poly *p);
 
 // n: length of v
 Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n);
+
+Poly* poly_create_irreduc(uint16_t m, const uint16_t* r, uint8_t n);
 
 Poly* poly_clone(const Poly *p, uint16_t new_t);
 
