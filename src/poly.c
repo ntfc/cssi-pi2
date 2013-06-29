@@ -61,38 +61,45 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   return c;
 }
 
-// TODO: handle poly with different t's?? 
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
-  //if(a->m != a->m || a->t != b->t) {
+  Poly *fst = a, *snd = b;
+  // if polys have different number of words, we need to convert one of them so
+  // that both end up with the same number of words
   if(a->t != b->t) {
-    fprintf(stderr, "ERROR poly_mult\n");
-    return 0;
+    fprintf(stderr, "INFO poly_mult with different nr of words\n");
+
+    if(a->m > b->m) {
+      snd = poly_add_degree(b, a->m - b->m);
+    }
+    if(a->m < b->m) {
+      fst = poly_add_degree(a, b->m - a->m);
+    }
   }
   uint16_t j, i;
   uint8_t k;
-  uint16_t t = a->t;
-  uint16_t m = a->m;
+  uint16_t t = fst->t;
+  uint16_t m = fst->m;
   uint16_t c_max_degree = 2*m - 1; // C is of degree at most m-1
-  //uint16_t c_words = CEILING((double)c_max_degree / (double)W); // number of words in C
   uint16_t c_words = (uint16_t)ceil((double)c_max_degree / (double)W); // number of words in C
-  //uint8_t c_unused = W*c_words - c_max_degree;  
+
   Poly *c = poly_alloc(c_max_degree);
   // B is a copy of b, but with one more word
-  uint32_t *B = calloc(b->t + 1, sizeof(uint32_t));
+
+  uint32_t *B = calloc(snd->t + 1, sizeof(uint32_t));
   // b[0] is already zero'd
-  for(j = 0; j < b->t; j++) {
-    B[j+1] = b->vec[j];
+  for(j = 0; j < snd->t; j++) {
+    B[j+1] = snd->vec[j];
   }
   for(k = 0; k < W; k++) {
     for(j = 0; j < t; j++) {
       // get k-th bit of A[j]
-      if(binary_get_bit(a->vec[GET_VEC_WORD_INDEX(a->t, j)], k) == 1) {
+      if(binary_get_bit(fst->vec[GET_VEC_WORD_INDEX(fst->t, j)], k) == 1) {
         i = j;
         // C{j} = C{j} + B
         while((i < c_words) && ((i - j) <= t)) {
           // C[i] = C[i] ^ B[i - j]
-          c->vec[GET_VEC_WORD_INDEX(c_words, i)] ^= B[GET_VEC_WORD_INDEX(b->t + 1, i - j)];
+          c->vec[GET_VEC_WORD_INDEX(c_words, i)] ^= B[GET_VEC_WORD_INDEX(snd->t + 1, i - j)];
           i++;
         }
       }
@@ -104,6 +111,12 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   }
   // free B
   free(B);
+  if(fst != a) {
+    poly_free(fst);
+  }
+  if(snd != b) {
+    poly_free(snd);
+  }
   return c;
 }
 
@@ -385,6 +398,23 @@ uint32_t** poly_compute_mod_table(const Poly *f) {
     printf("\n");
   }*/
   return table;
+}
+
+// adds some more degree to the poly
+Poly* poly_add_degree(const Poly *a, uint16_t add) {
+  if(add == 0) {
+    fprintf(stderr, "ERROR not adding degree to the poly\n");
+    return NULL;
+  }
+  uint16_t m = a->m + add;
+  Poly *b = poly_alloc(m);
+  // convert a->vec to b->vec
+  uint16_t t = a->t;
+  while(t--) {
+    b->vec[GET_VEC_WORD_INDEX(b->t, t)] = a->vec[GET_VEC_WORD_INDEX(a->t, t)];
+  }
+  
+  return b;
 }
 
 // t: length of table

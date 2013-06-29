@@ -52,6 +52,7 @@ Poly* poly_clone(const Poly *p, uint16_t new_t);
 
 uint8_t poly_get_bit(const Poly *a, uint32_t b);
 
+Poly* poly_add_degree(const Poly *a, uint16_t add);
 
 uint32_t** poly_compute_mod_table(const Poly *f);
 

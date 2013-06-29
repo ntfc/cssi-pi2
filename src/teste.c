@@ -310,47 +310,24 @@ void test_pi_irr(const Poly *f) {
 // NOTE: a and b can have diffent lengths..
 // right-to-left comb method
 Poly* test_poly_mult(const Poly *a, const Poly *b) {
-  const Poly *bigger = a, *smaller = b;
-  if(a->t < b->t) {
-    bigger = b;
-    smaller = a;
+  Poly *fst = a, *sec = b;
+  if(a->m > b->m) {
+    sec = poly_add_degree(b, a->m - b->m);
+    
   }
-  uint16_t j, i;
-  uint8_t k;
-  uint16_t t = bigger->t;
-  uint16_t m = bigger->m;
-  uint16_t c_max_degree = (a->m + b->m) - 1;
+  if(a->m < b->m) {
+    fst = poly_add_degree(a, b->m - a->m);
+  }
   
-  uint16_t c_words = (uint16_t)ceil((double)c_max_degree / (double)W); // number of words in C
-  //uint8_t c_unused = W*c_words - c_max_degree;  
-  Poly *c = poly_alloc(c_max_degree);
-  // B is a copy of b, but with one more word
-  uint32_t *B = calloc(smaller->t + 1, sizeof(uint32_t));
-  // b[0] is already zero'd
-  for(j = 0; j < smaller->t; j++) {
-    B[j+1] = b->vec[j];
+  Poly *c = poly_mult(fst, sec);
+  if(fst != a && fst != NULL) {
+    poly_free(fst);
   }
-  for(k = 0; k < W; k++) {
-    for(j = 0; j < t; j++) {
-      // get k-th bit of A[j]
-      if(binary_get_bit(a->vec[GET_VEC_WORD_INDEX(a->t, j)], k) == 1) {
-        i = j;
-        // C{j} = C{j} + B
-        while((i < c_words) && ((i - j) <= t)) {
-          // C[i] = C[i] ^ B[i - j]
-          c->vec[GET_VEC_WORD_INDEX(c_words, i)] ^= B[GET_VEC_WORD_INDEX(b->t + 1, i - j)];
-          i++;
-        }
-      }
-    }
-    if(k != W - 1) {
-      // B = B * x
-      binary_array_shift_left(B, smaller->t+1);
-    }
+  if(sec != b && sec != NULL) {
+    poly_free(sec);
   }
-  // free B
-  free(B);
   return c;
+  
 }
 
 int main() {
@@ -383,20 +360,27 @@ int main() {
   }
   i = 0;
   Poly *new_f = poly_mult(ff[0], ff[1]);
-  //printf("new_f=");poly_print_poly(new_f);
+  printf("new_f=");poly_print_poly(new_f);
   
   
   Poly *a = poly_rand_uniform_poly(new_f);
   Poly *b = poly_rand_uniform_poly(f);
   printf("a="); poly_print_poly(a);
   printf("b="); poly_print_poly(b);
-  Poly *test_mult = poly_add(a, b);
+  Poly *test_mult = poly_mult(a, b);
   printf("test_mult=\n");poly_print_poly(test_mult);
+  
   //test_lapin_irr(f);
   //test_lapin_red(f);
   //test_pi_irr(f);
 
-
+  i = 0;
+  while(i < 5)
+    poly_free(ff[i++]);
   poly_free(f);
+  poly_free(new_f);
+  poly_free(test_mult);
+  poly_free(a);
+  poly_free(b);
   return 0;
 }
