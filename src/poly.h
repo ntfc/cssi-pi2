@@ -11,7 +11,6 @@
 // ie: get GET_WORD_FROM_BIT(7) = 1 <=> a->vec[GET_WORD_INDEX(t, GET_WORD_FROM_BIT)]
 #define GET_WORD_FROM_BIT(i) ( floor( (double)(i) / (double)(W)) )
 
-
 // TODO: more polynomial info
 typedef struct s_poly {
   uint16_t t;
@@ -20,7 +19,10 @@ typedef struct s_poly {
   uint32_t *vec; // actual polynomial, with t words
 } Poly;
 
-typedef Poly* PolyVec;
+typedef struct s_poly_crt {
+  Poly **crt;
+  uint8_t m; // length of fi
+} PolyCRT;
 
 Poly* poly_rand_uniform_poly(const Poly *f);
 Poly* poly_rand_bernoulli_poly(const Poly *f, double tau);
@@ -59,6 +61,8 @@ uint32_t** poly_compute_mod_table(const Poly *f);
 // t: length of table
 void poly_free_table(uint32_t **t, uint8_t n);
 
-void poly_vec_free(PolyVec *pv, uint8_t m);
+PolyCRT* poly_crt_alloc(uint8_t m);
+
+void poly_crt_free(PolyCRT *p);
 
 #endif

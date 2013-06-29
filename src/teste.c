@@ -314,17 +314,17 @@ void test_pi_irr(const Poly *f) {
   printf("pi=");poly_print_poly(pi);
 }
 
-void test_pi_red(const PolyVec *f) {
+void test_pi_red(const PolyCRT *f) {
   Challenge c = challenge_generate(SEC_PARAM);
   printf("c=");challenge_print_challenge(c);
-  PolyVec *pi = lapin_pimapping_reduc(f, 5, c, SEC_PARAM);
+  PolyCRT *pi = lapin_pimapping_reduc(f, c, SEC_PARAM);
   uint8_t i = 0;
-  while(i < 5) {
-    printf("v%u=",i);poly_print_poly(pi[i++]);
+  while(i < f->m) {
+    printf("v%u=",i);poly_print_poly(pi->crt[i++]);
   }
   //printf("pi=");poly_print_poly(pi);
   
-  poly_vec_free(pi, 5);
+  poly_crt_free(pi);
   challenge_free(c);
 }
 
@@ -373,11 +373,11 @@ int main() {
   //test_mod2(f2);
   //test_mod(f);
   uint8_t i = 0;
-  PolyVec ff[5];
-  while(i < 5) {
+  PolyCRT *ff = poly_crt_alloc(5);
+  while(i < ff->m) {
     Poly *fi = poly_create_irreduc(F_PROD_REDUCIBLE_M[i], F_PROD_REDUCIBLE_R[i], 4);
     printf("fi = ");poly_print_poly(fi);
-    ff[i++] = fi;
+    ff->crt[i++] = fi;
   }
   
   test_pi_red(ff);
@@ -386,9 +386,7 @@ int main() {
   //test_lapin_red(f);
   //test_pi_irr(f);
 
-  i = 0;
-  while(i < 5)
-    poly_free(ff[i++]);
+  poly_crt_free(ff);
   poly_free(f);
   
   return 0;

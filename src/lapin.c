@@ -70,15 +70,15 @@ Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_para
   return p;
 }
 
-// TODO: rename PolyVec to PolyCRT maybe? And create alloc and free funtions
-PolyVec* lapin_pimapping_reduc(const PolyVec *f, uint8_t m, const Challenge c, uint8_t sec_param) {
+PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_param) {
+  // TODO: validate c
   uint8_t i = 0, j = 0;
   uint16_t to_pad = 0, new_m = 0;
   uint8_t c_t = ceil((double)sec_param / (double)W); // number of words in challenge
-  PolyVec *v = malloc(sizeof(Poly) * m);
+  PolyCRT *v = poly_crt_alloc(f->m);
   
-  for(i = 0; i < m; i++) {
-    to_pad = poly_degree(f[i]) - sec_param;
+  for(i = 0; i < f->m; i++) {
+    to_pad = poly_degree(f->crt[i]) - sec_param;
     new_m = sec_param + to_pad;
 
     Poly *vi = poly_alloc(new_m);
@@ -91,24 +91,12 @@ PolyVec* lapin_pimapping_reduc(const PolyVec *f, uint8_t m, const Challenge c, u
     }
     // just in case
     vi->vec[0] &= (0xffffffff >> vi->s); // align last word
-    v[i] = vi;
+    v->crt[i] = vi;
     
   }
   
   return v;
 }
-
-/*// TODO: implement pi-mappings
-// c must be an array with 80 elems
-void lapin_pimapping_reduc(const unsigned char *c) {
-  uint8_t i = 0;
-  uint8_t toPad = 0;
-  for(i = 0; i < 5; i++) {
-    toPad = binary_degree(F_PROD_REDUCIBLE[i], 4) - SEC_PARAM;
-    printf("%d\n", toPad);
-  }
-}*/
-
 
 //KeyGen
 Key* key_generate(const Poly *f) {

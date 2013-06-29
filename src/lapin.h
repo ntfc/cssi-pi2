@@ -11,6 +11,17 @@ typedef struct s_key {
   Poly *s1, *s2;
 } Key;
 
+/*typedef struct s_lapin {
+  uint8_t reduc; // 0 = irreducible, 1 = reducible
+  double tau, tau2;
+  uint16_t n;
+  Key *key;
+  union mod_poly {
+    Poly *irre;
+    PolyVec *reduc;
+  };
+} Lapin;*/
+
 static uint32_t F_IRREDUCIBLE[17] = {
   0x100000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3
@@ -42,7 +53,7 @@ static uint32_t F_REDUCIBLE[20] = { // degree = 621
 
 Challenge challenge_generate(uint8_t sec_param);
 void challenge_free(Challenge c);
-PolyVec* lapin_pimapping_reduc(const PolyVec *f, uint8_t m, const Challenge c, uint8_t sec_param);
+PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_param);
 Challenge lapin_reader_step1(uint8_t sec_param);
 void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
                     Poly **r, double tau, uint8_t sec_param, uint32_t ***table);

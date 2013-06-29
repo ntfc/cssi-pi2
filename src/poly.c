@@ -430,14 +430,33 @@ void poly_free_table(uint32_t **t, uint8_t n) {
     }
     free(t);
   }
-  
 }
 
-void poly_vec_free(PolyVec *pv, uint8_t m) {
-  if(pv) {
-    while(m--) {
-      poly_free(pv[m]);
+PolyCRT* poly_crt_alloc(uint8_t m) {
+  PolyCRT *p = malloc(sizeof(PolyCRT));
+  if(!p) {
+    fprintf(stderr, "ERROR poly_crt_alloc p\n");
+    return NULL;
+  }
+  p->m = m;
+  p->crt = calloc(m, sizeof(Poly*));
+  if(!p->crt) {
+    fprintf(stderr, "ERROR poly_crt_alloc p->crt\n");
+    free(p);
+    return NULL;
+  }
+  return p;
+}
+
+void poly_crt_free(PolyCRT *p) {
+  if(p) {
+    if(p->crt) {
+      uint8_t m = p->m;
+      while(m--) {
+        poly_free(p->crt[m]);
+      }
+      free(p->crt);
     }
-    free(pv);
+    free(p);
   }
 }
