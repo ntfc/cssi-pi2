@@ -64,7 +64,14 @@ void poly_print_poly(Poly *f) {
     i++;
   }
   printf("\n");
-
+}
+void challenge_print_challenge(Challenge c) {
+  uint8_t t = 0;
+  unsigned char w[W+1];
+  while(t < 3) {
+    printf("%s", binary_uint32_to_char(c[t++], w));
+  }
+  printf("\n");
 }
 
 void teste2() {
@@ -307,6 +314,20 @@ void test_pi_irr(const Poly *f) {
   printf("pi=");poly_print_poly(pi);
 }
 
+void test_pi_red(const PolyVec *f) {
+  Challenge c = challenge_generate(SEC_PARAM);
+  printf("c=");challenge_print_challenge(c);
+  PolyVec *pi = lapin_pimapping_reduc(f, 5, c, SEC_PARAM);
+  uint8_t i = 0;
+  while(i < 5) {
+    printf("v%u=",i);poly_print_poly(pi[i++]);
+  }
+  //printf("pi=");poly_print_poly(pi);
+  
+  poly_vec_free(pi, 5);
+  challenge_free(c);
+}
+
 // NOTE: a and b can have diffent lengths..
 // right-to-left comb method
 Poly* test_poly_mult(const Poly *a, const Poly *b) {
@@ -358,17 +379,8 @@ int main() {
     printf("fi = ");poly_print_poly(fi);
     ff[i++] = fi;
   }
-  i = 0;
-  Poly *new_f = poly_mult(ff[0], ff[1]);
-  printf("new_f=");poly_print_poly(new_f);
   
-  
-  Poly *a = poly_rand_uniform_poly(new_f);
-  Poly *b = poly_rand_uniform_poly(f);
-  printf("a="); poly_print_poly(a);
-  printf("b="); poly_print_poly(b);
-  Poly *test_mult = poly_mult(a, b);
-  printf("test_mult=\n");poly_print_poly(test_mult);
+  test_pi_red(ff);
   
   //test_lapin_irr(f);
   //test_lapin_red(f);
@@ -378,9 +390,6 @@ int main() {
   while(i < 5)
     poly_free(ff[i++]);
   poly_free(f);
-  poly_free(new_f);
-  poly_free(test_mult);
-  poly_free(a);
-  poly_free(b);
+  
   return 0;
 }

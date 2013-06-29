@@ -174,8 +174,10 @@ class Reducible:
     v = [] # list of v_i
     for p in self.fi:
       toPad = p.degree() - 80
-      # pad to the left
-      poly = (''.join(['0' * toPad, c]))
+      # pad to the left?
+      #poly = (''.join(['0' * toPad, c]))
+      # pad to the right
+      poly = (''.join([c, '0' * toPad]))
       v.append(binToPoly(poly, self.x))
     return v
     

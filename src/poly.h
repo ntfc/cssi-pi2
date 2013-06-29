@@ -59,4 +59,6 @@ uint32_t** poly_compute_mod_table(const Poly *f);
 // t: length of table
 void poly_free_table(uint32_t **t, uint8_t n);
 
+void poly_vec_free(PolyVec *pv, uint8_t m);
+
 #endif

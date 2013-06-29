@@ -65,18 +65,37 @@ Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_para
   p = poly_create_poly_from_coeffs(f, coeffs, 16);
   
   if(poly_hamming_weight(p) > 16) {
-    fprintf(stderr, "WARNING: wt(pi(c)) > 16!\n");
+    fprintf(stderr, "INFO wt(pi(c)) > 16!\n");
   }
   return p;
 }
 
-Poly* poly_pimapping_reduc(const Poly **f, uint8_t m, const Challenge c, uint8_t sec_param) {
-  uint8_t i = 0;
-  uint16_t toPad = 0;
+// TODO: rename PolyVec to PolyCRT maybe? And create alloc and free funtions
+PolyVec* lapin_pimapping_reduc(const PolyVec *f, uint8_t m, const Challenge c, uint8_t sec_param) {
+  uint8_t i = 0, j = 0;
+  uint16_t to_pad = 0, new_m = 0;
+  uint8_t c_t = ceil((double)sec_param / (double)W); // number of words in challenge
+  PolyVec *v = malloc(sizeof(Poly) * m);
+  
   for(i = 0; i < m; i++) {
-    toPad = poly_degree(f[i]) - 80;
-    printf("toPad = %u\n", toPad);
+    to_pad = poly_degree(f[i]) - sec_param;
+    new_m = sec_param + to_pad;
+
+    Poly *vi = poly_alloc(new_m);
+    for(j = 0; j < c_t; j++) {
+      vi->vec[GET_VEC_WORD_INDEX(vi->t, j)] = c[GET_VEC_WORD_INDEX(c_t, j)];
+    }
+    // add to_pad zeros to the right
+    while(to_pad--) {
+      binary_array_shift_left(vi->vec, vi->t);
+    }
+    // just in case
+    vi->vec[0] &= (0xffffffff >> vi->s); // align last word
+    v[i] = vi;
+    
   }
+  
+  return v;
 }
 
 /*// TODO: implement pi-mappings
