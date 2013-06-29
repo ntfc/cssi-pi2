@@ -506,6 +506,7 @@ def polyToBin(a, x):
 def polyToHex(a, x, W=32):
   # convert to bin if necessary
   if type(a) == type(x):
+    t = ceil(len(a.list()) / W)
     a = polyToBin(a, x).zfill(t * W)
   t = ceil(len(a) / W)
   a = a.zfill(t * W)

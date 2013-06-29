@@ -50,7 +50,7 @@ void test_print_char_word(const unsigned char *c) {
   printf("\n");
 }
 
-void poly_print_poly(Poly *f) {
+void poly_print_poly(const Poly *f) {
   if(!f) {
     fprintf(stderr, "ERROR poly NULL\n");
     return;
@@ -65,7 +65,7 @@ void poly_print_poly(Poly *f) {
   }
   printf("\n");
 }
-void challenge_print_challenge(Challenge c) {
+void challenge_print_challenge(const Challenge c) {
   uint8_t t = 0;
   unsigned char w[W+1];
   while(t < 3) {
@@ -273,8 +273,8 @@ void test_mod3(const Poly *f) {
 void test_lapin_irr(const Poly *f) {
   Challenge c = challenge_generate(SEC_PARAM);
   int i = 0;
-  unsigned char w[32+1];
-  /*printf("c=");
+  /*unsigned char w[32+1];
+  printf("c=");
   for(i = 0; i <= ceil(SEC_PARAM/W); i++)
     printf("%s", binary_uint32_to_char(c[i], w));
   printf("\n");
@@ -331,7 +331,7 @@ void test_pi_red(const PolyCRT *f) {
 // NOTE: a and b can have diffent lengths..
 // right-to-left comb method
 Poly* test_poly_mult(const Poly *a, const Poly *b) {
-  Poly *fst = a, *sec = b;
+  Poly *fst = (Poly*)a, *sec = (Poly*)b;
   if(a->m > b->m) {
     sec = poly_add_degree(b, a->m - b->m);
     
@@ -354,10 +354,6 @@ Poly* test_poly_mult(const Poly *a, const Poly *b) {
 int main() {
   srand((unsigned)time(NULL));
   
-  Poly *f = poly_alloc(532);
-  poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
-  //printf("f=");poly_print_poly(f);
-  
   /*// x^233 + x^74 + 1
   uint32_t new_f_coefs[] = {0x200, 0x0, 0x0, 0x0, 0x0, 0x400, 0x0, 0x1};
   Poly *f2 = poly_alloc(233);
@@ -372,22 +368,17 @@ int main() {
   //test_mod(f);
   //test_mod2(f2);
   //test_mod(f);
-  uint8_t i = 0;
-  PolyCRT *ff = poly_crt_alloc(5);
-  while(i < ff->m) {
-    Poly *fi = poly_create_irreduc(F_PROD_REDUCIBLE_M[i], F_PROD_REDUCIBLE_R[i], 4);
-    printf("fi = ");poly_print_poly(fi);
-    ff->crt[i++] = fi;
-  }
+
   
-  test_pi_red(ff);
+  //test_pi_red(ff);
   
+  Lapin *lapin = lapin_init(0);
+  
+  poly_print_poly(lapin->f.normal);
+  lapin_end(lapin);
   //test_lapin_irr(f);
   //test_lapin_red(f);
   //test_pi_irr(f);
-
-  poly_crt_free(ff);
-  poly_free(f);
   
   return 0;
 }

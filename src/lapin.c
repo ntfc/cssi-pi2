@@ -1,6 +1,7 @@
 #include <stdio.h> // TODO: remove
 #include <stdlib.h>
 #include <math.h>
+#include <string.h> // memcpy
 #include "lapin.h"
 #include "random.h"
 #include "binary.h"
@@ -26,6 +27,44 @@ Challenge challenge_generate(uint8_t sec_param) {
 void challenge_free(Challenge c) {
   if(c != NULL) {
     free(c);
+  }
+}
+
+// If redec != 0, reduc = true
+Lapin* lapin_init(uint8_t reduc) {
+  Lapin *l = malloc(sizeof(Lapin));
+
+  if(!l) {
+    fprintf(stderr, "ERROR lapin_init l\n");
+    return NULL;
+  }
+  
+  if(reduc) {
+    // set both reducible and reducible_crt polys
+    union mod_poly f;
+    f.crt = f_reducible_crt;
+    f.normal = f_reducible;
+    
+    Lapin l_init = {.reduc = 1, .tau = (double)1/(double)6, .tau2 = 0.29,
+              .sec_param = SEC_PARAM, .n = f_reducible->m, .f = f};
+    memcpy(l, &l_init, sizeof(Lapin));
+  }
+  else {
+    // set only  the irreducle poly
+    union mod_poly f;
+    f.normal = f_irreducible;
+    
+    Lapin l_init = {.reduc = 0, .tau = (double)1/(double)8, .tau2 = 0.27,
+              .sec_param = SEC_PARAM, .n = f_irreducible->m, .f = f};
+    memcpy(l, &l_init, sizeof(Lapin));
+  }
+  
+  return l;
+}
+
+void lapin_end(Lapin *l) {
+  if(l) {
+    free(l);
   }
 }
 

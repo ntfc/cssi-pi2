@@ -63,7 +63,7 @@ Poly* poly_add(const Poly *a, const Poly *b) {
 
 // right-to-left comb method
 Poly* poly_mult(const Poly *a, const Poly *b) {
-  Poly *fst = a, *snd = b;
+  Poly *fst = (Poly *)a, *snd = (Poly *)b;
   // if polys have different number of words, we need to convert one of them so
   // that both end up with the same number of words
   if(a->t != b->t) {
