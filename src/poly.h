@@ -58,8 +58,7 @@ Poly* poly_add_degree(const Poly *a, uint16_t add);
 
 uint32_t** poly_compute_mod_table(const Poly *f);
 
-// t: length of table
-void poly_free_table(uint32_t **t, uint8_t n);
+void poly_free_table(uint32_t **t);
 
 PolyCRT* poly_crt_alloc(uint8_t m);
 

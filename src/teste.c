@@ -74,55 +74,6 @@ void challenge_print_challenge(const Challenge c) {
   printf("\n");
 }
 
-void teste2() {
-
-  /*unsigned char w[32];
-  int i = 0;
-  Poly *a = poly_alloc(128, 4);
-  Poly *b = poly_alloc(128, 4);
-  uint32_t A[4] = {0x0, 0x0, 0x0, 0x324};
-  uint32_t B[4] = {0x0, 0xF, 0xC, 0xCF12};
-  poly_set_coeffs_from_uint32(a, A);
-  poly_set_coeffs_from_uint32(b, B);
-  
-  
-  printf("a = ");poly_print_poly(a);
-  printf("b = ");poly_print_poly(b);
-  Poly *c = poly_mult(a, b);
-  printf("a*b = ");poly_print_poly(c);
-  
-  poly_free(a);
-  poly_free(b);
-  poly_free(c);
-  
-  // generate challenge
-  Challenge ch = challenge_generate(SEC_PARAM);
-  for(i = 0; i < 3; i++) {
-    printf("%s", binary_uint32_to_char(ch[i], w));
-  }
-  printf("\n");
-  uint32_t sh[2] = {0x0F, 0x00000000};
-  printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
-  binary_array_shift_right(sh, 2);
-  printf("0x%.8x 0x%.8x\n", sh[0], sh[1]);
-  
-  Poly *f = poly_alloc(532, 17);
-  poly_set_coeffs_from_uint32(f, F_IRREDUCIBLE);
-  Poly *pi = lapin_pimapping_irreduc(f, ch, SEC_PARAM);
-  poly_print_poly(pi);
-  free(ch);
-  
-  uint16_t coeffs1[] = {128, 54, 1, 0, 3};
-  uint16_t coeffs2[] = {500, 148, 128, 32, 64, 56, 87, 74, 52, 10, 111, 12, 15, 25, 0};
-  Poly *a1 = poly_create_poly_from_coeffs(f, coeffs1, 5);
-  Poly *a2 = poly_create_poly_from_coeffs(f, coeffs2, 15);
-  Poly *c1 = poly_mult(a1, a2);
-  poly_print_poly(a1); poly_print_poly(a2);
-  printf("Before mod=");poly_print_poly(c1);
-  c1 = poly_mod(c1, f);
-  printf(" After mod=");poly_print_poly(c1);*/
-}
-
 void test_get_bit(const Poly *f) {
   printf("bit 600 = %u\n", poly_get_bit(f, 600));
   printf("bit 544 = %u\n", poly_get_bit(f, 544));
@@ -166,7 +117,7 @@ void test_mod(const Poly *f) {
   poly_free(b);
   poly_free(c);
   poly_free(d);
-  poly_free_table(table, W);
+  poly_free_table(table);
 }
 
 
@@ -270,38 +221,6 @@ void test_mod3(const Poly *f) {
   poly_free(C);
 }
 
-void test_lapin_irr(const Poly *f) {
-  Challenge c = challenge_generate(SEC_PARAM);
-  int i = 0;
-  /*unsigned char w[32+1];
-  printf("c=");
-  for(i = 0; i <= ceil(SEC_PARAM/W); i++)
-    printf("%s", binary_uint32_to_char(c[i], w));
-  printf("\n");
-  printf("0x%.8x\n", random_uniform_uint32());*/
-  Key *key = key_generate(f);
-  /*printf("s1=");poly_print_poly(key->s1);
-  printf("s2=");poly_print_poly(key->s2);*/
-    
-  Poly *r, *z;
-  uint32_t **table = NULL;
-  lapin_tag_step2(key, f, c, &z, &r, (double)1/(double)8, SEC_PARAM, &table);
-  
-  /*printf("r=");poly_print_poly(r);
-  printf("z=");poly_print_poly(z);*/
-  
-  int vrfy = lapin_reader_step3(key, f, c, z, r, (double)0.27, SEC_PARAM, &table);
-  printf("Vrfy = %d\n", vrfy);
-  
-  
-  // faltam fazer 4 free's
-  poly_free(z);
-  poly_free(r);
-  challenge_free(c);
-  key_free(key);
-  poly_free_table(table, W);
-}
-
 void test_pi_irr(const Poly *f) {
   uint32_t c[3] = {0x3c49, 0xf7edb6e0, 0xbba10de5};
   int i = 0;
@@ -354,31 +273,18 @@ Poly* test_poly_mult(const Poly *a, const Poly *b) {
 int main() {
   srand((unsigned)time(NULL));
   
-  /*// x^233 + x^74 + 1
-  uint32_t new_f_coefs[] = {0x200, 0x0, 0x0, 0x0, 0x0, 0x400, 0x0, 0x1};
-  Poly *f2 = poly_alloc(233);
-  poly_set_coeffs_from_uint32(f2, new_f_coefs);
-  printf("f2=");poly_print_poly(f2);*/
-  
-  // TODO: this challenge produces a pimapping with only 14 coeffs
-  //uint32_t c[3] =  {0xb9fe, 0x9d532bf9, 0x1ffa5b10};
-  
-  
-  //test_mult(f);
-  //test_mod(f);
-  //test_mod2(f2);
-  //test_mod(f);
-
-  
-  //test_pi_red(ff);
-  
   Lapin *lapin = lapin_init(0);
+  Challenge c = challenge_generate(lapin->sec_param);
+  Poly *r, *z;
+  int8_t tag = lapin_tag(lapin, c, &r, &z);
+  int8_t vrfy = lapin_vrfy(lapin, c, r, z);
+  printf("Vrfy (r,z) = %u\n", vrfy);
   
-  poly_print_poly(lapin->f.normal);
   lapin_end(lapin);
-  //test_lapin_irr(f);
-  //test_lapin_red(f);
-  //test_pi_irr(f);
+  
+  challenge_free(c);
+  poly_free(r);
+  poly_free(z);
   
   return 0;
 }

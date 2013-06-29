@@ -69,8 +69,15 @@ void lapin_end(Lapin *l);
 
 Challenge challenge_generate(uint8_t sec_param);
 void challenge_free(Challenge c);
+
 PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_param);
 Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_param);
+
+// writes to r and z
+int8_t lapin_tag(const Lapin *lapin, const Challenge c, Poly **r, Poly **z);
+int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const Poly *r, const Poly *z);
+
+
 Challenge lapin_reader_step1(uint8_t sec_param);
 void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
                     Poly **r, double tau, uint8_t sec_param, uint32_t ***table);

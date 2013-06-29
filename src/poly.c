@@ -367,7 +367,7 @@ Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
 }
 
 // this table uses f(x) instead of r(x)
-// TODO: use r(x) instead of f(x)!!!!
+// TODO: use r(x) instead of f(x)!!!! ????
 uint32_t** poly_compute_mod_table(const Poly *f) {
   uint8_t k = 0;
   uint16_t i = 0;
@@ -417,13 +417,12 @@ Poly* poly_add_degree(const Poly *a, uint16_t add) {
   return b;
 }
 
-// t: length of table
-void poly_free_table(uint32_t **t, uint8_t n) {
+void poly_free_table(uint32_t **t) {
   uint8_t i = 0;
   
   if(t != NULL) {
     
-    for(i = 0; i < n; i++) {
+    for(i = 0; i < W; i++) {
       if(t[i] != NULL) {
         free(t[i]);
       }
