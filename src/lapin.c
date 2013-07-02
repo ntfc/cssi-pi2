@@ -167,7 +167,7 @@ void key_free(Key *k) {
 int8_t lapin_tag(const Lapin *lapin, const Challenge c, Poly **r, Poly **z) {
   if(!lapin) {
     fprintf(stderr, "ERROR: lapin is NULL\n");
-    return 0;
+    return -1;
   }
   double tau1 = lapin->tau;
   uint16_t sec_param = lapin->sec_param;
@@ -175,7 +175,41 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, Poly **r, Poly **z) {
   
   // TODO: validate r and z and c and keys
   if(lapin->reduc) {
-    // TODO: tag
+    // TODO: this might be more efficient..
+    Poly *f = lapin->f.normal;
+    // TODO: use a global variable for table!
+    uint32_t **table = poly_compute_mod_table(f);
+    
+    *r = poly_rand_uniform_poly(f);
+
+    Poly *e = poly_rand_bernoulli_poly(f, tau1);
+    
+    Poly *pi = lapin_pimapping_irreduc(f, c, sec_param);
+    
+    // NOTE: this way all the memory can be free'd
+    // r * (s * pi(c) + s') + e
+    
+    Poly *sTimesPi = poly_mult(key->s1, pi);
+    Poly *sTimesPiMod = poly_mod(sTimesPi, f, &table);
+    poly_free(sTimesPi);
+    
+    Poly *sTimesPiPlusS2 = poly_add(sTimesPiMod, key->s2);
+
+    poly_free(sTimesPiMod);
+
+    Poly *rTimesRest = poly_mult(*r, sTimesPiPlusS2);
+    poly_free(sTimesPiPlusS2);
+    Poly *rTimesRestMod = poly_mod(rTimesRest, f, &table);
+    poly_free(rTimesRest);
+    
+    *z = poly_add(rTimesRestMod, e);
+    poly_free(rTimesRestMod);
+    
+    // free
+    poly_free(pi);
+    poly_free(e);
+    
+    poly_free_table(table);
   }
   else {
     // TODO: this might be more efficient..
@@ -278,3 +312,13 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const Poly *r, const Po
 
 
 
+/////////////////// 
+// TODO: delete or refactor this
+void challenge_print_challenge(const Challenge c) {
+  uint8_t t = 0;
+  unsigned char w[W+1];
+  while(t < 3) {
+    printf("%s", binary_uint32_to_char(c[t++], w));
+  }
+  printf("\n");
+}

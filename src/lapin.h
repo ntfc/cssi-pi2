@@ -6,6 +6,9 @@
 
 #define SEC_PARAM 80
 
+#define REDUCIBLE 1
+#define IRREDUCIBLE 0
+
 typedef uint32_t *Challenge;
 typedef struct s_key {
   Poly *s1, *s2;

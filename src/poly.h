@@ -25,7 +25,9 @@ typedef struct s_poly_crt {
 } PolyCRT;
 
 Poly* poly_rand_uniform_poly(const Poly *f);
+PolyCRT *poly_rand_uniform_crt(const PolyCRT *f);
 Poly* poly_rand_bernoulli_poly(const Poly *f, double tau);
+Poly* poly_rand_bernoulli_crt(const PolyCRT *f, double tau);
 
 Poly* poly_add(const Poly *a, const Poly *b);
 uint16_t poly_degree(const Poly *p);
@@ -63,5 +65,10 @@ void poly_free_table(uint32_t **t);
 PolyCRT* poly_crt_alloc(uint8_t m);
 
 void poly_crt_free(PolyCRT *p);
+
+PolyCRT* poly_add_crt(const PolyCRT* a, const PolyCRT* b);
+PolyCRT* poly_mult_crt(const PolyCRT* a, const PolyCRT* b, const PolyCRT *f);
+PolyCRT* poly_reduce_to_crt(const Poly *a, const PolyCRT *f);
+Poly* poly_crt(const PolyCRT *c);
 
 #endif

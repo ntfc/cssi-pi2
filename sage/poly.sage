@@ -189,13 +189,15 @@ class BinaryPolynomial:
     u = []
     # append f in binary form, with one extra word!
     # NOTE: all elements in u have self.t + 1 words
-    u.append(polyToBin(f, self.var).zfill((self.t + 1) * self.W))
+    # append only r(x)
+    u.append(polyToBin(self.f - self.var**self.f.degree(), self.var).zfill((self.t) * self.W))
+    #u.append(polyToBin(self.f, self.var).zfill((self.t + 1) * self.W))
     
     for k in xrange(1, self.W):
       u.append(self.shiftLeft(u[k - 1]))   
       
     # print polys...
-    print "c = {0}".format(c)
+    #print "c = {0}".format(c)
     # test table..
     for k in xrange(0, self.W):
       print "u[{0}] = {1}".format(k, polyToHex(u[k],x))
@@ -203,6 +205,7 @@ class BinaryPolynomial:
     # work with lists
     c = list(c)
     for i in xrange((2 * self.m) - 2, self.m - 1, -1):
+    
       ###"" alternative way. use this in C ""
       word = floor(i / self.W)
       #word = ceil(((t_2 * self.W) - i) / self.W) - 1
@@ -215,20 +218,22 @@ class BinaryPolynomial:
         k = (i - self.m) - (self.W * j)
         j_aux = j
         #print "C[{0}] = {1}".format(j, hex(Integer(''.join(self.getWord(c, j)), 2)).zfill(8))
-        while (j_aux < t_2) and ((j_aux - j) <= self.t):
+        while (j_aux < t_2) and ((j_aux - j) < self.t):
           # C{j_aux} = C{j_aux} XOR u[k]
           ci = self.getWord(c, j_aux) # warning: this is a list, not a str
           uk = self.getWord(u[k], j_aux - j) # this is a str, not a list
           ci = bitwiseXor(ci, uk) # str
-          print "C[{0}] = {1}, u[{2}] = {3}, {4}".format(j_aux, hex(Integer(''.join(self.getWord(c, j_aux)),2)).zfill(8), k, hex(Integer(uk,2)).zfill(8), hex(Integer(ci,2)).zfill(8))
+          #print "C[{0}] = {1}, u[{2}] = {3}, {4}".format(j_aux, hex(Integer(''.join(self.getWord(c, j_aux)),2)).zfill(8), k, hex(Integer(uk,2)).zfill(8), hex(Integer(ci,2)).zfill(8))
           # save ci to c[i]
           end = len(c) - (self.W * j_aux)
           start = end - self.W
           c[start : end] = list(ci)
           j_aux += 1
-    c = ''.join(c)
+    #c = ''.join(c)
+    c = c[len(c) - (self.t * self.W) : ]
     # return only C[t - 1] .. C[0]
-    return c[(self.t - 1) * self.W : ]
+    # and delete s leftmost bits
+    return '0'*self.s + ''.join(c[self.s : ])
 
   # shift left by one bit
   # all we need to to is delete the left-most bit and add one 0 to to the right
@@ -521,3 +526,33 @@ def polyToHex(a, x, W=32):
     end -= W
   p.reverse()
   return p
+
+def test_mod():
+  R = PolynomialRing(GF(2), 'x')
+  x = R.gen()
+  f = x**532 + x + 1
+  #f = x^127+x^8+x^7+x^3+1
+  R = R.quotient(f, 'x')
+  B = BinaryPolynomial(f, 32)
+  a = R.random_element()
+  
+  l = a.list()
+  # traverse in reversed order
+  a = (''.join(str(l[bit]) for bit in xrange(len(l)-1, -1, -1)))
+  
+  b = R.random_element()
+  
+  l = b.list()
+  # traverse in reversed order
+  b = (''.join(str(l[bit]) for bit in xrange(len(l)-1, -1, -1)))
+  
+  a = B.binToPoly(a)
+  b = B.binToPoly(b)
+  
+  c = a*b
+
+  return B.binToPoly(B.polyMod(c)) == c.mod(f)
+  #fi = x^127 + x^8 + x^7 + x^3 + 1
+  #B2 = BinaryPolynomial(fi, 32)
+  
+  #return B2.binToPoly(B2.polyMod(c)) == c.mod(fi)

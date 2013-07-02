@@ -23,6 +23,16 @@ Poly* poly_rand_uniform_poly(const Poly *f) {
   return p;
 }
 
+PolyCRT *poly_rand_uniform_crt(const PolyCRT *f) {
+  // TODO: validation
+  PolyCRT *a = poly_crt_alloc(f->m);
+  uint8_t i = 0;
+  for(i = 0; i < f->m; i++) {
+    a->crt[i] = poly_rand_uniform_poly(f->crt[i]);
+  }
+  return a;
+}
+
 // f: polynomial of degree m
 Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
   //uint8_t s = (t*W) - binary_degree(f, t); // s = Wt - m
@@ -33,6 +43,13 @@ Poly* poly_rand_bernoulli_poly(const Poly *f, double tau) {
     p->vec[t] = random_bernoulli_uint32(tau);
   p->vec[0] &= (0xffffffff >> p->s); // align last word
   return p;
+}
+
+Poly* poly_rand_bernoulli_crt(const PolyCRT *f, double tau) {
+  // TODO: validation
+  PolyCRT *a = poly_crt_alloc(f->m);
+  // TODO: finish this
+  return a;
 }
 
 // returns c = a + b
@@ -59,6 +76,10 @@ Poly* poly_add(const Poly *a, const Poly *b) {
   }
 
   return c;
+}
+
+PolyCRT* poly_add_crt(const PolyCRT* a, const PolyCRT* b) {
+  
 }
 
 // right-to-left comb method
@@ -118,6 +139,24 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
     poly_free(snd);
   }
   return c;
+}
+
+PolyCRT* poly_mult_crt(const PolyCRT* a, const PolyCRT* b, const PolyCRT *f) {
+  if(a->m != b->m || b->m != f->m) {
+    fprintf(stderr, "ERROR all poly in poly_mult_crt must be of same size\n");
+    return NULL;
+  }
+  
+  uint8_t i = 0;
+  PolyCRT *c = poly_crt_alloc(f->m);
+  for(i = 0; i < f->m; i++) {
+    Poly *newC = poly_mult(a->crt[i], b->crt[i]);
+    c->crt[i] = poly_mod(newC, f->crt[i], NULL);
+    poly_free(newC);
+  }
+  
+  return c;
+  
 }
 
 // NOTE: the Poly a is changed, and the value returned is the same as a
@@ -184,8 +223,10 @@ Poly* poly_clone(const Poly *p, uint16_t new_t) {
   }
   
   uint16_t i = 0;
-  for(i = 0; i < p->t; i++)
+  for(i = 0; i < p->t; i++) {
     c->vec[i + (new_t - p->t)] = p->vec[i];
+    //c->vec[GET_VEC_WORD_INDEX(c->t, i)] = p->vec[GET_VEC_WORD_INDEX(p->t, i)];
+  }
   return c;
 }
 
@@ -314,9 +355,14 @@ Poly* poly_fast_mod_reduction(Poly *a) {
 }
 
 Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
-  if(*table == NULL) {
+  uint32_t **mod_table = NULL;
+  if(!table || *table == NULL) {
     // pre-compute table
-    *table = poly_compute_mod_table(f);
+    fprintf(stderr, "INFO computing table\n");
+    mod_table = poly_compute_mod_table(f);
+  }
+  else {
+    mod_table = *table;
   }
   
   uint16_t j, i;
@@ -339,14 +385,16 @@ Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
       k = (i - m) - (W * j);
       
       j_aux = j;
-      while( (j_aux < C->t) && ((j_aux - j) <= f->t)) {
+      while( (j_aux < C->t) && ((j_aux - j) < f->t)) {
          // C{j_aux} = C{j_aux} ^ u[k]
         uint16_t ci_i = GET_VEC_WORD_INDEX(C->t, j_aux);
         uint32_t ci = C->vec[ci_i];
         
-        uint32_t uk_k = GET_VEC_WORD_INDEX(f->t+1, j_aux - j);
-        uint32_t uk = (*table)[k][uk_k];
+        uint32_t uk_k = GET_VEC_WORD_INDEX(f->t, j_aux - j);
+        
+        uint32_t uk = mod_table[k][uk_k];
         // C[j_aux] = C[j_aux] ^ u[k][j_aux - j]
+        
         C->vec[ci_i] = ci ^ uk;
         
         j_aux++;
@@ -354,34 +402,44 @@ Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table) {
     }
     
   }
-
+  
   Poly *cMod = poly_alloc(f->m);
   for(i = 0; i < cMod->t; i++) {
     cMod->vec[(cMod->t - 1) - i] = C->vec[(C->t - 1) - i];
   }
-  // not necessary
-  //cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
+  // necessary..
+  cMod->vec[0] &= (0xffffffff >> cMod->s); // align last word
   
   poly_free(C);
+  
+  if(!table || *table == NULL) {
+    // free computed table
+    poly_free_table(mod_table);
+  }
   return cMod;
 }
 
-// this table uses f(x) instead of r(x)
-// TODO: use r(x) instead of f(x)!!!! ????
 uint32_t** poly_compute_mod_table(const Poly *f) {
   uint8_t k = 0;
   uint16_t i = 0;
   uint32_t **table; // 2-dimension array = table
   // one more word than f
-  uint16_t t = f->t + 1; // number of words in each u_k
+  //uint16_t t = f->t + 1; // number of words in each u_k
+  uint16_t t = f->t; // number of words in each u_k
   table = malloc(sizeof(uint32_t*) * W);
   
   uint32_t *u0 = calloc(t, sizeof(uint32_t));
+  
   // copy f->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
-  for(i = 1; i < t; i++) {
-    u0[i] = f->vec[i-1];
+  // copy f->vec to u0
+  for(i = 0; i < t; i++) {
+    //u0[i] = f->vec[i-1];
+    u0[i] = f->vec[i];
   }
+  // use only r(x) instead of f(x)
+  u0[0] ^= (1 << binary_degree(u0[0]));
   table[0] = u0;
+
   k = 1;
   while(k < W) {
     table[k] = calloc(t, sizeof(uint32_t));
@@ -457,5 +515,67 @@ void poly_crt_free(PolyCRT *p) {
       free(p->crt);
     }
     free(p);
+  }
+}
+
+// TODO: not working because of poly_mod ....
+PolyCRT* poly_reduce_to_crt(const Poly *a, const PolyCRT *f) {
+  // TODO: validate a and f
+  uint8_t i = 0;
+  PolyCRT *a_crt = poly_crt_alloc(f->m);
+  for(i = 0; i < f->m; i++) {
+    printf("a ");poly_print_poly(a);
+    printf("mod ");poly_print_poly(f->crt[i]);
+    a_crt->crt[i] = poly_mod(a, f->crt[i], NULL);
+    poly_print_poly(a_crt->crt[i]);
+  }
+  return a_crt;
+}
+
+Poly* poly_crt(const PolyCRT *c) {
+  uint8_t i = 0;
+  poly_print_poly(c->crt[0]);
+  Poly *a = poly_clone(c->crt[0], c->crt[0]->t);
+  
+  
+  Poly *a_new;
+  for(i = 1; i < c->m; i++) {
+    a_new = poly_mult(a, c->crt[i]);
+    poly_free(a);
+    a = a_new;
+  }
+  
+  return a;
+}
+
+
+
+///////////////////////
+// TODO: delete or refactor this..
+void poly_print_poly(const Poly *f) {
+  if(!f) {
+    fprintf(stderr, "ERROR poly NULL\n");
+    return;
+  }
+  uint16_t i = 0;
+  uint16_t t = f->t;
+  unsigned char w[W+1];
+  
+  while(i < t) {
+    printf("%s", binary_uint32_to_char(f->vec[i], w));
+    i++;
+  }
+  printf("\n");
+}
+
+void poly_print_poly_crt(const PolyCRT *f) {
+  if(!f) {
+    fprintf(stderr, "ERROR poly NULL\n");
+    return;
+  }
+  int i = 0;
+  unsigned char w[W+1];
+  for(i = 0; i < f->m; i++) {
+    printf("f_%d = ", i); poly_print_poly(f->crt[i]);
   }
 }
