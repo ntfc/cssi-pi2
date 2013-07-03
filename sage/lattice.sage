@@ -6,14 +6,7 @@ m = 8786
 sigma = 31495
 T = RealDistribution('gaussian', sigma)
 
-def genY():
-  return vector([T.get_random_element().integer_part() for _ in range(m)])
-  
-def vector_distribution_function(y):
-  if len(y) != m:
-    print "ERROR: len(y) must be m!"
-    return
-  return math.pow(1/(sigma * sqrt(2 * math.pi)), m)# * math.exp(- ((y.norm(2))**2 / (2 * sigma**2)))
+
   
 def genMatrix(n,m,q):
   matx = random_matrix(ZZ, n, m, x=0, y=q)
@@ -33,19 +26,41 @@ def matrixAdd(a, s):
     return
   return a+s
 
-#isto vai ser para apagar, nao era assim
-#def genVectorY123(sigma, m):
-# dist = RealDistribution('gaussian', sigma)
-# randvector = random_vector(ZZ, m)
-# sump = sum(map(lambda x : dist.distribution_function(x), randvector))
-# randvector = randvector.apply_map(lambda x: dist.get_random_element()/sump)
-# return randvector.transpose()
+def genY(sgima, n):
+	return
+
+
+#teddy fez isto
+#analisar depois
+def genY1():
+  return vector([T.get_random_element().integer_part() for _ in range(m)])
+  
+def vector_distribution_function(y):
+  if len(y) != m:
+    print "ERROR: len(y) must be m!"
+    return
+  return math.pow(1/(sigma * sqrt(2 * math.pi)), m)# * math.exp(- ((y.norm(2))**2 / (2 * sigma**2)))
+	
+
+
+def verify(n, sigma, m, u, z, c, a, t):
+	c1 = hashFunction(matrixMult((a, z)-matrixMult(t,c), u))
+	return ((norm(z) <= (n*sigma*sqrt(m))) and (c == c1))
+
+
+
+
 
 
 
 #Probabilidades e amostragem
+#tudo mail isto
+
+def probFunction(v, m, x):
+	return	
 
 #Todo: ver p^m??? Ver se a funçao de probabilidades bate certo
+#Isto esta mal. Come me a ram toda para o valor de q
 
 def genListProb(sigma, q):
   sump = sumPZ(sigma, q)
@@ -65,8 +80,8 @@ def sumPZ(sigma, q):
   return sump
 
 def genVectorY(sigma, q, m):
-  listProb = genListProb(sigma, q)
-  dist = GeneralDiscreteDistribution(listProb)
-  vectorY = vector(ZZ, m)
-  vectorY = map(lambda x: dist.get_random_element(), vectorY)
-  return vectorY
+	listProb = genListProb(sigma, q)
+	dist = GeneralDiscreteDistribution(listProb)
+	vectorY = vector(ZZ, m)
+	vectorY = map(lambda x: dist.get_random_element(), vectorY)
+	return vectorY
