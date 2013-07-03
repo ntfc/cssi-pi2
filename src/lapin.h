@@ -34,7 +34,7 @@ static uint32_t F_IRREDUCIBLE[17] = {
 
 // declare x^532 + x + 1
 // why the &(Poly)? see http://stackoverflow.com/a/11709950/1975046
-static Poly *f_irreducible = &(Poly){.m = 532, .t = 17, .s = 12, .vec = F_IRREDUCIBLE};
+static Poly *f_irreducible = &(Poly){.n_words = 17, .vec = F_IRREDUCIBLE};
 
 static uint32_t F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
   { 0x80000000, 0x0, 0x0, 0x189 }, // x^127+x^8+x^7+x^3+1
@@ -46,11 +46,11 @@ static uint32_t F_PROD_REDUCIBLE[5][4] = { // = Poly[5]
 
 //static const Poly *f_reducible_crt_1 = &(Poly){.m = 127, .t = 4, .s = 1, .vec = F_PROD_REDUCIBLE[0]};
 static Poly *f_reducible_crt_vec[5] = {
-  &(Poly){.m = 127, .t = 4, .s = 1, .vec = F_PROD_REDUCIBLE[0]},
-  &(Poly){.m = 126, .t = 4, .s = 2, .vec = F_PROD_REDUCIBLE[1]},
-  &(Poly){.m = 125, .t = 4, .s = 3, .vec = F_PROD_REDUCIBLE[2]},
-  &(Poly){.m = 122, .t = 4, .s = 6, .vec = F_PROD_REDUCIBLE[3]},
-  &(Poly){.m = 121, .t = 4, .s = 7, .vec = F_PROD_REDUCIBLE[4]}
+  &(Poly){.n_words = 4, .vec = F_PROD_REDUCIBLE[0]},
+  &(Poly){.n_words = 4, .vec = F_PROD_REDUCIBLE[1]},
+  &(Poly){.n_words = 4, .vec = F_PROD_REDUCIBLE[2]},
+  &(Poly){.n_words = 4, .vec = F_PROD_REDUCIBLE[3]},
+  &(Poly){.n_words = 4, .vec = F_PROD_REDUCIBLE[4]}
 };
 static PolyCRT *f_reducible_crt = &(PolyCRT){.m = 5, .crt = f_reducible_crt_vec };
 
@@ -62,7 +62,7 @@ static uint32_t F_REDUCIBLE[20] = { // degree = 621
   0x3406728f, 0xce000000, 0x00000000, 0x000003b9, 0x42fa4143
 };
 // This could be used in situations where one needs to calculate the f in the reducible case
-static Poly *f_reducible = &(Poly){.m = 621, .t = 20, .s = 19, .vec = F_REDUCIBLE};
+static Poly *f_reducible = &(Poly){.n_words = 20, .vec = F_REDUCIBLE};
 
 
 
@@ -73,7 +73,7 @@ void lapin_end(Lapin *l);
 Challenge challenge_generate(uint8_t sec_param);
 void challenge_free(Challenge c);
 
-PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_param);
+/*PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_param);
 Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_param);
 
 // writes to r and z
@@ -88,5 +88,5 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c,
                        const Poly *z, const Poly *r, double tau1,
                        uint8_t sec_param, uint32_t ***table);
 Key* key_generate(const Poly *f);
-void key_free(Key *k);
+void key_free(Key *k);*/
 #endif

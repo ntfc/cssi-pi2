@@ -76,14 +76,16 @@ void lapin_end(Lapin *l) {
 
 //PiMapping irreducible
 //return poly
-Poly* lapin_pimapping_irreduc(const Poly *f, const Challenge c, uint8_t sec_param) {
+Poly* lapin_pimapping_irreduc(const Lapin *lapin, const Challenge c) {
   int8_t k = 0;
   int16_t j = 0;
   uint8_t cj;
   Poly *p;
 
-  uint8_t words = ceil(((double)sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
+  uint8_t words = ceil(((double)lapin->sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
   
+  
+  // TODO: improve this
   // tmp copy of c
   Challenge tmpC = calloc(words, sizeof(*c)); // TODO: does it make sense?
   for(j = 0; j < words; j++)
@@ -138,7 +140,7 @@ PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_
   
   return v;
 }
-
+/*
 //KeyGen
 Key* key_generate(const Poly *f) {
   Key *key = malloc(sizeof(Key));
@@ -321,4 +323,4 @@ void challenge_print_challenge(const Challenge c) {
     printf("%s", binary_uint32_to_char(c[t++], w));
   }
   printf("\n");
-}
+}*/

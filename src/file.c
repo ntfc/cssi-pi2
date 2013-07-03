@@ -3,7 +3,7 @@
 #include "binary.h"
 #include "poly.h"
 
-
+/*
 int8_t file_save_challenge(FILE *fp, const Challenge c) {
   if(!fp) {
     fprintf(stderr, "ERROR: null file\n");
@@ -86,3 +86,4 @@ int8_t file_save_crt(FILE *fp, const PolyCRT *c) {
   return fpr;
   
 }
+*/
