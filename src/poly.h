@@ -11,7 +11,6 @@
 // ie: get GET_WORD_FROM_BIT(7) = 1 <=> a->vec[GET_WORD_INDEX(t, GET_WORD_FROM_BIT)]
 #define GET_WORD_FROM_BIT(i) ( floor( (double)(i) / (double)(W)) )
 
-
 // TODO: more polynomial info
 typedef struct s_poly {
   uint16_t t;
@@ -20,8 +19,15 @@ typedef struct s_poly {
   uint32_t *vec; // actual polynomial, with t words
 } Poly;
 
+typedef struct s_poly_crt {
+  Poly **crt;
+  uint8_t m; // length of fi
+} PolyCRT;
+
 Poly* poly_rand_uniform_poly(const Poly *f);
+PolyCRT *poly_rand_uniform_crt(const PolyCRT *f);
 Poly* poly_rand_bernoulli_poly(const Poly *f, double tau);
+Poly* poly_rand_bernoulli_crt(const PolyCRT *f, double tau);
 
 Poly* poly_add(const Poly *a, const Poly *b);
 uint16_t poly_degree(const Poly *p);
@@ -36,7 +42,7 @@ uint16_t poly_hamming_weight(const Poly *a);
 Poly* poly_shift_left(Poly *a);
 Poly* poly_shift_right(Poly *a);
 
-Poly* poly_alloc(uint16_t m, uint16_t t);
+Poly* poly_alloc(uint16_t m);
 // TODO: careful with this one!!
 void poly_set_coeffs_from_uint32(Poly *p, const uint32_t *coefs);
 void poly_free(Poly *p);
@@ -44,15 +50,25 @@ void poly_free(Poly *p);
 // n: length of v
 Poly* poly_create_poly_from_coeffs(const Poly *f, const uint16_t *v, uint8_t n);
 
+Poly* poly_create_irreduc(uint16_t m, const uint16_t* r, uint8_t n);
+
 Poly* poly_clone(const Poly *p, uint16_t new_t);
 
 uint8_t poly_get_bit(const Poly *a, uint32_t b);
 
-Poly* poly_get_r(const Poly *f);
+Poly* poly_add_degree(const Poly *a, uint16_t add);
 
 uint32_t** poly_compute_mod_table(const Poly *f);
 
-// t: length of table
-void poly_free_table(uint32_t **t, uint8_t n);
+void poly_free_table(uint32_t **t);
+
+PolyCRT* poly_crt_alloc(uint8_t m);
+
+void poly_crt_free(PolyCRT *p);
+
+PolyCRT* poly_add_crt(const PolyCRT* a, const PolyCRT* b);
+PolyCRT* poly_mult_crt(const PolyCRT* a, const PolyCRT* b, const PolyCRT *f);
+PolyCRT* poly_reduce_to_crt(const Poly *a, const PolyCRT *f);
+Poly* poly_crt(const PolyCRT *c);
 
 #endif
