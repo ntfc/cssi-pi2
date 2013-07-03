@@ -17,19 +17,35 @@ def matrixAdd(a, s):
 		return
 	return a+s
 
-#isto vai ser para apagar, nao era assim
-#def genVectorY123(sigma, m):
-#	dist = RealDistribution('gaussian', sigma)
-#	randvector = random_vector(ZZ, m)
-#	sump = sum(map(lambda x : dist.distribution_function(x), randvector))
-#	randvector = randvector.apply_map(lambda x: dist.get_random_element()/sump)
-#	return randvector.transpose()
+def genY(sgima, n):
+
+
+
+
+def hashFunction(ay, u):
+	return
+	
+
+
+def verify(n, sigma, m, u, z, c, a, t):
+	c1 = hashFunction(matrixMult((a, z)-matrixMult(t,c), u))
+	return ((norm(z) <= (n*sigma*sqrt(m))) and (c == c1))
+
+
+
+
+
 
 
 
 #Probabilidades e amostragem
 
+
+def probFunction(v, m, x):
+	return	
+
 #Todo: ver p^m??? Ver se a funçao de probabilidades bate certo
+#Isto esta mal. Come me a ram toda para o valor de q
 
 def genListProb(sigma, q):
 	sump = sumPZ(sigma, q)
@@ -54,3 +70,5 @@ def genVectorY(sigma, q, m):
 	vectorY = vector(ZZ, m)
 	vectorY = map(lambda x: dist.get_random_element(), vectorY)
 	return vectorY
+
+
