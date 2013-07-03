@@ -39,6 +39,19 @@ Poly *poly_clone(const Poly *p) {
   return a;
 }
 
+Poly* poly_create_from_coeffs(uint16_t t, const uint16_t *v, uint8_t n) {
+  // TODO: v must be sorted?
+  Poly *p = poly_alloc(t);
+  uint16_t word;
+  uint8_t pos;
+  while(n--) {
+    word = v[n] / W; // word to xor with. NOTE: word=0 <=> p->vec[p->t-1]
+    pos = v[n] - (word * W); // bit position to xor
+    p->vec[GET_VEC_WORD_INDEX(p->n_words, word)] ^= (0x1 << pos); // actual xor
+  }
+  return p;
+}
+
 uint32_t poly_degree(const Poly *p) {
   uint8_t t = 0;
   

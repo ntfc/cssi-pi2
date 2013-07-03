@@ -24,6 +24,7 @@ typedef struct s_poly_crt {
 Poly *poly_alloc(uint16_t t);
 void poly_free(Poly *p);
 Poly *poly_clone(const Poly *p);
+Poly* poly_create_from_coeffs(uint16_t t, const uint16_t *v, uint8_t n);
 uint32_t poly_degree(const Poly *p);
 Poly *poly_refresh(Poly *p);
 Poly* poly_rand_uniform_poly(uint32_t m);

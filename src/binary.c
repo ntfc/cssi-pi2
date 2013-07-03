@@ -121,6 +121,7 @@ void binary_array_shift_left(uint32_t *a, uint16_t t) {
   a[i] <<= 1;
 }
 
+
 // b = (a << 1)
 void binary_array_shift_left2(const uint32_t *a, uint16_t t, uint32_t* b) {
   int16_t i = 0;

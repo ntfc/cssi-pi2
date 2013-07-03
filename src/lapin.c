@@ -47,7 +47,7 @@ Lapin* lapin_init(uint8_t reduc) {
     f.normal = f_reducible;
     
     Lapin l_init = {.reduc = 1, .tau = (double)1/(double)6, .tau2 = 0.29,
-              .sec_param = SEC_PARAM, .n = f_reducible->m, .f = f};
+              .sec_param = SEC_PARAM, .n = poly_degree(f_reducible), .f = f};
     memcpy(l, &l_init, sizeof(Lapin));
   }
   else {
@@ -56,7 +56,7 @@ Lapin* lapin_init(uint8_t reduc) {
     f.normal = f_irreducible;
     
     Lapin l_init = {.reduc = 0, .tau = (double)1/(double)8, .tau2 = 0.27,
-              .sec_param = SEC_PARAM, .n = f_irreducible->m, .f = f};
+              .sec_param = SEC_PARAM, .n = poly_degree(f_irreducible), .f = f};
     memcpy(l, &l_init, sizeof(Lapin));
   }
   l->key = key_generate(l->f.normal);
@@ -80,18 +80,18 @@ Poly* lapin_pimapping_irreduc(const Lapin *lapin, const Challenge c) {
   int8_t k = 0;
   int16_t j = 0;
   uint8_t cj;
+
   Poly *p;
 
   uint8_t words = ceil(((double)lapin->sec_param/(double)8) / (double)sizeof(*c)); // ceil((sec_param/8) / 4)
   
   
-  // TODO: improve this
+  // TODO: improve this!
   // tmp copy of c
   Challenge tmpC = calloc(words, sizeof(*c)); // TODO: does it make sense?
   for(j = 0; j < words; j++)
     tmpC[j] = c[j];
   uint16_t coeffs[16];
- 
   for(j = 15; j >= 0; j--) {
     cj = tmpC[words - 1] & 0x1F;
     // here we use j instead of the (j-1) indicated in the paper because
@@ -100,56 +100,60 @@ Poly* lapin_pimapping_irreduc(const Lapin *lapin, const Challenge c) {
     // now, bj is a poly coefficient
     // shift tmpC
     k = 5; // 0x1F is 5 bits
+    // TODO: implement binary_array_shift_left(a, t, i)
     while(k--) {
       binary_array_shift_right(tmpC, words);
     }    
   }
   free(tmpC);
-  p = poly_create_poly_from_coeffs(f, coeffs, 16);
+
+  p = poly_create_from_coeffs(lapin->f.normal->n_words, coeffs, 16);
   
-  if(poly_hamming_weight(p) > 16) {
-    fprintf(stderr, "INFO wt(pi(c)) > 16!\n");
+  if(poly_hamming_weight(p) < 16) {
+    fprintf(stderr, "INFO wt(pi(c)) < 16!\n");
   }
   return p;
 }
 
-PolyCRT* lapin_pimapping_reduc(const PolyCRT *f, const Challenge c, uint8_t sec_param) {
+PolyCRT* lapin_pimapping_reduc(Lapin *lapin, const Challenge c) {
   // TODO: validate c
   uint8_t i = 0, j = 0;
   uint16_t to_pad = 0, new_m = 0;
-  uint8_t c_t = ceil((double)sec_param / (double)W); // number of words in challenge
-  PolyCRT *v = poly_crt_alloc(f->m);
+  uint8_t c_t = ceil((double)lapin->sec_param / (double)W); // number of words in challenge
+  PolyCRT *v = poly_crt_alloc(lapin->n);
   
-  for(i = 0; i < f->m; i++) {
-    to_pad = poly_degree(f->crt[i]) - sec_param;
-    new_m = sec_param + to_pad;
+  for(i = 0; i < lapin->f.crt->m; i++) {
+    to_pad = poly_degree(lapin->f.crt->crt[i]) - lapin->sec_param;
+    new_m = lapin->sec_param + to_pad;
 
+    // TODO: new_m or new_m + 1??
     Poly *vi = poly_alloc(new_m);
     for(j = 0; j < c_t; j++) {
-      vi->vec[GET_VEC_WORD_INDEX(vi->t, j)] = c[GET_VEC_WORD_INDEX(c_t, j)];
+      vi->vec[GET_VEC_WORD_INDEX(vi->n_words, j)] = c[GET_VEC_WORD_INDEX(c_t, j)];
     }
     // add to_pad zeros to the right
     while(to_pad--) {
-      binary_array_shift_left(vi->vec, vi->t);
+      binary_array_shift_left(vi->vec, vi->n_words);
     }
+    // TODO: is this necessary??
     // just in case
-    vi->vec[0] &= (0xffffffff >> vi->s); // align last word
+    //vi->vec[0] &= (0xffffffff >> vi->s); // align last word
     v->crt[i] = vi;
-    
   }
   
   return v;
 }
-/*
+
 //KeyGen
 Key* key_generate(const Poly *f) {
   Key *key = malloc(sizeof(Key));
   if(key == NULL) {
     fprintf(stderr, "ERROR alloc key\n");
   }
-  key->s1 = poly_rand_uniform_poly(f);
+  uint32_t m = poly_degree(f);
+  key->s1 = poly_rand_uniform_poly(m);
   //poly s'
-  key->s2 = poly_rand_uniform_poly(f);
+  key->s2 = poly_rand_uniform_poly(m);
   
   return key;
 }
@@ -165,7 +169,7 @@ void key_free(Key *k) {
     free(k);
   }
 }
-
+/*
 int8_t lapin_tag(const Lapin *lapin, const Challenge c, Poly **r, Poly **z) {
   if(!lapin) {
     fprintf(stderr, "ERROR: lapin is NULL\n");
@@ -311,7 +315,7 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const Poly *r, const Po
   }
   return ret;
 }
-
+*/
 
 
 /////////////////// 
@@ -323,4 +327,4 @@ void challenge_print_challenge(const Challenge c) {
     printf("%s", binary_uint32_to_char(c[t++], w));
   }
   printf("\n");
-}*/
+}

@@ -26,28 +26,12 @@ void usage() {
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
 
-  Poly *b1 = poly_rand_uniform_poly(150);
-  Poly *b2 = poly_rand_uniform_poly(150);
-  poly_print_poly(b1);
-  poly_print_poly(b2);
-  PolyCRT *ber1 = poly_to_crt(b1, f_reducible_crt);
-  PolyCRT *ber2 = poly_to_crt(b2, f_reducible_crt);
-  poly_crt_print_poly(ber1);
-  poly_crt_print_poly(ber2);
-
-  PolyCRT *mult = poly_crt_mult(ber1, ber2, f_reducible_crt);
-  poly_crt_print_poly(mult);
-  
-  
-  poly_free(b1);
-  poly_free(b2);
-  poly_crt_free(ber1);
-  poly_crt_free(ber2);
-  poly_crt_free(mult);
-
-  /*Lapin *lapin = lapin_init(IRREDUCIBLE);
+  Lapin *lapin = lapin_init(IRREDUCIBLE);
   Challenge c = challenge_generate(lapin->sec_param);
-  Poly *r, *z;
+  challenge_print_challenge(c);
+  Poly *pi = lapin_pimapping_irreduc(lapin, c);
+  poly_print_poly(pi);
+  /*Poly *r, *z;
   int8_t tag = lapin_tag(lapin, c, &r, &z);
   int8_t vrfy = lapin_vrfy(lapin, c, r, z);
   printf("Vrfy (r,z) = %u\n", vrfy);
