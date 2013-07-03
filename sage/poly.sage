@@ -177,62 +177,56 @@ class BinaryPolynomial:
 
   # return a mod self.f
   # c must be in binary
-  def polyMod(self, c):    
+  def polyMod(self, c):
     if type(c) != str:
       c = polyToBin(c, self.var)
-      
-    m_2 = (self.m*2) - 1 # c->m. means that deg(c) <= c->m - 1
-    t_2 = ceil(m_2 / self.W) # c->t
-    #print "c->m = {0}, c->t = {1}, f->t = {2}".format(m_2, t_2, self.t)
-    c = c.zfill(t_2 * self.W) # zfill c
-    # pre-computation u_k = f * x^k
-    u = []
-    # append f in binary form, with one extra word!
-    # NOTE: all elements in u have self.t + 1 words
-    # append only r(x)
-    u.append(polyToBin(self.f - self.var**self.f.degree(), self.var).zfill((self.t) * self.W))
-    #u.append(polyToBin(self.f, self.var).zfill((self.t + 1) * self.W))
     
+    c_m = len(c)
+    c_t = ceil(c_m / self.W)
+    c_s = self.W * c_t - c_m
+    #print "c_m = {0}, c_t = {1}".format(c_m, c_t)
+    c = c.zfill(c_t * self.W)
+    
+    m = self.m
+    t = self.t
+    
+    r = self.f - self.var**self.f.degree()
+    r_t = self.t
+    # pre computation
+    u = []
+    u.append(polyToBin(r, self.var).zfill(r_t * self.W))
     for k in xrange(1, self.W):
-      u.append(self.shiftLeft(u[k - 1]))   
-      
+      u.append(self.shiftLeft(u[k - 1]))
     # print polys...
     #print "c = {0}".format(c)
-    # test table..
-    for k in xrange(0, self.W):
-      print "u[{0}] = {1}".format(k, polyToHex(u[k],x))
+    #for k in xrange(0, self.W):
+      #print "u[{0}] = {1}".format(k, polyToHex(u[k],x, self.W))
       
-    # work with lists
     c = list(c)
-    for i in xrange((2 * self.m) - 2, self.m - 1, -1):
-    
-      ###"" alternative way. use this in C ""
-      word = floor(i / self.W)
-      #word = ceil(((t_2 * self.W) - i) / self.W) - 1
-      bit = self.W - (i - (word * self.W)) - 1
-      ###""if int(self.getWord(c, word)[bit]) == 1:""
-      if int(c[(len(c) - i) - 1]) == 1:
-        #print "Word = {0}, bit = {1}".format(word, bit)
-        #print self.getWord(c, word)[(self.W - bit) - 1]
+    for i in xrange(c_m - 1, self.m - 1, -1):
+      bit = len(c) - i - 1
+      if c[bit] == '1':
         j = floor((i - self.m) / self.W)
         k = (i - self.m) - (self.W * j)
+        #print "i = {0}, j = {1}, k = {2}".format(i, j, k)
         j_aux = j
-        #print "C[{0}] = {1}".format(j, hex(Integer(''.join(self.getWord(c, j)), 2)).zfill(8))
-        while (j_aux < t_2) and ((j_aux - j) < self.t):
+        # j_aux - j => word in uk
+        # j_aux => word in C
+        while (j_aux < c_t) and ((j_aux - j) < r_t):
           # C{j_aux} = C{j_aux} XOR u[k]
-          ci = self.getWord(c, j_aux) # warning: this is a list, not a str
           uk = self.getWord(u[k], j_aux - j) # this is a str, not a list
-          ci = bitwiseXor(ci, uk) # str
-          #print "C[{0}] = {1}, u[{2}] = {3}, {4}".format(j_aux, hex(Integer(''.join(self.getWord(c, j_aux)),2)).zfill(8), k, hex(Integer(uk,2)).zfill(8), hex(Integer(ci,2)).zfill(8))
-          # save ci to c[i]
-          end = len(c) - (self.W * j_aux)
+          ci = self.getWord(c, j_aux) # warning: this is a list, not a str
+          
+          ci = bitwiseXor(ci, uk)
+          
+          end = len(c) - (j_aux * self.W)
           start = end - self.W
+          
           c[start : end] = list(ci)
+          
           j_aux += 1
-    #c = ''.join(c)
+    
     c = c[len(c) - (self.t * self.W) : ]
-    # return only C[t - 1] .. C[0]
-    # and delete s leftmost bits
     return '0'*self.s + ''.join(c[self.s : ])
 
   # shift left by one bit
@@ -551,8 +545,8 @@ def test_mod():
   
   c = a*b
 
-  return B.binToPoly(B.polyMod(c)) == c.mod(f)
-  #fi = x^127 + x^8 + x^7 + x^3 + 1
-  #B2 = BinaryPolynomial(fi, 32)
+  #return B.binToPoly(B.polyMod(c)) == c.mod(f)
+  fi = x^127 + x^8 + x^7 + x^3 + 1
+  B2 = BinaryPolynomial(fi, 32)
   
-  #return B2.binToPoly(B2.polyMod(c)) == c.mod(fi)
+  return B2.binToPoly(B2.polyMod(c)) == c.mod(fi)

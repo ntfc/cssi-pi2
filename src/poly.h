@@ -35,6 +35,8 @@ uint16_t poly_degree(const Poly *p);
 Poly* poly_mult(const Poly *a, const Poly *b);
 // return c mod f. does not change value of c
 Poly* poly_mod(const Poly *c, const Poly *f, uint32_t ***table);
+
+Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f);
 // fast mod reduction
 Poly* poly_fast_mod_reduction(Poly *a);
 uint16_t poly_hamming_weight(const Poly *a);

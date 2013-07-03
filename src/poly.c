@@ -423,14 +423,11 @@ uint32_t** poly_compute_mod_table(const Poly *f) {
   uint8_t k = 0;
   uint16_t i = 0;
   uint32_t **table; // 2-dimension array = table
-  // one more word than f
-  //uint16_t t = f->t + 1; // number of words in each u_k
   uint16_t t = f->t; // number of words in each u_k
   table = malloc(sizeof(uint32_t*) * W);
   
   uint32_t *u0 = calloc(t, sizeof(uint32_t));
   
-  // copy f->vec to u0. u0[0] = 0x0, u0[1] = f->vec[0], etc
   // copy f->vec to u0
   for(i = 0; i < t; i++) {
     //u0[i] = f->vec[i-1];
