@@ -46,7 +46,7 @@ def genY():
 	vec =vector(ZZ, m)
 	while i < m:
 		x = ZZ.random_element(-limite, limite, 'uniform')
-		if int(random < T.distribution_function(x)):
+		if int(random() < T.distribution_function(x)):
 			vec[i] = x
 			i+=1
 	return vec
