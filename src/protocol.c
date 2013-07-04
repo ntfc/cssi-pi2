@@ -26,16 +26,15 @@ void usage() {
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
 
-  Lapin *lapin = lapin_init(IRREDUCIBLE);
+  /*Lapin *lapin = lapin_init(IRREDUCIBLE);
   Challenge c = challenge_generate(lapin->sec_param);
   printf("s1=");poly_print_poly(lapin->key->s1);
   printf("s2=");poly_print_poly(lapin->key->s2);
   printf("c=");challenge_print_challenge(c);
-  //PolyCRT *r_crt, *z_crt;
+  
   Poly *r, *z;
   lapin_tag(lapin, c, &r, &z);
-  //poly_crt_print_poly(r_crt);
-  //poly_crt_print_poly(z_crt);
+  
   printf("r=");poly_print_poly(r);
   printf("z=");poly_print_poly(z);
   printf("vrfy = %u\n", lapin_vrfy(lapin, c, r, z));
@@ -43,27 +42,27 @@ int main(int argc, char **argv) {
   poly_free(r);
   poly_free(z);
   challenge_free(c);
-  lapin_end(lapin);
+  lapin_end(lapin);*/
   
-  //PolyCRT *rr = poly_crt_rand_uniform(lapin->f.crt);
-  //poly_crt_print_poly(r);
-  /*Poly *r, *z;
-  int8_t tag = lapin_tag(lapin, c, &r, &z);
-  int8_t vrfy = lapin_vrfy(lapin, c, r, z);
-  printf("Vrfy (r,z) = %u\n", vrfy);
-  poly_print_poly(r);
-  poly_print_poly(z);
-  Poly *aa = poly_mult(r,z);
-  poly_print_poly(aa);
-  Poly *bb = poly_mod(aa, f_irreducible, NULL); 
-  poly_print_poly(bb);
-  lapin_end(lapin);
+  Lapin *lapin = lapin_init(REDUCIBLE);
+  Challenge c = challenge_generate(lapin->sec_param);
+  printf("s1=");poly_print_poly(lapin->key->s1);
+  printf("s2=");poly_print_poly(lapin->key->s2);
+  printf("c=");challenge_print_challenge(c);
+  PolyCRT *pi = lapin_pimapping_reduc(lapin, c);
+  printf("pi=");poly_crt_print_poly(pi);
+  poly_crt_free(pi);
   
-
+  PolyCRT *r, *z;
+  lapin_tag(lapin, c, &r, &z);
+  printf("r=");poly_crt_print_poly(r);
+  printf("z=");poly_crt_print_poly(z);
+  //printf("vrfy = %u\n", lapin_vrfy(lapin, c, r, z));
   
+  poly_crt_free(r);
+  poly_crt_free(z);
   challenge_free(c);
-  poly_free(r);
-  poly_free(z);*/
+  lapin_end(lapin);
   
   return 0;
 }

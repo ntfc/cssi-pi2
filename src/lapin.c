@@ -125,10 +125,11 @@ PolyCRT* lapin_pimapping_reduc(const Lapin *lapin, const Challenge c) {
 
   for(i = 0; i < lapin->f_crt->m; i++) {
     to_pad = poly_degree(lapin->f_crt->crt[i]) - lapin->sec_param;
-    new_m = lapin->sec_param + to_pad;
-
     // TODO: new_m or new_m + 1??
-    Poly *vi = poly_alloc(new_m);
+    new_m = lapin->sec_param + to_pad;
+    uint16_t new_t = ceil((double)new_m / (double)W);
+    
+    Poly *vi = poly_alloc(new_t);
     for(j = 0; j < c_t; j++) {
       vi->vec[GET_VEC_WORD_INDEX(vi->n_words, j)] = c[GET_VEC_WORD_INDEX(c_t, j)];
     }
@@ -138,7 +139,8 @@ PolyCRT* lapin_pimapping_reduc(const Lapin *lapin, const Challenge c) {
     }
     // TODO: is this necessary??
     // just in case
-    //vi->vec[0] &= (0xffffffff >> vi->s); // align last word
+    uint8_t new_s = W*new_t - new_m;
+    vi->vec[0] &= (0xffffffff >> new_s); // align last word
     v->crt[i] = vi;
   }
   
@@ -204,7 +206,8 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     
     *r_crt = poly_crt_rand_uniform(fi);
     PolyCRT *e = poly_crt_rand_bernoulli(lapin->n, fi, tau1);
-
+    
+    printf("e=");poly_crt_print_poly(e);
     PolyCRT *pi = lapin_pimapping_reduc(lapin, c);
 
     PolyCRT* sTimesPi = poly_crt_mult(s1, pi, fi);
@@ -213,7 +216,7 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     poly_crt_free(sTimesPi);
     
     PolyCRT *rTimes = poly_crt_mult(*r_crt, sTimesPiPlusS2, fi);
-    
+    poly_crt_free(sTimesPiPlusS2);
     *z_crt = poly_crt_add(rTimes, e);
     poly_crt_free(rTimes);
     
