@@ -8,7 +8,6 @@ m = 8786
 sigma = 31495
 kp = 28
 
-#TODO: ver cena da rejeiçao no genY tambem
 
 
 
@@ -53,7 +52,7 @@ def genY():
 	return vec
 
 
-#este lixo é deterministico por isso não dá para passar na condicao final
+#E deterministico portanto while é perda de tempo
 def hashFunction(v, u):
 	normv = kp +1
 	j = 0
@@ -85,7 +84,7 @@ def hashFunction(v, u):
 		print 'k '+kp.str()+'normv '+normv.str()
 	return vf
 
-#sem a cena da rejeicao
+#Hash sem a rejeicao
 def hashFunction1(v, u):
 	s = ''
 	#vector to string
@@ -120,9 +119,9 @@ def rejectionSampling(sc, z):
 
 	return pz/(m*pvz)
 
-
-def verify(u, z, c, a, t):
-	c1 = hashFunction1(matrixMult(a, z)-matrixVectorMult(t,c), u)
+#esta a receber tudo para ser mais facil. Depois mudar isto
+def verify((z, c, a, t, message)):
+	c1 = hashFunction1(matrixMult(a, z)-matrixVectorMult(t,c), message)
 	return ((norm(z) <= (n*sigma*sqrt(m))) and (c == c1))
 
 
@@ -152,6 +151,8 @@ def sign(message):
 		print 'tentativa sign '+i.str()
 	return (z, c)
 
+
+#Assinatura sem rejections
 def sign1(message):
 	rejectS = 0
 
@@ -175,7 +176,7 @@ def sign1(message):
 	#print'chegou aqui3'
 	#rejectS = rejectionSampling(matrixVectorMult(s, c), z)
 
-	return (z, c, a, t, messagemv)
+	return (z, c, a, t, message)
 
 
 
@@ -199,7 +200,6 @@ def sign1(message):
 
 ######################################
 #teddy fez isto
-#analisar depois
 #def genY():
 #  return vector([T.get_random_element().integer_part() for _ in range(m)])
   
