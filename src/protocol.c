@@ -26,7 +26,7 @@ void usage() {
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
 
-  /*Lapin *lapin = lapin_init(IRREDUCIBLE);
+  Lapin *lapin = lapin_init(IRREDUCIBLE);
   Challenge c = challenge_generate(lapin->sec_param);
   printf("s1=");poly_print_poly(lapin->key->s1);
   printf("s2=");poly_print_poly(lapin->key->s2);
@@ -42,9 +42,9 @@ int main(int argc, char **argv) {
   poly_free(r);
   poly_free(z);
   challenge_free(c);
-  lapin_end(lapin);*/
+  lapin_end(lapin);
   
-  Lapin *lapin = lapin_init(REDUCIBLE);
+  /**Lapin *lapin = lapin_init(REDUCIBLE);
   Challenge c = challenge_generate(lapin->sec_param);
   printf("s1=");poly_print_poly(lapin->key->s1);
   printf("s2=");poly_print_poly(lapin->key->s2);
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   poly_crt_free(r);
   poly_crt_free(z);
   challenge_free(c);
-  lapin_end(lapin);
+  lapin_end(lapin);*/
   
   return 0;
 }
