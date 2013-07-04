@@ -52,13 +52,12 @@ Poly* poly_create_from_coeffs(uint16_t t, const uint16_t *v, uint8_t n) {
   return p;
 }
 
-uint32_t poly_degree(const Poly *p) {
-  uint8_t t = 0;
+int32_t poly_degree(const Poly *p) {
+  uint16_t t = 0;
   
-  while(p->vec[t] == 0 && t < p->n_words) {
+  while(p->vec[t] == 0 && t < (p->n_words - 1)) {
     t++;
   }
-  
   return binary_degree(p->vec[t]) + (W * (p->n_words - t - 1));
 }
 

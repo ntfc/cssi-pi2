@@ -16,7 +16,7 @@
 #define FLOOR(X) ( CEILING(X) - 1 )*/
 
 uint8_t binary_hamming_weight(uint32_t n);
-uint16_t binary_degree(uint32_t p); // TODO: 8bytes version
+int16_t binary_degree(uint32_t p); // TODO: 8bytes version
 uint32_t binary_reverse_number(uint32_t n);
 // TODO: validate 
 uint32_t binary_char_to_uint32(const unsigned char *c);

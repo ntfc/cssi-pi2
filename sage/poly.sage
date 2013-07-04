@@ -450,6 +450,47 @@ class BinaryPolynomial:
     # return C[16], C[15], .. C[0]
     return ''.join(str(bit) for bit in A[ (t*2 *W) - (t * W) : ])
 
+  
+  def poly_xgcd(self, a, b):
+    if type(a) != type(self.var):
+      a = binToPoly(a, self.var)
+    if type(b) != type(self.var):
+      b = binToPoly(b, self.var)
+    a_m = a.degree()
+    b_m = b.degree()
+    # test degrees
+    if a_m > b_m:
+      print "Error xgcd: must have deg(a) <= deg(b)"
+      return
+    u = a
+    v = b
+    # poly g1
+    g1 = self.var*1
+    # poly g2
+    g2 = self.var*0
+    # poly g1
+    h1 = self.var*0
+    # poly h2
+    h2 = self.var*1
+    while u != 0:
+      print h2
+      j = u.degree() - v.degree()
+      if j < 0:
+        (u, v) = (v,u)
+        (g1, g2) = (g2, g1)
+        (h1, h2) = (h2, h1)
+        j = -j
+      #x_j = self.var**j
+      u = (u + (self.var**j * v))
+      g1 = (g1 + (self.var**j * g2))
+      
+      h1 = (h1 + (self.var**j * h2))
+    d = v
+    # TODO: porque que e que precisa desta multiplicacao por x^-1 ??? :(
+    g = g2 * self.var**-1
+    h = h2 * self.var**-1
+    return (d, g, h)
+
 """ Auxiliary functions """
 # split list in parts
 def split_list(alist, wanted_parts=1):

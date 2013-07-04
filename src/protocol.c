@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
   PolyCRT *pi = lapin_pimapping_reduc(lapin, c);
   printf("pi=");poly_crt_print_poly(pi);
   poly_crt_free(pi);
-  
+
   PolyCRT *r, *z;
   lapin_tag(lapin, c, &r, &z);
   printf("r=");poly_crt_print_poly(r);
