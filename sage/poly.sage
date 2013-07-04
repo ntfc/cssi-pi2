@@ -79,7 +79,7 @@ class BinaryPolynomial:
       print "Polynomials must be in binary form!"
       return
     if len(a) != len(b):
-      print "Polynomials must be of same length"
+      print "INFO: Polynomials must be of same length"
       return
     return bitwiseXor(a, b)
 
@@ -243,6 +243,15 @@ class BinaryPolynomial:
     toShift = list(a[1:]) # work with list instead of string
     toShift.append('0')
     # return as string    
+    return ''.join(toShift)
+    
+  # shift right by one bit
+  # all we need to to is delete the right-most bit and add one 0 to to the left
+  def shiftRight(self, a):
+    # delete the right-most bit
+    toShift = list(a[ : len(a) - 1]) # work with list instead of string
+    toShift.insert(0, '0')
+    # return as string
     return ''.join(toShift)
     
   # add j W-bit words to the left of array of words c
@@ -451,45 +460,65 @@ class BinaryPolynomial:
     return ''.join(str(bit) for bit in A[ (t*2 *W) - (t * W) : ])
 
   
-  def poly_xgcd(self, a, b):
+  def polyXgcd(self, a, b):
     if type(a) != type(self.var):
       a = binToPoly(a, self.var)
     if type(b) != type(self.var):
       b = binToPoly(b, self.var)
+    
     a_m = a.degree()
     b_m = b.degree()
+    
     # test degrees
     if a_m > b_m:
       print "Error xgcd: must have deg(a) <= deg(b)"
       return
     u = a
     v = b
-    # poly g1
-    g1 = self.var*1
-    # poly g2
-    g2 = self.var*0
-    # poly g1
-    h1 = self.var*0
-    # poly h2
-    h2 = self.var*1
+    
+    # poly g
+    g = [1, 0]
+    # poly h
+    h = [0, 1]
+    
+    
     while u != 0:
-      print h2
       j = u.degree() - v.degree()
       if j < 0:
         (u, v) = (v,u)
-        (g1, g2) = (g2, g1)
-        (h1, h2) = (h2, h1)
+        g.reverse()
+        h.reverse()
         j = -j
-      #x_j = self.var**j
-      u = (u + (self.var**j * v))
-      g1 = (g1 + (self.var**j * g2))
+      z = self.var**j
       
-      h1 = (h1 + (self.var**j * h2))
+      u = (u + (z * v))
+      
+      #if u.degree() >= b.degree():
+        #u = u.mod(b)
+      g[0] = (g[0] + (z * g[1]))
+      
+      #if g[0].degree() >= b.degree():
+        #g[0] = g[0].mod(b)
+      h[0] = (h[0] + (z * h[1]))
+      
+      #if h[0].degree() >= b.degree():
+        #h[0] = h[0].mod(b)
     d = v
-    # TODO: porque que e que precisa desta multiplicacao por x^-1 ??? :(
-    g = g2 * self.var**-1
-    h = h2 * self.var**-1
+    
+    g = g[1]
+    h = h[1]
     return (d, g, h)
+    
+  def crtToPoly(self, ai, fi):
+    if type(ai) != list or type(fi) != list or len(ai) != len(fi):
+      print "Error: type errors"
+      return
+    ai = map(lambda b : polyToBin(b, self.var), ai)
+    fi = map(lambda b : polyToBin(b, self.var), fi)
+    N = '0'*len(ai[0])
+    for b in fi:
+      N = self.polyMultV2(N, b)
+    print N
 
 """ Auxiliary functions """
 # split list in parts
