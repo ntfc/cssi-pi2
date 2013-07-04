@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "poly.h"
 #include "lapin.h"
-
+/*
 int8_t file_save_challenge(FILE *fp, const Challenge c);
 Challenge file_read_challenge(FILE *fp);
 
@@ -16,5 +16,5 @@ PolyCRT* file_read_crt(FILE *fp);
 
 // return the number of read polys
 int8_t file_read_polys(FILE *fp, Poly ***ps);
-
+*/
 #endif

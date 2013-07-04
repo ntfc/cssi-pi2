@@ -125,6 +125,56 @@ class BinaryPolynomial:
         b = self.shiftLeft(b)
     # return as str
     return ''.join(C)
+    
+  # return the multiplication between a and b, not modulo!!
+  def polyMultV2(self, a, b):
+    if type(a) != str or type(b) != str:
+      #print "Polynomials must be in binary form! Converting to poly form.."
+      a = polyToBin(a, self.var)
+      b = polyToBin(b, self.var)
+    if len(a) != len(b):
+      print "INFO: Polynomials of different length"
+    # TODO: if string a and are padded, this is wrong..
+    a_m = len(a)
+    a_t = ceil(a_m / self.W)
+    b_m = len(b)
+    b_t = ceil(b_m / self.W)
+    
+    m = max(a_m, b_m)
+    t = ceil(m / self.W)
+
+    # zfill a and b
+    a = a.zfill(a_t * self.W)
+    b = b.zfill(b_t * self.W)
+    
+    c_t = t*2
+    ## work with C as a list, because python string are immutable
+    C = list('0' * (c_t  * self.W))
+
+    # b needs an extra word because of the shifts
+    b = b.zfill(len(b) + self.W)
+    
+    for k in xrange(0, self.W):
+      for j in xrange(0, t):
+        # a_t may be smaller than t..
+        if j < a_t: 
+          if int(self.getBit(a, j, k)) == 1:
+            i = j
+            ## since b has an extra word, we can have (i-j) <= self.t instead of < self.t
+            #while (i < t_2) and (i-j <= self.t):
+            while (i < c_t) and (i-j <= b_t):
+              # C[i] = C[i] XOR B[i-j]
+              Ci = self.getWord(C, i)
+              Ci = bitwiseXor(Ci, self.getWord(b, i-j))
+              # save Ci to C[i]
+              end = len(C) - (self.W * i)
+              start = end - self.W
+              C[start : end] = list(Ci)
+              i += 1
+      if k != (self.W - 1):
+        b = self.shiftLeft(b)
+    # return as str
+    return ''.join(C)
 
   # return a mod self.f
   # c must be in binary
@@ -135,12 +185,12 @@ class BinaryPolynomial:
     c_m = len(c)
     c_t = ceil(c_m / self.W)
     c_s = self.W * c_t - c_m
-    #print "c_m = {0}, c_t = {1}".format(c_m, c_t)
+    
     c = c.zfill(c_t * self.W)
     
     m = self.m
     t = self.t
-    
+
     r = self.f - self.var**self.f.degree()
     r_t = ceil(r.degree() / self.W) + 1 # tested. works
     #r_t = self.t # tested. works
@@ -151,22 +201,27 @@ class BinaryPolynomial:
       u.append(self.shiftLeft(u[k - 1]))
     # print polys...
     #print "c = {0}".format(c)
-    for k in xrange(0, self.W):
-      print "u[{0}] = {1}".format(k, polyToHex(u[k],x, self.W))
+    #for k in xrange(0, self.W):
+      #print "u[{0}] = {1}".format(k, polyToHex(u[k],x, self.W))
       
     c = list(c)
     for i in xrange(c_m - 1, self.m - 1, -1):
+      
       bit = len(c) - i - 1
       if c[bit] == '1':
         j = floor((i - self.m) / self.W)
+        #j = j.mod(self.t)
+        
         k = (i - self.m) - (self.W * j)
-        #print "i = {0}, j = {1}, k = {2}".format(i, j, k)
+
         j_aux = j
         # j_aux - j => word in uk
         # j_aux => word in C
+        
         while (j_aux < c_t) and ((j_aux - j) < r_t):
           # C{j_aux} = C{j_aux} XOR u[k]
           uk = self.getWord(u[k], j_aux - j) # this is a str, not a list
+          
           ci = self.getWord(c, j_aux) # warning: this is a list, not a str
           
           ci = bitwiseXor(ci, uk)
@@ -477,6 +532,7 @@ def test_mod():
   R = PolynomialRing(GF(2), 'x')
   x = R.gen()
   f = x**532 + x + 1
+  #f = x**27
   #f = x^127+x^8+x^7+x^3+1
   R = R.quotient(f, 'x')
   B = BinaryPolynomial(f, 32)
@@ -492,13 +548,14 @@ def test_mod():
   # traverse in reversed order
   b = (''.join(str(l[bit]) for bit in xrange(len(l)-1, -1, -1)))
   
-  a = B.binToPoly(a)
-  b = B.binToPoly(b)
+  a = binToPoly(a, B.var)
+  b = binToPoly(b, B.var)
   
   c = a*b
 
   #return B.binToPoly(B.polyMod(c)) == c.mod(f)
   fi = x^127 + x^8 + x^7 + x^3 + 1
+  #fi = x**12 + x + 1
   B2 = BinaryPolynomial(fi, 32)
-  
-  return B2.binToPoly(B2.polyMod(c)) == c.mod(fi)
+  mod = binToPoly(B2.polyMod(c), B.var)
+  return mod == c.mod(fi)
