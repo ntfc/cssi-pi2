@@ -372,6 +372,11 @@ Poly* poly_mod(const Poly *c, const Poly *f) {
   return a;
 }
 
+Poly *poly_xgcd(const Poly *a, const Poly *b, Poly **g, Poly **h) {
+  fprintf(stderr, "ERROR: poly_xgcd not implemented yet!\n");
+  return NULL;
+}
+
 // returns a*b mod f
 Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f) {
   Poly *m = poly_mult(a,b);
@@ -449,25 +454,25 @@ PolyCRT* poly_crt_rand_bernoulli(uint32_t deg, const PolyCRT *f, double tau) {
   return ber_crt;
 }
 
-// TODO: extended gcd
-Poly *poly_crt_to_poly(const PolyCRT *a) {
+// TODO: not finished
+Poly *poly_crt_to_poly(const PolyCRT *a, const PolyCRT *f) {
   uint8_t i;
-  /*Poly *c = NULL, *aux = a->crt[0];
-  for(i = 1; i < a->m; i++) {
+  Poly *N = NULL, *aux = f->crt[0];
+  for(i = 1; i < f->m; i++) {
     if(i == 1) {
-      c = poly_mult(aux, a->crt[i]);
-      aux = c;
+      N = poly_mult(aux, f->crt[i]);
+      aux = N;
     }
     else {
-      c = poly_mult(aux, a->crt[i]);
+      N = poly_mult(aux, f->crt[i]);
       poly_free(aux);
-      aux = c;
+      aux = N;
     }
-  }*/
-  return NULL;
+  }
+  // TODO: extended euclidean algorithm and possibly division
+  return N;
 }
 
-// TODO: not working because of poly_mod ....
 PolyCRT* poly_to_crt(const Poly *a, const PolyCRT *f) {
   // TODO: validate a and f
   uint8_t i = 0;

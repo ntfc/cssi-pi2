@@ -39,14 +39,14 @@ Lapin* lapin_init(uint8_t reduc) {
     fprintf(stderr, "ERROR lapin_init l\n");
     return NULL;
   }
-  
+  // TODO: create a function pointer in lapin structure to save the key gen function
   if(reduc) {
     // set both reducible and reducible_crt polys
     Lapin l_init = {.reduc = 1, .tau = (double)1/(double)6, .tau2 = 0.29,
               .sec_param = SEC_PARAM, .n = poly_degree(f_reducible),
               .f_normal = f_reducible, .f_crt = f_reducible_crt};
     memcpy(l, &l_init, sizeof(Lapin));
-    
+    l->key_crt = key_crt_generate(l->f_crt);
   }
   else {
     // set only  the irreducle poly
@@ -54,9 +54,9 @@ Lapin* lapin_init(uint8_t reduc) {
               .sec_param = SEC_PARAM, .n = poly_degree(f_irreducible),
               .f_normal = f_irreducible};
     memcpy(l, &l_init, sizeof(Lapin));
+    l->key = key_generate(l->f_normal);
   }
-  // TODO: generate keys in crt format
-  l->key = key_generate(l->f_normal);
+  
   
   return l;
 }
@@ -65,6 +65,9 @@ void lapin_end(Lapin *l) {
   if(l) {
     if(l->key) {
       key_free(l->key);
+    }
+    if(l->key_crt) {
+      key_crt_free(l->key_crt);
     }
     free(l);
   }
@@ -159,10 +162,26 @@ Key* key_generate(const Poly *f) {
     return NULL;
   }
   uint32_t m = poly_degree(f);
-  
+  // poly s
   key->s1 = poly_rand_uniform_poly(m);
   //poly s'
   key->s2 = poly_rand_uniform_poly(m);
+  
+  return key;
+}
+KeyCRT* key_crt_generate(const PolyCRT *f) {
+  if(!f) {
+    fprintf(stderr, "ERROR: f is NULL\n");
+    return NULL;
+  }
+  KeyCRT *key = malloc(sizeof(KeyCRT));
+  if(key == NULL) {
+    fprintf(stderr, "ERROR alloc key\n");
+    return NULL;
+  }
+  key->s1 = poly_crt_rand_uniform(f);
+  
+  key->s2 = poly_crt_rand_uniform(f);
   
   return key;
 }
@@ -179,30 +198,43 @@ void key_free(Key *k) {
   }
 }
 
+void key_crt_free(KeyCRT *k) {
+  if(k != NULL) {
+    if(k->s1) {
+      poly_crt_free(k->s1);
+    }
+    if(k->s2) {
+      poly_crt_free(k->s2);
+    }
+    free(k);
+  }
+}
+
+// TODO: is it possible to assign one of the poly in poly_mult, poly_add, poly_mod, etc?
 int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
   if(!lapin) {
     fprintf(stderr, "ERROR: lapin is NULL\n");
     return -1;
   }
-  if(!lapin->key) {
-    fprintf(stderr, "ERROR: keys not set\n");
+  if(lapin->reduc && !lapin->key_crt) {
+    fprintf(stderr, "ERROR: crt keys not set\n");
+    return -1;
+  }
+  if(!lapin->reduc && !lapin->key) {
+    fprintf(stderr, "ERROR: irreduc keys not set\n");
     return -1;
   }
   double tau1 = lapin->tau;
-  uint16_t sec_param = lapin->sec_param;
-  const Key *key = lapin->key;
+  
   
   // TODO: validate r and z and c and keys
   if(lapin->reduc) {
+    const KeyCRT *key = lapin->key_crt;
     const PolyCRT *fi = lapin->f_crt;
-    const Poly *f = lapin->f_normal;
+
     // cast r and z
     PolyCRT **r_crt = (PolyCRT**)r;
     PolyCRT **z_crt = (PolyCRT**)z;
-    
-    // TODO: improve this
-    PolyCRT *s1 = poly_to_crt(key->s1, fi);
-    PolyCRT *s2 = poly_to_crt(key->s2, fi);
     
     *r_crt = poly_crt_rand_uniform(fi);
     PolyCRT *e = poly_crt_rand_bernoulli(lapin->n, fi, tau1);
@@ -210,9 +242,9 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     printf("e=");poly_crt_print_poly(e);
     PolyCRT *pi = lapin_pimapping_reduc(lapin, c);
 
-    PolyCRT* sTimesPi = poly_crt_mult(s1, pi, fi);
+    PolyCRT* sTimesPi = poly_crt_mult(key->s1, pi, fi);
 
-    PolyCRT* sTimesPiPlusS2 = poly_crt_add(sTimesPi, s2);
+    PolyCRT* sTimesPiPlusS2 = poly_crt_add(sTimesPi, key->s2);
     poly_crt_free(sTimesPi);
     
     PolyCRT *rTimes = poly_crt_mult(*r_crt, sTimesPiPlusS2, fi);
@@ -222,9 +254,9 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     
     poly_crt_free(pi);
     poly_crt_free(e);
-    poly_crt_free(s1); poly_crt_free(s2);
   }
   else {
+    const Key *key = lapin->key;
     Poly **r_poly = (Poly**)r;
     Poly **z_poly = (Poly**)z;
     // TODO: this might be more efficient..
@@ -268,15 +300,47 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
   }
   // TODO: validate r and z and c and keys
   double tau2 = lapin->tau2;
-  uint16_t sec_param = lapin->sec_param;
-  const Key *key = lapin->key;
+  
   int8_t ret = 0;
   
   
   if(lapin->reduc) {
-    // TODO: vrfy
+    const KeyCRT *key = lapin->key_crt;
+    const PolyCRT *r_crt = (const PolyCRT *)r;
+    const PolyCRT *z_crt = (const PolyCRT *)z;
+    //TODO: IF R PERTENCE A R^*
+    const PolyCRT *f = lapin->f_crt;
+    
+    PolyCRT *pi = lapin_pimapping_reduc(lapin, c);
+    
+    PolyCRT *sTimesPi = poly_crt_mult(key->s1, pi, f);
+    
+    PolyCRT *sTimesPiPlusS2 = poly_crt_add(sTimesPi, key->s2);
+    poly_crt_free(sTimesPi);
+    
+    PolyCRT *rTimesRest = poly_crt_mult(r_crt, sTimesPiPlusS2, f);
+    poly_crt_free(sTimesPiPlusS2);
+    
+    PolyCRT *e1 = poly_crt_add(z_crt, rTimesRest);
+    poly_crt_free(rTimesRest);
+    
+    Poly *e1_poly = poly_crt_to_poly(e1, f);
+    poly_crt_free(e1);
+    if((double)poly_hamming_weight(e1_poly) > ((double)lapin->n * tau2)) {
+      // reject
+      ret = 0;
+    }
+    else {
+      // accept
+      ret = 1;
+    }
+    
+    // free
+    poly_free(e1_poly);
+    poly_crt_free(pi);
   }
   else {
+    const Key *key = lapin->key;
     const Poly *r_poly = (const Poly *)r;
     const Poly *z_poly = (const Poly *)z;
     //TODO: IF R PERTENCE A R^*
@@ -297,7 +361,7 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
     
     poly_free(rTimesRest);
 
-    if((double)poly_hamming_weight(e1) > (double)(lapin->n * tau2)) {
+    if((double)poly_hamming_weight(e1) > ((double)lapin->n * tau2)) {
       // reject
       ret = 0;
     }

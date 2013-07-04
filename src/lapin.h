@@ -14,12 +14,17 @@ typedef struct s_key {
   Poly *s1, *s2;
 } Key;
 
+typedef struct s_key_crt {
+  PolyCRT *s1, *s2;
+} KeyCRT;
+
 // how to alloc this: http://stackoverflow.com/questions/9691404/how-to-initialize-const-in-a-struct-in-c-with-malloc
 typedef struct s_lapin {
   const double tau, tau2;
   const uint16_t sec_param;
   const uint32_t n;
   Key *key;
+  KeyCRT *key_crt;
   const Poly *f_normal;
   const PolyCRT *f_crt;
   const uint8_t reduc; // 0 = irreducible, 1 = reducible
@@ -85,5 +90,7 @@ int lapin_reader_step3(const Key *key, const Poly *f, const Challenge c,
                        const Poly *z, const Poly *r, double tau1,
                        uint8_t sec_param, uint32_t ***table);*/
 Key* key_generate(const Poly *f);
+KeyCRT* key_crt_generate(const PolyCRT *f);
 void key_free(Key *k);
+void key_crt_free(KeyCRT *k);
 #endif
