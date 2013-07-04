@@ -40,16 +40,21 @@ Poly* poly_shift_right(Poly *a, uint16_t i);
 Poly* poly_add(const Poly *a, const Poly *b);
 Poly* poly_mult(const Poly *a, const Poly *b);
 Poly* poly_mod(const Poly *c, const Poly *f);
+Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f);
 
 /* CRT */
 
 PolyCRT* poly_crt_alloc(uint8_t m);
 void poly_crt_free(PolyCRT *p);
-PolyCRT *poly_crt_rand_uniform(uint16_t nmemb, const PolyCRT *deg);
+PolyCRT *poly_crt_rand_uniform(const PolyCRT *f);
 PolyCRT* poly_crt_rand_bernoulli(uint32_t deg, const PolyCRT *f, double tau);
 PolyCRT* poly_to_crt(const Poly *a, const PolyCRT *f);
 Poly *poly_crt_to_poly(const PolyCRT *a);
 PolyCRT *poly_crt_add(const PolyCRT *a, const PolyCRT *b);
 PolyCRT* poly_crt_mult(const PolyCRT *a, const PolyCRT *b, const PolyCRT *f);
 
+
+/* helpers */
+void poly_print_poly(const Poly *f);
+void poly_crt_print_poly(const PolyCRT *f);
 #endif

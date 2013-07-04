@@ -18,13 +18,11 @@ typedef struct s_key {
 typedef struct s_lapin {
   const double tau, tau2;
   const uint16_t sec_param;
-  const uint16_t n;
+  const uint32_t n;
   Key *key;
+  const Poly *f_normal;
+  const PolyCRT *f_crt;
   const uint8_t reduc; // 0 = irreducible, 1 = reducible
-  const union mod_poly {
-    Poly *normal;
-    PolyCRT *crt; // if reduc=1, irrec and reduc are set. otherwise, only irre is set
-  } f;
 } Lapin;
 
 static uint32_t F_IRREDUCIBLE[17] = {
@@ -73,14 +71,13 @@ void lapin_end(Lapin *l);
 Challenge challenge_generate(uint8_t sec_param);
 void challenge_free(Challenge c);
 
-PolyCRT* lapin_pimapping_reduc(Lapin *lapin, const Challenge c);
+PolyCRT* lapin_pimapping_reduc(const Lapin *lapin, const Challenge c);
 Poly* lapin_pimapping_irreduc(const Lapin *lapin, const Challenge c);
 
 // writes to r and z
-/*int8_t lapin_tag(const Lapin *lapin, const Challenge c, Poly **r, Poly **z);
-int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const Poly *r, const Poly *z);
+int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z);
+int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const void *z);
 
-*/
 /*Challenge lapin_reader_step1(uint8_t sec_param);
 void lapin_tag_step2(const Key *key, const Poly *f, const Challenge c, Poly **z,
                     Poly **r, double tau, uint8_t sec_param, uint32_t ***table);

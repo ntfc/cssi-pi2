@@ -373,6 +373,14 @@ Poly* poly_mod(const Poly *c, const Poly *f) {
   return a;
 }
 
+// returns a*b mod f
+Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f) {
+  Poly *m = poly_mult(a,b);
+  Poly *mod = poly_mod(m, f);
+  poly_free(m);
+  return mod;
+}
+
 void poly_print_poly(const Poly *f) {
   if(!f) {
     fprintf(stderr, "ERROR poly NULL\n");
@@ -421,9 +429,9 @@ void poly_crt_free(PolyCRT *p) {
 }
 
 // m: at most degree m
-PolyCRT *poly_crt_rand_uniform(uint16_t nmemb, const PolyCRT *f) {
+PolyCRT *poly_crt_rand_uniform(const PolyCRT *f) {
   // TODO: validation
-  PolyCRT *a = poly_crt_alloc(nmemb);
+  PolyCRT *a = poly_crt_alloc(f->m);
   if(!a) {
     return NULL;
   }
