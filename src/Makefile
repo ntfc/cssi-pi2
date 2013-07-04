@@ -1,8 +1,9 @@
 OPT_OR_DEBUG=-O2
-CFLAGS=-Wall -Wextra $(OPT_OR_DEBUG)
+CFLAGS=-Wall -Wextra $(OPT_OR_DEBUG) $(DEF)
 OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
 LIBS=-lm
 EXEC=lapin # exec file name
+#DEF=-DURANDOM
 CC=gcc
 
 $(EXEC): $(OBJS)

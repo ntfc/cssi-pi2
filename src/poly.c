@@ -68,14 +68,6 @@ Poly *poly_refresh(Poly *p) {
   
   if(p->n_words > n_words) {
     fprintf(stderr, "INFO: reallocating p->vec\n");
-    // TODO: use realloc
-    /*uint32_t *new_vec = calloc(n_words, sizeof(uint32_t));
-    uint16_t i = 0;
-    for(i = 0; i < n_words; i++) {
-      new_vec[GET_VEC_WORD_INDEX(n_words, i)] = p->vec[GET_VEC_WORD_INDEX(p->n_words, i)];
-    }
-    free(p->vec);
-    p->vec = new_vec;*/
     p->vec = poly_vec_realloc(p->vec, p->n_words, n_words);
     p->n_words = n_words;
   }

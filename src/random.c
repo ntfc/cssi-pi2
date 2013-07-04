@@ -1,22 +1,31 @@
 #include <stdio.h> // TODO: remove
 #include <stdlib.h>
-#include "random.h"
+#ifdef URANDOM
+  #include "urandom.h"
+#endif
 #include "binary.h"
-
-// TODO
-//#ifdef URANDOM
-
-//#elifdef SRAND
 
 // generates a double between 0 and 1
 double random_uniform() {
-  double ret = ((double)rand()/(double)RAND_MAX);
+  double ret;
+  //#ifdef URANDOM
+  // TODO: how to generate random doubles between 0 and 1?
+  //randombytes(&ret, sizeof(double));
+  //#else
+  ret = ((double)rand()/(double)RAND_MAX);
+  //#endif
   return ret;
 }
 
 // http://stackoverflow.com/a/288869/1975046
 uint8_t random_uniform_range(uint8_t min, uint8_t max) {
-  double ret = ((double) rand() / (((double)RAND_MAX) + 1.0)) * (max-min+1) + min;
+  double ret;
+  //#ifdef URANDOM
+  // TODO: how to generate random doubles between 0 and 1?
+  //randombytes(&ret, sizeof(ret));
+  //#else
+  ret = ((double) rand() / (((double)RAND_MAX) + 1.0)) * (max-min+1) + min;
+  //#endif
   return (uint8_t)ret;
 }
 
@@ -24,16 +33,19 @@ uint8_t random_uniform_range(uint8_t min, uint8_t max) {
 uint8_t random_bernoulli(double tau) {
   return (uint8_t)(random_uniform() < tau);
 }
-//#endif
 
 // Generate a uniform random uint32
 uint32_t random_uniform_uint32(void) {
-  uint8_t i = 0;
   uint32_t n = 0;
+  #ifdef URANDOM
+  randombytes(&n, sizeof(n));
+  #else
+  uint8_t i = 0;
   for(i = 0; i < 32; i++) {
     n <<= 1;
     n ^= (uint32_t)random_uniform_range(0, 1);
   }
+  #endif
   return n;
 }
 

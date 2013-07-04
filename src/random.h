@@ -1,6 +1,6 @@
 #ifndef __RANDOM_H__
 #define __RANDOM_H__
-
+#define URANDOM
 #include <stdint.h>
 
 double random_uniform();

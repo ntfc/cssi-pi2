@@ -30,8 +30,8 @@ int16_t binary_degree(uint32_t p) {
   int16_t deg = 0;
   while(p >>= 1)
     deg++;
-  // TODO: define the word size. And this muliplication can be more efficient
-  return deg; // + (W * (t-1));
+
+  return deg;
 }
 
 // reverses all bits from a number: reverse_number(0b01001) = 0b10010

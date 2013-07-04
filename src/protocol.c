@@ -5,6 +5,7 @@
 
 #include "lapin.h"
 #include "poly.h"
+#include "random.h"
 
 void usage() {
   fprintf(stderr, "Usage: \n");
@@ -55,6 +56,8 @@ int main(int argc, char **argv) {
 
   test_lapin_reduc();
   //test_lapin_irreduc();
+  uint32_t r = random_uniform_uint32();
+  printf("%u\n", r);
   
   return 0;
 }
