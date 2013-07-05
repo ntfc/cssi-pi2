@@ -15,13 +15,18 @@ class LatticeSignature:
   
   def genS(self):
     return random_matrix(ZZ, self.m, self.k, x=-self.d, y=self.d)
+    #return randomMatrix(self.m, self.k, self.d)
     
   def genA(self):
     bound = int(((self.q-1)/2))
     
     #matx = random_matrix(ZZ, self.n, self.m, x=-bound, y=bound)
     #return matx
-    A = random_matrix(ZZ, self.n, self.m - self.n, x=-bound, y=bound)
+    #A = random_matrix(ZZ, self.n, self.m - self.n, x=-bound, y=bound)
+    # is is faster to generate random numbers between 0 and q, right?
+    ncols = self.m - self.n
+    nrows = self.n
+    A = randomMatrix(nrows, ncols, self.q)
     I = matrix.identity(self.n)
     # return [A | I] in Hermite Normal Form
     return block_matrix(ZZ, [[A, I]], subdivide=False)
@@ -40,6 +45,8 @@ class LatticeSignature:
     vec = vector(ZZ, self.m)
     while i < self.m:
       x = ZZ.random_element(-limite, limite, 'uniform')
+      #x = ZZ.random_element(limite*2, distribution='uniform')
+      #x -= limite
       if random() < self.__p(0, x):
         vec[i] = x
         i+=1
@@ -56,21 +63,24 @@ class LatticeSignature:
     mu = base64.b64encode(mu)
     s1 = (A*y).Mod(self.q)
     s = ''.join(map(lambda x : str(x), s1.list()))
+    sha1 = hashlib.sha1()
+    sha1.update(mu)
+    mu = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
     s += mu
-    
     #resultado hash com 160bits
-    h = self.H(s)
-    
+    #h = self.H(s)
+    h = self.H2(s)
+    print "||v||_1 = {0} (should be <= {1})".format(h.norm(p=1), self.kappa)
     return h
 
   def calcZ(self, S, c, y):
     return (S*c) + y
     
   def H(self, m):
-    H = hashlib.sha1()
-    H.update(m)
+    sha1 = hashlib.sha1()
+    sha1.update(m)
     
-    h = bin(Integer(H.hexdigest(),16))[2:].zfill(160)
+    h = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
     
     c1 = h[ : 80]
     c2 = h[80 : ]
@@ -79,10 +89,72 @@ class LatticeSignature:
     v2 = vector([int(ci) for ci in c2])
     
     v = vector(v1 - v2)
-    norm1 = v.norm(p=1)
-    print "||v||_1 = {0} (must be <= {1}".format(v.norm(p=1), self.kappa)
     return v
   
+  def H2(self, s):
+    sha1 = hashlib.sha1()
+    sha1.update(s)
+    h = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
+    
+    h2 = vector(ZZ, 0)
+    
+    for i in xrange(0, 16): # divide h in 10 bit strings
+      start = i * 4
+      bits = h[start : start + 4]
+      pos = int(bits[1:], 2)
+      vi = vector(ZZ, 10) # 10 bits
+      if bits[0] == '0':
+        #print "put -1 in {0}".format(pos)
+        vi[pos] = -1
+      if bits[0] == '1':
+        #print "put 1 in {0}".format(pos)
+        vi[pos] = 1
+      h2 = vector(list(h2) + list(vi)) # ugly!
+    
+    return h2[80 : ]
+    
+  def Vrfy(self, mu, z, c, A, T):
+    z_norm = float(z.norm(p=2))
+    if type(mu) != str:
+      print "Message must be a string!"
+      return
+    # TODO: unicode troubles..
+    mu = base64.b64encode(mu)
+    s1 = (A*z - T*c)
+    s = ''.join(map(lambda x : str(x), s1.list()))
+    sha1 = hashlib.sha1()
+    sha1.update(mu)
+    mu = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
+    s += mu
+    #resultado hash com 160bits
+    #h = self.H(s)
+    h = self.H2(s)
+    z_to_compare = float(self.eta*self.sigma*float(sqrt(self.m)))
+    return z_norm < z_to_compare and c == h
+  
+  #denominador e comum portanto pode ser cortado
+  def rejectionSampling(self, S, z, c):
+    Sc = S*c
+
+    pz = math.pow(1/(self.sigma * sqrt(2 * math.pi)), self.m) * math.exp(- ((z.norm(p=2))**2) / (2 * self.sigma**2))
+    
+    print pz
+    return
+    pvz = math.pow(1/(self.sigma * sqrt(2 * math.pi)), self.m) * math.exp(- ((z - Sc).norm(p=2)**2) / (2 * self.sigma**2))
+
+    return float(pz/(self.m*pvz))
+    
+def randomMatrix(nrows, ncols, bound):
+  A = matrix(nrows, ncols)
+  for row in xrange(0, nrows):
+    new_row = []
+    for col in xrange(0, ncols):
+      aij = ZZ.random_element(bound)
+      new_row.append(aij - bound)
+    A[row] = new_row
+  return A
+  
+
 """def matrixMult(a, s):
   if(a.ncols() != s.nrows()):
     print 'error dimensions'
@@ -105,16 +177,12 @@ def matrixAdd(a, s):
 
 #denominador e comum portanto pode ser cortado
 def rejectionSampling(sc, z):
-  pz = math.pow(1/(sigma * sqrt(2 * math.pi)), m) * math.exp(- ((norm(z))**2) / (2 * sigma**2))
+  pz = math.pow(1/(sigma * sqrt(2 * math.pi)), m) * math.exp(- ((z.norm(p=2))**2) / (2 * sigma**2))
 
-  pvz = math.pow(1/(sigma * sqrt(2 * math.pi)), m) * math.exp(- ((norm(z - sc))**2) / (2 * sigma**2))
+  pvz = math.pow(1/(sigma * sqrt(2 * math.pi)), m) * math.exp(- ((z - sc).norm(p=2)**2) / (2 * sigma**2))
 
   return pz/(m*pvz)
 
-#esta a receber tudo para ser mais facil. Depois mudar isto
-def verify((z, c, a, t, message)):
-  c1 = hashFunction1(matrixMult(a, z)-matrixVectorMult(t,c), message)
-  return ((norm(z) <= (n*sigma*sqrt(m))) and (c == c1))
 
 
 def sign(message):
