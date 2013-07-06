@@ -6,6 +6,10 @@
 #include "random.h"
 #include "binary.h"
 #include "poly.h"
+#ifdef PERFORMANCE
+ #include <time.h>
+ #include "measure.h"
+#endif
 
 // n: security parameter in bits
 // NOTE: Challenge must be free'd in the end
@@ -108,10 +112,11 @@ Poly* lapin_pimapping_irreduc(const Lapin *lapin, const Challenge c) {
   free(tmpC);
 
   p = poly_create_from_coeffs(lapin->f_normal->n_words, coeffs, 16);
-  
+  #ifdef DEBUG
   if(poly_hamming_weight(p) < 16) {
     fprintf(stderr, "INFO wt(pi(c)) < 16!\n");
   }
+  #endif
   return p;
 }
 
@@ -226,7 +231,10 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
   }
   double tau1 = lapin->tau;
   
-  
+  #ifdef PERFORMANCE
+  struct timespec start, end, rand_start, rand_end;
+  START_MEASURE(start);
+  #endif
   // TODO: validate r and z and c and keys
   if(lapin->reduc) {
     const KeyCRT *key = lapin->key_crt;
@@ -236,10 +244,18 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     PolyCRT **r_crt = (PolyCRT**)r;
     PolyCRT **z_crt = (PolyCRT**)z;
     
+    #ifdef PERFORMANCE
+    // exclude this from the measurement
+    START_MEASURE(rand_start);
+    #endif
     *r_crt = poly_crt_rand_uniform(fi);
     PolyCRT *e = poly_crt_rand_bernoulli(lapin->n, fi, tau1);
-    
+    #ifdef PERFORMANCE
+    END_MEASURE(rand_end);
+    #endif
+    #ifdef DEBUG
     printf("e=");poly_crt_print_poly(e);
+    #endif
     PolyCRT *pi = lapin_pimapping_reduc(lapin, c);
 
     PolyCRT* sTimesPi = poly_crt_mult(key->s1, pi, fi);
@@ -261,18 +277,21 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     Poly **z_poly = (Poly**)z;
     // TODO: this might be more efficient..
     const Poly *f = lapin->f_normal;
-    
+    #ifdef PERFORMANCE
+    // exclude this from the measurement
+    START_MEASURE(rand_start);
+    #endif
     *r_poly = poly_rand_uniform_poly(lapin->n);
 
     Poly *e = poly_rand_bernoulli_poly(lapin->n, tau1);
-    
+    #ifdef PERFORMANCE
+    END_MEASURE(rand_end);
+    #endif
     Poly *pi = lapin_pimapping_irreduc(lapin, c);
     
     // NOTE: this way all the memory can be free'd
     // r * (s * pi(c) + s') + e
-    
     Poly *sTimesPi = poly_mult_mod(key->s1, pi, f);
-    
     
     Poly *sTimesPiPlusS2 = poly_add(sTimesPi, key->s2);
 
@@ -287,9 +306,41 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     // free
     poly_free(pi);
     poly_free(e);
+    
+    // NOTE: this way all the memory can be free'd
+    // r * (s * pi(c) + s') + e
+    /**uint32_t **table = table_compute_mod_table(f);
+    Poly *pi = lapin_pimapping_irreduc(lapin, c);
+    
+    // NOTE: this way all the memory can be free'd
+    // z = r * (s * pi(c) + s') + e
+    *z_poly = poly_mult(key->s1, pi);
+    *z_poly = poly_mod_faster(*z_poly, f, &table);
+    
+    Poly *add1 = poly_add(*z_poly, key->s2);
+    Poly *rTimesAdd1 = poly_mult(add1, *r_poly);
+    poly_free(add1);
+    *z_poly = poly_mult_mod_faster(*z_poly, rTimesAdd1, f, &table);
+    poly_free(rTimesAdd1);
+    
+    add1 = poly_add(*z_poly, e);
+    poly_free(*z_poly);
+    *z_poly = add1;
+    
+    // free
+    poly_free(pi);
+    poly_free(e);
+    table_free(table);*/
 
   }
+  #ifdef PERFORMANCE
+  END_MEASURE(end);
   
+  uint32_t rand_duration = MEASURE_RESULT(rand_start, rand_end);
+  uint32_t duration = MEASURE_RESULT(start, end) - rand_duration;
+  fprintf(stdout, "Time elapsed in lapin_tag (reducible = %u) = %u ms (%u ms in random)\n",
+                  lapin->reduc, duration, rand_duration);
+  #endif
   return 1;
 }
 
@@ -303,7 +354,10 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
   
   int8_t ret = 0;
   
-  
+  #ifdef PERFORMANCE
+  struct timespec start, end;
+  START_MEASURE(start);
+  #endif
   if(lapin->reduc) {
     const KeyCRT *key = lapin->key_crt;
     const PolyCRT *r_crt = (const PolyCRT *)r;
@@ -348,6 +402,9 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
     
     Poly *pi = lapin_pimapping_irreduc(lapin, c);
     
+    
+    // NOTE: this way all the memory can be free'd
+    // z - r * (s * pi + s')
     Poly *sTimesPi = poly_mult_mod(key->s1, pi, f);
     
     
@@ -360,7 +417,7 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
     Poly *e1 = poly_add(z_poly, rTimesRest);
     
     poly_free(rTimesRest);
-
+    
     if((double)poly_hamming_weight(e1) > ((double)lapin->n * tau2)) {
       // reject
       ret = 0;
@@ -373,8 +430,38 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
     // free
     poly_free(pi);
     poly_free(e1);
-  
+    // NOTE: this way all the memory can be free'd
+    // z - r * (s * pi + s')
+    /**uint32_t **table = table_compute_mod_table(f);
+    Poly *e2 = poly_mult(key->s1, pi);
+    Poly *add1 = poly_add(e2, key->s2);
+    poly_free(e2);
+    Poly *e1 = poly_add(r_poly, r_poly);
+    
+    e1 = poly_mult_mod_faster(e1, add1, f, &table);
+    poly_free(add1);
+    
+    if((double)poly_hamming_weight(e1) > ((double)lapin->n * tau2)) {
+      // reject
+      ret = 0;
+    }
+    else {
+      // accept
+      ret = 1;
+    }
+    
+    // free
+    poly_free(pi);
+    poly_free(e1);
+    table_free(table);*/
   }
+  #ifdef PERFORMANCE
+  END_MEASURE(end);
+  
+  uint32_t duration = MEASURE_RESULT(start, end);
+  fprintf(stdout, "Time elapsed in lapin_vrfy (reducible = %u) = %u ms\n",
+                  lapin->reduc, duration);
+  #endif
   return ret;
 }
 

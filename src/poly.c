@@ -67,7 +67,9 @@ Poly *poly_refresh(Poly *p) {
   uint16_t n_words = ceil((double)poly_degree(p) / (double) W);
   
   if(p->n_words > n_words) {
+    #ifdef DEBUG
     fprintf(stderr, "INFO: reallocating p->vec\n");
+    #endif
     p->vec = poly_vec_realloc(p->vec, p->n_words, n_words);
     p->n_words = n_words;
   }
@@ -103,7 +105,9 @@ Poly* poly_rand_bernoulli_poly(uint32_t m, double tau) {
 // TODO: return in case of error. Use errno
 uint8_t poly_get_bit(const Poly *a, uint32_t pos) {
   if(pos >= (a->n_words * W)) {
+    #ifdef DEBUG
     fprintf(stderr, "ERROR: bit %u is out of range (max: %u - 1)\n", pos, (a->n_words * W));
+    #endif
     return 2;
   }
   uint16_t word = BIT_WORD(pos); // in which word to find?
@@ -145,9 +149,18 @@ Poly *poly_get_r(const Poly *p) {
   return r;
 }
 
+// set the poly n_words to nmemb
+Poly *poly_realloc(Poly *a, uint16_t nmemb) {
+  a->vec = poly_vec_realloc(a->vec, a->n_words, nmemb);
+  a->n_words = nmemb;
+  return a;
+}
+
 uint32_t *poly_vec_realloc(uint32_t *v, uint16_t t, uint16_t nmemb) {
   if(nmemb == t) {
+    #ifdef DEBUG
     fprintf(stderr, "INFO: no realloc possible\n");
+    #endif
     return v;
   }
   uint32_t *new_t;
@@ -167,6 +180,8 @@ uint32_t *poly_vec_realloc(uint32_t *v, uint16_t t, uint16_t nmemb) {
     }
   }
   free(v);
+  v = new_t;
+  
   return new_t;
 }
 
@@ -182,7 +197,9 @@ uint32_t** table_compute_mod_table(const Poly *f) {
   table = malloc(sizeof(uint32_t*) * W);
   
   uint32_t *u0 = calloc(r_t, sizeof(uint32_t));
-  
+  #ifdef DEBUG
+  printf("INFO: computing mod table\n");
+  #endif
   // copy r->vec to u0
   for(i = 0; i < r_t; i++) {
     //u0[i] = f->vec[i-1];
@@ -364,17 +381,107 @@ Poly* poly_mod(const Poly *c, const Poly *f) {
   return a;
 }
 
+Poly* poly_mod_faster(Poly *c, const Poly *f, uint32_t ***tb) {
+  uint32_t **table;
+  if(tb == NULL) {
+    #ifdef DEBUG
+    printf("INFO: computing table in mod, and discarding its result\n");
+    #endif
+    table = table_compute_mod_table(f);
+  }
+  else {
+    if(*tb == NULL) {
+      #ifdef DEBUG
+      printf("INFO: computing table in mod, but saving it for later\n");
+      #endif
+      *tb = table_compute_mod_table(f);
+      table = *tb;
+    }
+    else {
+      #ifdef DEBUG
+      printf("INFO: using pre-computed table\n");
+      #endif
+      table = *tb;
+    }
+  }
+  uint32_t c_m = poly_degree(c) + 1;
+  // use this a_t instead of a->n_words, because a->n_words may
+  //not be up to date..
+  uint16_t c_t = ceil((double)c_m / (double)W);
+  //uint8_t c_s = W * c_t - c_m;
+  
+  uint32_t m = poly_degree(f);
+  uint16_t t = ceil((double)m / (double)W);
+  
+  uint8_t s = W*t - m;
+  // TODO: dont do this in here..
+  Poly *r = poly_get_r(f);
+  uint16_t r_t = ceil((double)poly_degree(r) / (double)W) + 1;
+  poly_free(r);
+  //Poly *a = poly_clone(c);
+  Poly *a = c;
+  
+  uint16_t j, j_aux;
+  uint8_t k;
+  uint16_t i;
+  for(i = c_m - 1; i >= m; i--) {
+    
+    uint8_t bit = poly_get_bit(a, i);
+    if(bit == 1) {
+      j = floor(((double)i - (double)m) / (double)W);
+      k = (i - m) - (W * j);
+      
+      j_aux = j;
+      // j_aux - j => word in table
+      // j_aux => word in c
+      while( (j_aux < c_t) && ((j_aux - j) < r_t)) {
+         // C{j_aux} = C{j_aux} ^ u[k]
+         
+        uint32_t uk_k = GET_VEC_WORD_INDEX(r_t, j_aux - j);
+        
+        uint32_t uk = table[k][uk_k];
+        
+        uint16_t ci_i = GET_VEC_WORD_INDEX(c_t, j_aux);
+        uint32_t ci = a->vec[ci_i];
+        // C[j_aux] = C[j_aux] ^ u[k][j_aux - j]
+        
+        a->vec[ci_i] = ci ^ uk;
+        
+        j_aux++;
+      }
+    }
+  }
+  if(tb == NULL) {
+    table_free(table);
+  }
+  
+  a->vec = poly_vec_realloc(a->vec, a->n_words, t);
+  a->n_words = t;
+  a->vec[0] &= (0xffffffff >> s); // align last word
+
+  return a;
+}
+
 Poly *poly_xgcd(const Poly *a, const Poly *b, Poly **g, Poly **h) {
   fprintf(stderr, "ERROR: poly_xgcd not implemented yet!\n");
   return NULL;
 }
 
-// returns a*b mod f
+// returns a*b mod f.
 Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f) {
   Poly *m = poly_mult(a,b);
   Poly *mod = poly_mod(m, f);
   poly_free(m);
   return mod;
+}
+
+// returns a*b mod f. saves result in a
+Poly *poly_mult_mod_faster(Poly *a, const Poly *b, const Poly *f, uint32_t ***table) {
+  Poly *m = poly_mult(a,b);
+  poly_free(a);
+  m = poly_mod_faster(m, f, table);
+  a = m;
+  return m;
 }
 
 void poly_print_poly(const Poly *f) {

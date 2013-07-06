@@ -32,6 +32,8 @@ Poly* poly_rand_bernoulli_poly(uint32_t m, double tau);
 uint8_t poly_get_bit(const Poly *a, uint32_t pos);
 uint16_t poly_hamming_weight(const Poly *a);
 Poly *poly_get_r(const Poly *p);
+// reallocs poly
+Poly *poly_realloc(Poly *a, uint16_t nmemb);
 uint32_t *poly_vec_realloc(uint32_t *v, uint16_t t, uint16_t nmemb);
 uint32_t** table_compute_mod_table(const Poly *f);
 void table_free(uint32_t **t);
@@ -40,7 +42,9 @@ Poly* poly_shift_right(Poly *a, uint16_t i);
 Poly* poly_add(const Poly *a, const Poly *b);
 Poly* poly_mult(const Poly *a, const Poly *b);
 Poly* poly_mod(const Poly *c, const Poly *f);
+Poly* poly_mod_faster(Poly *c, const Poly *f, uint32_t ***tb);
 Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f);
+Poly *poly_mult_mod_faster(Poly *a, const Poly *b, const Poly *f, uint32_t ***table);
 Poly *poly_xgcd(const Poly *a, const Poly *b, Poly **g, Poly **h);
 /* CRT */
 

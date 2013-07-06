@@ -4,11 +4,12 @@ OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
 LIBS=-lm
 EXEC=lapin # exec file name
 #DEF=-DURANDOM
+DEF=-DDEBUG -DPERFORMANCE
 CC=gcc
 
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
-	rm -v $(EXEC) $(wildcard *.o)
+	rm -v $(wildcard *.o) $(EXEC) 
 
