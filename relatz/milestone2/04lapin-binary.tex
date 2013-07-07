@@ -1,0 +1,134 @@
+\section{Aritmétrica de polinómios}
+Como pretendermos implementar de raíz o protocolo em \sage\ e \textsf{C}, é necessário perceber como funcionam as operações sobre polinómios ao mais baixo nível, ou seja, apenas com a utilização de operações sobre bits. Neste capítulo pretendem-se explicar os passos e decisões tomadas durante a implementação.\\
+As operações aritmétricas sobre polinómios que precisámos de implementar são: soma, multiplicação, módulo. Tendo estas três implementadas, é relativamente fácil implementar o resto das operações, tais como o máximo divisor \textsf{gcd} comum ou o algoritmo de Euclides estendido, necessárias para a conversão de um polinómio em CRT para um normal. Grande parte destes algoritmos foram estudados a partir de \cite{Hankerson:2003:GEC:940321}.\\
+%%%%%%%%%%%%%%
+% Representacao
+%%%%%%%%%%%%%%
+\subsection{Representação}
+De forma a que as operações com polinómios sejam o mais eficiente possível, é necessário trabalhar sobre a sua representação binária, em vez de os representar com simples inteiros.\\
+Uma forma bastante simples de representar polinómios é colocar o bit menos significativo do lado direito, sendo a tradução de um polinómio para binário a seguinte:
+$$
+x^7 + x^4 + x^2 + x + 1 \Leftrightarrow 1 0 0 1 0 1 1 1
+$$
+O bit mais significativo representa o monómio $x^7$, enquanto que o menos significativo representa o $1$.\\
+Mas esta forma, por si só, não é a mais apropriada para implementar as operações aritmétricas em \textit{software}. Em \cite{lapin}, o autor refere-se a um método de multiplicação de polinómios mais eficiente, descrito em \cite{Hankerson:2003:GEC:940321}. Antes de descrever esses métodos, é necessário introduzir uma nova forma de representar polinómios binários.\\
+Nesta nova forma, assume-se que a máquina tem um arquitectura de $W$-bits, em que $W$ é um múltiplo de 8. Um polinómio passa a ser visto como um conjunto de palavras de $W$ bits, em que o bit menos significativo continua a estar do lado direito.\\
+Assume-se que existe o polinómio irredutível $f(x)$ com $deg(f) = m$. Todos os elementos $a(x)$ de $\mathbb{F}_2[x]/f(x)$ têm grau menor ou igual a $m-1$. Cada elemento $a(x)$ tem associada a representação descrita anteriormente, ou seja, é o vector binário $a = (a_{m-1}, a_m, \dotsc, a_1, a_0)$ de tamanho $m$. Considere-se $t = \lceil m/W \rceil$ e $s = Wt - m$. O vector binário $a$ pode ser guardado num \textit{array} de $t$ palavras de $W$ bits: $A = A[t-1], A[t], \dotsc, A[1], A[0]$. Os $s$ bits mais à esquerda de $A[t-1]$ nunca são usados (estão sempre a 0).\\
+A partir de agora vamos usar sempre esta última representação para tratar de polinómios.\\
+%%%%%%%%%%%%%%
+% Some
+%%%%%%%%%%%%%%
+\subsubsection{Soma}
+A soma de dois polinómios pode ser vista como um simples \textsf{XOR} entre as palavras dos dois polinómios, sendo efectuado o \textsf{XOR} palavra a palavra, bit a bit. No Algoritmo~\ref{alg:bin_add} descreve-se este processo.\\
+\begin{algorithm}[htb!]
+  \caption{Soma de palavras binárias de $W$ bits}\label{alg:bin_add}
+  \begin{algorithmic}
+    \Require Polinómios $a(x)$ e $b(x)$ de grau menor ou igual a $m-1$
+    \Ensure Polinómio $c(x) = a(x) + b(x)$
+    \For {$i = 0$ to $t - 1$}
+    \State    $C[i] = A[i] \oplus B[i]$
+    \EndFor
+    \State \Return c
+  \end{algorithmic}
+\end{algorithm}%
+Como se pode ver, no Algoritmo~\ref{alg:bin_add} assume-se que os dois polinómios $a(x)$ e $b(x)$ têm o mesmo número de $t$ palavras. No entanto, é bastante simples tornar implementar uma soma que recebe dois polinómios $a$, $b$ de tamanho arbitrário, sem efectuar grandes alterações.
+%%%%%%%%%%%%%%%%%%%
+% Multplicacao
+%%%%%%%%%%%%%%%%%%%
+\subsubsection{Multiplicação}
+Ao contrário da soma descrita no Algoritmo~\ref{alg:bin_add}, a multiplicação de polinómios já não é tão simples. Em \cite{lapin}, sugere-se a utilização do método \textit{right-to-left comb} descrito em \cite{Hankerson:2003:GEC:940321} por ser o mais eficiente.\\
+Tal como para a soma, um polinómio é visto como $t$ palavras de $W$ bits. Em cada iteração conhece-se o resultado de $b(x) \cdot x^k$ para $k \in [0, W-1]$, logo, $b(x) \cdot x^{Wj+k}$ pode facilmente ser obtido adicionando $j$ palavras nulas (a zero) à direita do vector que representa $b(x) \cdot x^k$. Tal como o próprio nome indica, as palavras de $A$ são percorridas da direita para a esquerda. Quando se tem um array $C = C[n],\dotsc,C[1],C[0]$, denota-se por $C\{j\}$ o array truncado $C[n],\dotsc,C[j+1],C[j]$.\\
+\begin{algorithm}[htb!]
+  \caption{Método \textit{Right-to-left comb} para a multiplicação de dois polinómios}\label{alg:right_to_left}
+  \begin{algorithmic}
+    \Require Polinómios $a(x)$ e $b(x)$ de grau menor ou igual a $m-1$
+    \Ensure Polinómio $c(x) = a(x) \cdot b(x)$
+    \State $C = 0$
+    \For {$k = 0$ to $W - 1$}
+      \For{$j = 0$ to $t - 1$}
+        \If{$k$-ésimo bit de $A[j]$ é $1$}
+        \State $C\{j\} = C\{j\} + b(x)$
+        \EndIf
+      \EndFor
+      \If{$k \neq (W - 1)$}
+      \State $b(x) = b(x) \cdot x$
+      \Comment{Equivale a um shift para a esquerda de $b(x)$}
+      \EndIf
+    \EndFor
+    \State \Return C
+  \end{algorithmic}
+\end{algorithm}
+Note-se que na implementação, o $C$ é inicializado como sendo um polinómio de $2t$ palavras, com grau máximo de $2m - 2$.
+%%%%%%%%%%%%%%
+% Modulo
+%%%%%%%%%%%%%%
+\subsubsection{Módulo}
+Depois de propriamente estudadas as operações de soma e multiplicação, tornou-se mais simples perceber e implementar o módulo. Numa primeira fase, assumiu-se que apenas era efectuado o módulo de um polinómio que fosse o resultado da multiplicação de dois polinómios de grau máximo $m - 1$. Mas rapidamente se constatou que desta forma seria impossível executar o protocolo de forma correcta. No entanto, foi bastante simples transformar o algoritmo num mais genérico, que recebe polinómios de tamanho arbitrário.\\
+Considera-se que $f(x) = x^{m} + r(x)$ em que $r(x)$ é um polinómio de grau máximo $m - 1$.\\
+\begin{algorithm}[htb!]
+  \caption{Redução modular (bit a bit)}\label{alg:mod}
+  \begin{algorithmic}
+    \Require Polinómio $f(x)$ de grau $m$ e $a(x)$ de grau $p$ ($p \geq m$)
+    \Ensure Polinómio $c(x) = a(x) \mod{f(x)}$
+    \State \textit{Pré Computação:} $u_k(x) = x^k \cdot r(x), 0 \leq k < W$
+    \For{$i = p$ downto $m$}
+    \If{$c_i = 1$}
+      \State $j = \lfloor (i-m) / W \rfloor$
+      \State $k = (i - m) - Wj$
+      \State $C\{j\} = C\{j\} + u_k(x)$
+    \EndIf
+    \EndFor
+    \State \Return $C$
+  \end{algorithmic}
+\end{algorithm}
+Infelizmente, este primeiro algoritmo é o mais ineficiente pois precisa de pré-computar uma tabela com $W$ entradas. Mas existem algoritmos mais eficientes, que processam o polinómio $c$ palavra a palavra, em vez de bit a bit descrito no Algoritmo~\ref{alg:mod}. Um desses algoritmos de redução mais rápida está descrito no Algoritmo~\ref{alg:fast1}, em que é efectuada a redução módulo $x^{532} + x + 1$\footnote{Apesar de termos implementado este algoritmo, na prática não é usado porque o resultado do bit 0 da palavra 0 nem sempre está certo.}.
+\begin{algorithm}[htb!]
+  \caption{Redução modular mais rápida (palavra a palavra) módulo $f(x) = x^{532} + x + 1$}\label{alg:fast1}
+  \begin{algorithmic}
+    \Require Polinómio $f(x)$ de grau $m = 532$ e $c(x)$ de grau máximo $2m - 2$
+    \Ensure Polinómio $a(x) = c(x) \mod{f(x)}$
+    \For{$i = 33$ downto $17$}
+      \State $T = C[i]$
+      \State $C[i-17] = C[i-17] \oplus (T \ll 12) \oplus (T \ll 13) $
+      \State $C[i-16] = C[i-16] \oplus (T \gg 20) \oplus (T \gg 19) $
+    \EndFor
+    \State $T = C[16]$
+    \State $C[0] = C[0] \oplus (T \gg 20) \oplus (T \gg 19)$
+    \State $C[16] = C[16]\ \&\ \text{0xFFFFF}$
+    \State \Return $C$
+  \end{algorithmic}
+\end{algorithm}
+%%%%%%%%%%%%%%
+% Euclides
+%%%%%%%%%%%%%%
+\subsubsection{Euclides estendido}
+O algoritmo de Euclides estendido é bastante similar ao usado nos inteiros. Apresenta-se a versão para polinómios binários.
+\begin{algorithm}[htb!]
+  \caption{Algoritmo de Euclides estendido para polinómios binários}\label{alg:xgcd}
+  \begin{algorithmic}
+    \Require Polinómios não nulos $a$ e $b$ tal $deg(a) \leq deg(b)$
+    \Ensure $d = \gcd(a,b)$ e polinómios $g,h$ tal que $ag + bh = d$
+    \State $u = a, v = b$
+    \State $g_1 = 1, g_2 = 0$
+    \State $h_1 = 0, h_2 = 1$
+    \While{$u \neq 0$}
+      \State $j = deg(u) - deg(v)$
+      \If{$j < 0$}
+        \State $(u,v) = (v,u)$
+        \State $(g_1, g_2) = (g_2, g_1)$
+        \State $(h_1, h_2) = (h_2, h_1)$
+        \State $j = -j$
+      \EndIf
+      \State $u = u + x^j \cdot v$
+      \State $g_1 = g_1 + x^j \cdot g_2$
+      \State $h_1 = h_1 + x^j \cdot h_2$
+    \EndWhile
+    \State $d = v, g = g_2, h = h_2$
+    \State \Return $(d, g, h)$
+  \end{algorithmic}
+\end{algorithm}
+%%%%%%%%%%%%%%
+% CRT
+%%%%%%%%%%%%%%
+\subsubsection{Chinese Remainder Theorem}
+A redução de um polinómio para a sua representação CRT e a operação inversa são triviais de implementar tendo já definidas as operações de soma, multiplicação, módulo e o algoritmo de Euclides estendido.

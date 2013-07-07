@@ -4,7 +4,7 @@ OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
 LIBS=-lm
 EXEC=lapin # exec file name
 #DEF=-DURANDOM -DDEBUG
-DEF=-DPERFORMANCE
+#DEF=-DPERFORMANCE
 CC=gcc
 
 $(EXEC): $(OBJS)

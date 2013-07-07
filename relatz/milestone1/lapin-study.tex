@@ -1,0 +1,133 @@
+\section{Descrição}
+O protocolo Lapin apresentado em \cite{lapin} consiste num protocolo de autenticação baseado no problema \RingLPN\ (\textit{Ring variant of the Learning Parity with Noise}). Este protocolo, constituído por apenas dois \textit{rounds} e seguro contra ataques activos, tem uma complexidade de comunicação bastante pequena, pelo que é indicado para dispositivos \textit{low-cost} ou em cenários onde os recursos são limitados.\\
+Em comparação com outros protocolos, que fazem uso de cifras por blocos como por exemplo o AES, o Lapin mostra-se como uma boa alternativa. Em casos onde se possuam algumas centenas de bytes de memória não-volátil, onde se poderão guardar alguns resultados pré-computados, o protocolo apenas é apenas duas vezes mais lento que o AES, mas em compensação, tem cerca de dez vezes menos código do que o AES.\\
+%%%%%%%%%%%%%%
+% Conceitos
+%%%%%%%%%%%%%%
+\section{Conceitos}
+%%%%%%%%%%%%%%%
+% Polinomios
+%%%%%%%%%%%%%%%
+\subsection{Polinómios}
+O protocolo baseia-se essencialmente em operações sobre polinómios binários, ou seja, polinómios em $\mathbb{F}_2[x]$. Todos os polinómios do protocolo pertencem ao anel $\mathbb{F}_2[x]/f(x)$, sendo que um elemento deste anel tem grau máximo $deg(f)-1$. No âmbito deste projecto, serão considerados dois anéis $\mathsf{R} = \mathbb{F}_2[x]/f(x)$: um anel em que $f(x)$ é irredutível e outro em que $f(x)$ é factorizável em $m$ polinómios distintos. Denota-se por $\widehat{a}$ a representação CRT (Teorema Chinês dos Restos) do polinómio $a$ em relação aos $m$ factores do $f(x)$ factorizável, ou seja, $\widehat{a} = (a \bmod{f_1}, \dotsc, a \bmod{f_m})$\\
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Distributions
+%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Distribuições}
+Uma distribuição \textsf{D} sobre determinado domínio representa-se sob a forma de $r \longleftarrow_{\$} \mathsf{D}$, sendo $r$ o valor gerado de acordo com a distribuição \textsf{D}. Denomina-se uma distribuição uniforme sobre o domínio \textsf{Y} como \textsf{U(Y)}. Seja a distribuição de \textsf{Bernoulli},  $\textsf{Ber}_{\tau}$ sobre $\mathbb{F}_2$ com o parâmetro $\tau \in\ ]0,1/2[$. Para um anel polinómio $\mathsf{R} = \mathbb{F}_2[x]/f(x)$, a distribuição $\textsf{Ber}_{\tau}^\mathsf{R}$ denota a distribuição sobre polinómios de $\mathsf{R}$, para os quais os coeficientes são determinados independentemente de $\textsf{Ber}_{\tau}$. Para um anel $\mathsf{R}$ e um polinómio $s \in \mathsf{R}$, representa-se $\Lambda_{\tau}^{\mathsf{R},s}$ como uma distribuição sobre $\mathsf{R} \times \mathsf{R}$ sendo as amostragens obtidas através dos polinómios $r \longleftarrow_{\$} \mathsf{U(R)}$ e $e \longleftarrow_{\$} \mathsf{Ber}_{\tau}^\mathsf{R}$, cujo resultado é o seguinte \textit{output}: $(r, rs+e)$.
+%%%%%%%%%%%%%%%%
+% RingLPN e LPN
+%%%%%%%%%%%%%%%%
+\subsection{Ring Learning Parity with Noise (\RingLPN) e Learning Parity with Noise (\textsf{LPN})}
+A segurança do protocolo depende problema do \textsf{Ring-LPN} que se trata de uma expansão do problema \textsf{LPN} para anéis. Este problema pode também ser visto como uma instanciação particular de um outro problema com grande ligação aos reticulados, o \textsf{Ring-LWE} (\textit{Learning with Errors over Rings}).\\
+A diferença entre os dois problemas reside na diferença entre dois possíveis oráculos. O primeiro oráculo gera aleatoriamente um vector secreto $s \in \mathbb{F}_2^n$ que é usado produzir a resposta. No problema \textsf{LPN}, cada chamada do oráculo produz, de forma uniforme, uma matriz aleatória $A \in \mathbb{F}_2^{n \times n}$ e um vector $As + e = t \in \mathbb{F}_2^n$, onde $e$ é um vector de $\mathbb{F}_2^n$ em que cada entrada é um valor aleatório gerado independentemente pela distribuição de \textit{Bernoulli} com a probabilidade de 1 usando o parâmetro público $\tau$ entre $0$ e $1 \setminus 2$. O segundo oráculo gera uma matriz $A \in \mathbb{F}_2^{n \times n}$ aleatória de forma uniforme e um vector aleatório $t \in \mathbb{F}_2^n$ de forma igualmente uniforme.\\
+A diferença entre o \textsf{LPN} e o \textsf{Ring-LPN} está na geração da matriz $A$, em ambos os oráculos. Enquanto no problema \textsf{LPN} todas as entradas são geradas de forma uniforme e independente, no problema \textsf{Ring-LPN} apenas a primeira coluna é gerada dessa forma em $\mathbb{F}_2^n$, sendo que as restantes colunas dependem da primeira e do anel subjacente $\mathsf{R} = \mathbb{F}_2[x]/f(x)$. De assinalar ainda que a suposição $\textsf{Ring-LPN}^\mathsf{R}$ indica que é difícil distinguir entre os \textit{outputs} dos dois oráculos.\\
+O problema \textsf{LPN} é bastante usado em criptografia como uma suposição difícil, ao contrário do \textsf{Ring-LPN}. Contudo, uma publicação recente demonstra que o problema \textsf{Ring-LWE} é tão difícil quanto resolver quanticamente o pior caso de um pequeno vector de reticulados. Por sua vez, o 
+\textsf{Ring-LPN} é bastante semelhante ao problema \textsf{Ring-LWE}.
+%%%%%%%%%%%%%%%%%%%
+% Funcionamento
+%%%%%%%%%%%%%%%%%%%
+\section{Funcionamento}\label{lapin:protocol}
+O protocolo é definido sobre o anel $\mathsf{R} = \mathbb{F}_2[x]/f(x)$ e envolve um \textit{mapping} adequado $\pi : \{0,1\}^{\lambda} \rightarrow \mathsf{R}$. Este \textit{mapping} deve ser definido de tal forma que $\forall \, c, c' \in \{0,1\}^\lambda$ tem-se que $\pi(c) - \pi(c') \in \mathsf{R} \setminus \mathsf{R}^\star$ sse $c = c'$.\\
+Descreve-se de seguida o funcionamento do protocolo: 
+\begin{center}
+  \begin{tabular}{| l  c  r |}
+    \hline
+     \multicolumn{3}{| l |}{Parâmetros Públicos: $\mathsf{R}, \pi : \{0,1\}^\lambda$ $\rightarrow \mathsf{R}, \tau, \tau'$} \\
+     \multicolumn{1}{| l }{Chave Privada: $s, s' \in \mathsf{R}$}  &  & \\
+    &  & \\
+    &  &  \\
+     \multicolumn{1}{| c }{\textsf{Tag}  $\mathcal{T}$} &  & \multicolumn{1}{ c |}{\textsf{Leitor}  $\mathcal{R}$} \\
+     &  & \\
+     & $\xleftarrow{c}$ & \multicolumn{1}{l |}{$c \leftarrow_{\$} \{0,1\}^\lambda$} \\ 
+    $r \leftarrow_{\$} \mathsf{R}^*$;  $e \longleftarrow_{\$} \mathsf{Ber}_{\tau}^R \in \mathsf{R}$ &  &  \\ 
+    $z := r \cdot (s \cdot \pi(c) + s') + e$ & $\xrightarrow{(r,z)}$ &  \\
+     &  & \multicolumn{1}{ l |}{se $r \notin \mathsf{R}^\star$ retorna \textsf{reject}} \\
+     &  & \multicolumn{1}{ l |}{$e' := z - r \cdot (s \cdot \pi(c) + s')$} \\
+     &  & \multicolumn{1}{ l |}{se $\mathsf{wt}(e') > n \cdot \tau'$ retorna \textsf{reject}} \\
+     &  & \multicolumn{1}{ l |}{retorna \textsf{accept}}\\
+    \hline
+  \end{tabular}
+\end{center}
+%
+\begin{description}
+  \item[Parâmetros públicos] $\tau, \tau'$ representam constantes (definidas mais adiante), $n$ depende do parâmetro de segurança $\lambda$:
+    \begin{itemize}
+      \item Anel $\mathsf{R} = \mathbb{F}_2[x]/f(x)$ com $deg(f) = n$
+      \item \textit{Mapping} $\pi : \{0,1\}^\lambda \rightarrow \mathsf{R}$
+      \item Parâmetro da distribuição de Bernoulli $\tau \in \mathbb{R}$ e \textit{threshold} aceitação $\tau' \in \mathbb{R}$ tal que $0 < \tau < \tau' < 1/2$
+      %\item Parâmetro da distribuição de Bernoulli $0 < \tau < 1/2$, $\tau \in \mathbb{R}$
+      %\item \textit{Threshold} de aceitação $\tau < \tau' < 1/2$, $\tau' \in \mathbb{R}$
+    \end{itemize}
+  \item[Geração de chaves] Algoritmo $\mathsf{KeyGen}(1^\lambda)$ amostra $s, s' \longleftarrow_{\$} \mathsf{R}$ e retorna $s, s'$ como a chave privada
+  \item[Protocolo de autenticação] O Leitor $\mathcal{R}$ e a \textit{Tag} $\mathcal{T}$ partilham a chave secreta $s, s' \in \mathsf{R}$. Para que $\mathcal{T}$ seja autenticada por $\mathcal{R}$, ambos executam os seguintes passos:
+    \begin{enumerate}
+      \item $\mathcal{R}$ gera um \textit{challenge} $c \longleftarrow_{\$} \{0,1\}^\lambda$. \textbf{$\mathbf{\mathcal{R}}$ envia $\mathbf{c}$ para $\mathbf{\mathcal{T}}$}
+      \item $\mathcal{R}$ gera $r \longleftarrow_{\$} \mathsf{R}$, $e \longleftarrow_{\$} \mathsf{Ber^{R}_\tau}$ e calcula $z = r \cdot (s \cdot \pi(c) + s') + e$. \textbf{$\mathbf{\mathcal{T}}$ envia o par $\mathbf{(r,z)}$ para $\mathbf{\mathcal{R}}$}
+      \item $\mathcal{T}$ recebe o par $(r,z)$ e:
+        \begin{itemize}
+          \item se $r \notin \mathsf{R}^\star$, retorna \textsf{reject} e protocolo termina;
+          \item calcula $e' = z - r \cdot (s \cdot \pi(c) + s')$;
+          \item se $\mathsf{wt}(e') > n \cdot \tau'$, retorna \textsf{reject} e protocolo termina\footnote{$\mathsf{wt}(e)$ representa o \textit{hamming weight} de uma \textit{string} binária $e$, ou seja, o número de bits 1 em $e$};
+          \item retorna \textsf{accept}
+        \end{itemize}
+    \end{enumerate}
+\end{description}
+%%%%%%%%%%%
+% Redutivel
+%%%%%%%%%%%
+\subsection{Polinómio redutível}
+Por questões de eficiência, por vezes é melhor utilizar um polinómio $f(x)$ que seja redutível sobre $\mathbb{F}_2$. Isto permite-nos utilizar a representação CRT dos elementos de $\mathbb{F}_2[x]/f(x)$ para efectuar multiplicações que se tornam muitos mais eficientes quando em CRT.\\
+Se o polinómio é factorizável em $\prod_{i=1}^{m} f_i$, então é possível tentar resolver o problema do \RingLPN\ módulo um qualquer $f_i$, em vez de $f$. Sendo que o $deg(f_i) < deg(f)$, resolver o \RingLPN\ torna-se mais fácil.\\
+A implementação do protocolo através da utilização de um polinómio redutível permite-nos tirar vantagens da aritmética baseada no Teorema Chinês dos Restos.\\
+Na implementação é definido o anel $\mathsf{R} = \mathbb{F}_2[x]/f(x)$, e escolhido o polinómio redutível $f$ como o produto de $m = 5$ polinómios irredutíveis:
+$$
+\begin{array}{c c c c c c c c c c c}
+  f_1 &=& x^{127} &+& x^{8} &+& x^{7} &+& x^{3} &+& 1 \\
+  f_2 &=& x^{126} &+& x^{9} &+& x^{6} &+& x^{5} &+& 1 \\
+  f_3 &=& x^{125} &+& x^{9} &+& x^{7} &+& x^{4} &+& 1 \\
+  f_4 &=& x^{122} &+& x^{7} &+& x^{4} &+& x^{3} &+& 1 \\
+  f_5 &=& x^{121} &+& x^{8} &+& x^{6} &+& x     &+& 1 \\
+\end{array}
+$$
+Por isso, $deg(f) = n = 621$. É definido $\tau = 1/6$ e $\tau' = 0.29$ de forma a obter um erro de solidez mínimo $\varepsilon_{ms} \approx c(\tau', 1/2)^{-n} \le 2^{-82}$ e um erro de integridade $\varepsilon_{c} \le 2^{-42}$. O melhor ataque conhecido sobre \RingLPNRtau\ tem como parâmetro a complexidade $>2^{80}$.\\
+O \textit{mapping} $\pi : \{0,1\}^{80} \rightarrow \mathsf{R}$ é definido no Algoritmo~\ref{alg:pi_irreduc}. Cada $v_i$ pode ser visto como a representação dos coeficientes de um polinómio em $\mathbb{F}_2[x]/f_i(x)$. O \textit{mapping} $\pi$ está representado na forma CRT. De referir ainda que, para $c, c^\star \in \{0,1\}^{80}$, temos que $\pi(c) - \pi(c^\star) \in \mathsf{R} \setminus \mathsf{R}^\star$ sse $c = c^\star$ e por isso $\pi$ é adequado para \textsf{R}.\\
+\begin{algorithm}
+  \caption{\textit{Mapping} $\pi$ para o anel $\mathsf{R} = \mathbb{F}_2[x]/f(x)$, no caso em que $f(x)$ é irredutível}\label{alg:pi_irreduc}
+
+  \begin{algorithmic}
+    \Require $c \in \{0, 1\}^{80}$
+    \Ensure $\pi = (v_1, \dotsc, v_5)$
+    \For {$i = 1$ to $5$}
+    \State    $toPad = deg(f_i) - 80$
+    \State    $v_i = padding(c, toPad)$
+    \EndFor 
+    \State \Return $v$
+  \end{algorithmic}
+\end{algorithm}
+%%%%%%%%%%%
+% Irredutivel
+%%%%%%%%%%%
+\subsection{Polinómio irredutível}
+Quando $f(x)$ é irredutível em $\mathbb{F}_2$, o anel $\mathbb{F}_2[x]/f(x)$ é um corpo. Para estes anéis, não são conhecidos algoritmos capazes de tirar partido da estrutura algébrica adicionada a esta instância particular do \RingLPN. Desta forma, o algoritmo conhecido mais eficiente para resolver este problema é usado para resolver o \textsf{LPN}.\\
+A complexidade computacional do problema \textsf{LPN} baseia-se no tamanho de \textit{n} e na distribuição de ruído $\mathsf{Ber_\tau}$. Intuitivamente, quanto maior for \textit{n} e $\tau$ mais próximo de $1/2$, mais difícil se torna o problema.\\
+Habitualmente, são considerados como valores de $\tau$ valores constantes entre $0.05$ e $0.25$. Para tais valores de $\tau$, o algoritmo assimptótico mais rápido para a resolução do problema \textsf{LPN} demora $2^{\Omega(n/log\ n)}$ e requer aproxidamente $2^{\Omega(n/log\ n)}$ amostragens do oráculo \textsf{LPN}. No caso do número de amostragens ser menor, o algoritmo, naturalmente, tem uma performance inferior. No protocolo o número de amostragens disponíveis para o adversário é limitado a $n$ vezes o número de execuções. Então, assumindo que o adversário tem acesso a um número limitado de amostragens, é mais difícil quebrar o protocolo de autenticação do que resolver o problema \RingLPN.\\
+Para definir o corpo $\mathsf{F} = \mathbb{F}_2[x]/f(x)$ foi escolhido o polinómio irredutível:
+$$
+  f(x)  =  x^{532} + x + 1 \\
+$$
+Por isso com grau $n = 532$, e definidos $\tau = 1/8$ e $\tau' = 0.27$ que permite obter um erro de solidez mínimo $\varepsilon_{ms} \approx c(\tau', 1/2)^{-n} \le 2^{-80}$ e um erro de integridade $\varepsilon_{c} \le 2^{-55}$.\\
+De acordo com análises citadas na publicação, o algoritmo mais rápido na resolução do problema \textsf{LPN} de dimensão $532$ com $\tau = 1/8$ requer $2^{77}$ de memória para o resolver quando é dado aproxidamente o mesmo número de amostras. Dado que a dimensão é pouco maior e o número de amostras limitado, é razoável assumir que esta instância tem segurança de $80$ bits.\\
+O \textit{mapping} $\pi : \{0,1\}^{80} \rightarrow \mathsf{F}$ é definido no Algoritmo~\ref{alg:pi_irreduc}. Dado que $\pi$ descrito é injectivo e \textsf{F} é um corpo, o \textit{mapping} $\pi$ é adequado para \textsf{F}.
+\begin{algorithm}
+  \caption{\textit{Mapping} $\pi$ para o corpo $\mathsf{F} = \mathbb{F}_2[x]/f(x)$, no caso em que $f(x)$ é redutível}\label{alg:pi_reduc}
+
+  \begin{algorithmic}
+    \Require $c \in \{0, 1\}^{80} = (c_1, \dotsc, c_16)$, com cada $c_j$ um número de 5 bits entre 1 e 31
+    \Ensure $(v_1, \dotsc, v_{16})$ os 16 coeficientes não nulos.
+    \For {$j = 1$ to $16$}
+    \State    $v_i = 16 \cdot (j - 1) + c_j$
+    \EndFor
+    \State \Return $v$
+  \end{algorithmic}
+\end{algorithm}

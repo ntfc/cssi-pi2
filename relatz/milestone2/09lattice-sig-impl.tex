@@ -1,0 +1,76 @@
+\section{Prototipagem em \sage}
+Tal como já foi referido neste relatório, utilizamos o \sage para desenvolver um protótipo do esquema de assinatura apresentado na publicação \cite{lattice_sig}. Para representar os vectores e matrizes presentes no esquema utilizamos os tipos \verb|vector| e \verb|matrix| disponíveis no \sage.\\
+Existe a função \verb|random_matrix| em \sage\ que gera matrizes de forma aleatória, mas ficámos com a impressão de que era bastante mais lento do que a seguinte alternativa:
+\begin{lstlisting}[style=sage]
+def randomMatrix(nrows, ncols, bound):
+  A = matrix(nrows, ncols)
+  for row in xrange(0, nrows):
+    new_row = []
+    for col in xrange(0, ncols):
+      aij = ZZ.random_element(bound)
+      new_row.append(aij - bound)
+    A[row] = new_row
+  return A
+\end{lstlisting}
+Foram implementados os algoritmos de geração de chaves, assinatura e de verificação que passamos a explicar.
+\subsection{Geração de chaves}
+O algoritmo de geração de chaves deste esquema consiste basicamente na geração das matrizes \textbf{S}, \textbf{A} e na multiplicação de ambas, sendo a primeira a chave privada com tamanho $m \times k$. A chave pública é \textbf{T} que consiste no resultado da multiplicação de \textbf{S} por \textbf{A}, com dimensão $n \times m$, módulo $q$. De seguida apresenta-se as funções de geração de \textbf{S} e \textbf{A}.\\
+\begin{lstlisting}[style=sage]
+ def genS(self):
+    return random_matrix(ZZ, self.m, self.k, x=-self.d, y=self.d)
+
+ def genA(self):
+    bound = int(((self.q-1)/2))
+    ncols = self.m - self.n
+    nrows = self.n
+    A = randomMatrix(nrows, ncols, self.q)
+    I = matrix.identity(self.n)
+    return block_matrix(ZZ, [[A, I]], subdivide=False)
+\end{lstlisting}
+\subsection{Assinatura}
+O algoritmo de assinatura utiliza uma distribuição para a geração de \textbf{y}, uma função de hash sobre a mensagem e ainda um \textit{rejection sampling}, para além de funções de soma e multiplicação.\\
+Utilizamos a distribuição gaussiana com os limites para a distribuição $[-\sigma\log(n), \sigma\log(n)]$. Sendo que os valores amostrados são aceites com a probabilidade $\rho_{\sigma, c}(x)$.\\
+\begin{lstlisting}[style=sage]
+ def genY(self):
+    limite = Integer(self.sigma * log(self.n,2))
+    T = RealDistribution('gaussian', self.sigma)
+    i = 0
+    vec = vector(ZZ, self.m)
+    while i < self.m:
+      x = ZZ.random_element(-limite, limite, 'uniform')
+      if random() < self.__p(0, x):
+        vec[i] = x
+        i+=1
+    return vec
+ def __p(self, c, x):
+    return exp((float(-((x-c)**2) / (2*self.sigma**2))))
+\end{lstlisting}
+%
+Por fim é utilizado um \textit{rejection sampling} que pretende garantir que a distribuição de (\textbf{z},\textbf{c}) é independente da chave privada \textbf{S}. Em \cite{lattice_sig} diz-se que a fórmula apresentada para o \textit{rejection sampling} no esquema de assinatura está estatisticamente muito perto de $1/M$. %$\frac{1}{\mathbf{M}}$.\\
+\begin{lstlisting}[style=sage]
+ def rejectionSampling(self, S, z, c):
+    return int(random() < float(1 / self.M))
+\end{lstlisting}
+%
+\subsection{Verificação}
+O algoritmo de verificação é bastante simples. É utilizada novamente a função de hash que recebe a multiplicação de \textbf{A} e \textbf{z} subtraindo a multiplicação de \textbf{T} e \textbf{c}, e a mensagem. É ainda verificado se a norma de \textbf{z} é menor que a multiplicação de $\eta$, $\sigma$ e raiz de \textbf{m}.\\
+\begin{lstlisting}[style=sage]
+ def Vrfy(self, mu, z, c, A, T):
+    if type(mu) != str:
+      return
+    z_norm = float(z.norm(p=2))
+    s1 = (A*z - T*c).Mod(self.q)
+    s2 = self.hash_mu(mu)
+    s = ''.join(map(lambda x : str(x), s1.list()))
+    s += s2
+    if self.k == 80:
+      h = self.H2(s)
+    else: 
+      h = self.H512(s)
+    z_to_compare = float(self.eta*self.sigma*float(sqrt(self.m)))
+    return z_norm < z_to_compare and c == h
+\end{lstlisting}
+%
+\section{Conclusões}
+A implementação deste esquema de assinaturas não foi nada fácil dado que a publicação não é muito clara em relação à função de \textit{hash} utilizada, bem como em relação à \textit{rejection sampling}. Ultrapassadas estas dificuldades iniciais, conseguimos desenvolver um protótipo do esquema e verificar que tal como referido na publicação a utilização dos parâmetros indicados na variante I não é de facto muito eficiente.\\
+Utilizamos ainda os parâmetros das variantes II e III, o que nos permitiu verificar que nestes dois casos o algoritmo de geração de chaves é mais lento devido a multiplicação de \textbf{A} por \textbf{S}, contudo o algoritmo de assinatura é mais rápido do que no caso I.

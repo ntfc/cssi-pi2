@@ -1,0 +1,135 @@
+\documentclass[11pt,a4paper,notitlepage]{report} % notitlepage doesnt reset pagenumber on abstract
+\usepackage[portuguese]{babel}
+\usepackage[latin1,utf8]{inputenc} %utf8 for linux
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+%\usepackage[a4paper, pdftex, bookmarks, colorlinks, linkcolor=black, urlcolor=blue]{hyperref} %por linkcolor=cor para ter os links com cor.
+\usepackage[a4paper,left=3cm,right=2.5cm,top=3cm,bottom=2.5cm]{geometry}
+%\usepackage[margin=10pt,font=small,labelfont=bf]{caption}
+%\usepackage{graphicx}
+\usepackage{float} % for floating objects
+%\usepackage{multirow}
+\usepackage{array}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{mathtools}
+%\usepackage[table]{xcolor}
+\usepackage[section]{placeins} % para os floats nao ultraparassem a section em que sao criados
+%\usepackage[portuguese]{nomencl} % para a lista de nomenclaturas
+%\makenomenclature
+%\usepackage[toc,page]{appendix}
+\usepackage{algpseudocode} % for algorithms
+\usepackage{algorithm} % for algorithms
+\usepackage[titletoc]{appendix} % as seen here: http://stackoverflow.com/questions/5690679/add-appendix-before-a-in-thesis-toc
+%\usepackage[nottoc]{tocbibind} % para meter a bibliografia no toc
+\usepackage{enumerate} % para o enumerate a), b)
+\usepackage{listings}
+\usepackage[margin=10pt,font=small,labelfont=bf]{caption}
+\usepackage{color}
+\usepackage{todonotes} % Mark­ing things to do in a LATEX doc­u­ment
+%
+\newenvironment{definition}[1][Definição]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{example}[1][Exemplo]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% new commands
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % para a capa
+\newcommand{\sage}{\texttt{Sage}}
+\newcommand{\RingLPN}{\textsf{Ring-LPN}}
+\newcommand{\RingLPNR}{\textsf{Ring-LPN}$\mathsf{^R}$}
+\newcommand{\RingLPNRtau}{\textsf{Ring-LPN}$\mathsf{^R_\tau}$}
+%
+%
+% mudar algorithm para algoritmo
+\floatname{algorithm}{Algoritmo}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+% mudar appendices para anexos
+\renewcommand{\appendixtocname}{Apêndices}
+\renewcommand{\appendixpagename}{Apêndices}
+% floating algorithms
+\newfloat{algorithm}{t}{lop}
+% mudar list of nomenclatures para palavras chave
+%\renewcommand{\nomname}{Palavras Chave}
+%
+% listings
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\renewcommand{\lstlistingname}{Código}
+\lstdefinestyle{sage}{
+  frame=tb,
+  language=Python,
+  tabsize=2,
+  breaklines=true,
+  breakatwhitespace=true,
+  basicstyle={\footnotesize\ttfamily},
+  aboveskip=3mm,
+  belowskip=3mm,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  showstringspaces=false,
+  captionpos=t,
+  %morecomment=[is]{\#}{ } % could be used to hide comments
+}
+% \include includes the file in a new page
+% \input include the file in the current page
+% \chapter[short description]{long description}
+% use \and when using more than one author
+% to use bibtex: \cite{citation_name}
+%
+%
+\begin{document}
+\pagenumbering{roman}
+\input{./cover.tex}
+%
+%\maketitle
+\newpage
+%
+% the abstract
+\begin{abstract}
+\thispagestyle{plain} % pagenumber on abstract page
+\input{abstract}
+\end{abstract}
+\newpage
+%\input{nomenclature}
+%\printnomenclature
+%\newpage
+%table of contents
+\tableofcontents
+\newpage
+%
+\pagenumbering{arabic}
+\chapter{Introdução}
+\input{objectives}
+\chapter{Lapin -- Estudo}
+\input{lapin-study}
+\chapter{Lapin -- Implementação}
+\input{lapin-sage}
+\input{lapin-binary}
+%\chapter{\textit{Lattice Signatures Without Trapdoors}}
+%\input{lattice-sig-study}
+\chapter{Conclusão}
+\input{conclusion}
+%
+%
+% bibtex
+\bibliographystyle{plain}
+\nocite{*} % Show all Bib-entries
+% Note the lack of whitespace between the commas and the next bib file.
+\bibliography{bib/articles,bib/books,bib/www}
+%
+\appendix
+\appendixpage
+\addappheadtotoc
+\chapter{Lapin em \sage}\label{appendix:lapin}
+\input{appendix/lapin}
+\chapter{Operações binárias em \sage}\label{appendix:bin-ops}
+\input{appendix/binary-ops}
+%\chapter{Outro anexo}
+\end{document}

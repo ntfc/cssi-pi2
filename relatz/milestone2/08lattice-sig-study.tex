@@ -1,0 +1,75 @@
+%%%%%%%%%%%%%%%%%%%
+% Descricao
+%%%%%%%%%%%%%%%%%%%
+%\section{Descrição}
+O segundo objectivo para do nosso projecto é o estudo de protocolos de assinaturas digitais baseados em reticulados. Já existem bastante esquemas criptográficos baseadas em reticulados (ainda que não completamente praticáveis, mas já bastante próximos disso), mas o mesmo não se passa com as assinaturas digitais. Para além disso, os esquemas de assinaturas existentes são muito pouco ineficientes.\\
+O protocolo a ser estudado será o proposto em \cite{lattice_sig} por Lyubashevsky. Aqui apresenta-se um método alternativo para a construção de assinaturas digitais baseadas em reticulados, com tamanhos de chaves e de assinaturas mais pequenas que os esquemas \textit{hash-and-sign} conhecidos até ao momento. Este é baseado num algoritmo bastante simples, que requer apenas operações sobre vectores e matrizes e \textit{rejection sampling}. Os tamanhos das chaves e assinaturas são também mais pequenos que os dos esquemas \textit{hash-and-sign}.\\
+%São propostas várias variantes do mesmo protocolo, sendo que todos eles de baseam no problema \textsf{SIS} (\textit{Small Integer Solution}) e em variantes do mesmo. Resumidamente, o problema \textsf{SIS} é equivalente ao \textit{knapsack problem} (problema da mochila) em elementos de $\mathbb{Z}_q^n$.\\
+%%%%%%%%%%%%%%%%%%%
+% Definicoes
+%%%%%%%%%%%%%%%%%%%
+\section{Definições}
+\subsection{Representações}
+Considera-se $q$ um número primo. Usaremos letras maiúsculas a negrito como matrizes em $\mathbb{Z}$ e os vectores com letra minúsculas a negrito. Quando se tem $\| \mathbf{v} \|_n$ refere-se à norma $\ell_n$ do vector, e para o caso de $n = 2$ omite-se o índice.\\
+%%%%%%%%%%%%%%%%%%%
+% Distribuicoes
+%%%%%%%%%%%%%%%%%%%
+\subsection{Distribuições}
+Nesta secção apresentam-se as distribuições utilizadas no esquema de assinatura:
+\begin{description}
+    \item[Distribuição Contínua] A distribuição normal sobre $\mathbb{R}^m$ centrada num vector $\mathbf{v}$ com o desvio $\sigma$ é definida pela função $\rho_{\mathbf{v}, \sigma}^m(\mathbf{x})$ = $\left(\cfrac{1}{\sqrt{2\pi\sigma^2}}\right)^m \cdot e^{\cfrac{-\|\mathbf{x}-\mathbf{v}\|^2}{2\sigma^2}}$.  
+\end{description}
+Quando o vector $\mathbf{v}$ = $0$, escreve-se $\rho_{\sigma}^m(x)$.
+\begin{description}  
+   \item[Distribuição Discreta] A distribuição normal sobre $\mathbb{Z}^m$ centrada num vector $\mathbf{v} \in \mathbb{Z}^m$ com o desvio $\sigma$ é definida pela função $\mathcal{D}^m_{\mathbf{v}, \sigma}(\mathbf{x})$ = $\rho_{\mathbf{v}, \sigma}^m(\mathbf{x}) / \rho_\sigma^m(\mathbb{Z}^m)$.
+\end{description}
+Na definição da distribuição discreta, $\rho_\sigma^m(\mathbb{Z}^m)$ = $\sum_{\mathbf{z} \in \mathbb{Z}^m} \rho_{\sigma}^m(\mathbf{z})$ é apenas um factor necessário para transformar a função numa distribuição de probabilidades. De referir também, que para qualquer $\mathbf{v} \in \mathbb{Z}$, $\rho_{\mathbf{v},\sigma}^m(\mathbb{Z}^m)$ = $\rho_\sigma^m(\mathbb{Z}^m)$, sendo o factor de escala é igual para qualquer $\mathbf{v}$.
+%%%%%%%%%%%%%%%%%%%
+% Problema SIS
+%%%%%%%%%%%%%%%%%%%
+\subsection{Problema \textsf{SIS}}
+O objectivo de construções de assinatura digital que utilizam \textit{random oracle model} é garantir que a distribuição da assinatura é estatisticamente independente da chave secreta. Com esta propriedade e através da definição de um oráculo aleatório é possível que um potencial atacante, num cenário de redução de segurança, consiga produzir uma assinatura válida sem conhecer a chave privada. Com essa assinatura pode ser resolvido um problema difícil adjacente, que no caso dos reticulados é geralmente o o \textsf{Small Integer Solution problem}, em que é dado uma matriz $A$ e é pedido um pequeno vector $v$ tal que $Av = 0$ $mod$ $q$.De seguida são apresentadas definições de problemas que fazem parte da categoria \textsf{SIS problem} nos quais se baseia a assinatura.\\
+%
+\begin{description}
+  \item[$l_2$-SIS$_{q,n,m,\beta}$ problem] Dada uma matriz aleatória $A \leftarrow_{\$} \mathbb{Z}^{n \times m}_q$ encontre um vector $v \in \mathbb{Z}_{m} \setminus \{0\}$ tal que $Av =  0$ e $\| v \| \leq \beta$. 
+  \item[SIS$_{q,n,m,d}$ distribution] Escolha uma matriz aleatória $A \leftarrow_{\$} \mathbb{Z}^{n \times m}_q$ e um vector $s \leftarrow_{\$} \{-d,...,0,...d\}^m$ e retorne $(A, As)$ como output.
+  \item[SIS$_{q,n,m,\beta}$ search problem] Dado um par $(A, t)$ de SIS$_{q,n,m,d}$ distribution, encontre $s \in \{-d,...,0,...d\}^m$ tal que $As = t$.
+  \item[SIS$_{q,n,m,\beta}$ decision problem] Dado um par $(A, t)$ decide com uma vantagem não negligenciável se foi gerado de forma uniformemente aleatória de $\mathbb{Z}^{n \times m}_q \times \mathbb{Z}^n_q$ ou através de SIS$_{q,n,m,d}$ distribution.
+\end{description}
+\section{Funcionamento}
+O funcionamento do esquema de assinatura baseia-se, sucintamente, em operações sobre matrizes e vectores, na amostragem da distribuição normal sobre $\mathbb{Z}^m$, na utilização de um oráculo aleatório, e ainda numa \textit{rejection sampling}.\\
+Na Figura~\ref{sig:esquema} é apresentado o funcionamento do esquema de assinaturas.
+\begin{figure}[H]
+  \centering
+  \begin{tabular}{| l  l |}
+    \hline
+     \multicolumn{2}{| l |}{\small{\underline{Chave assinar:} $\mathbf{S} \leftarrow_{\$} \{-d,\ldots,0,\ldots,d\}^{m \times k} $}}   \\
+     \multicolumn{1}{| l }{\small{\underline{Chave verificação:} $\mathbf{A} \leftarrow_{\$} \mathbb{Z}^{n \times m}_q$, $\mathbf{T} \leftarrow \mathbf{AS} \mod{q}$}}   & \\
+     \multicolumn{1}{| l }{\small{\underline{Random Oracle:} $H : \{0,1\}^{*} \rightarrow \{\mathbf{v} : \mathbf{v} \in \{-1,0,1\}^k, \|\mathbf{v}\|_1 \leq \kappa\}$}}  & \\
+      & \\
+      &  \\
+     \multicolumn{1}{| l }{\textsf{Sign($\mu,\mathbf{A},\mathbf{S}$)}}  & \multicolumn{1}{ l |}{\textsf{Verify($\mu,\mathbf{z},\mathbf{c},\mathbf{A},\mathbf{T}$)} } \\
+      & \\
+     \small{1: $\mathbf{y} \leftarrow_{\$} \mathcal{D}_\sigma^m$}  & \multicolumn{1}{ l |}{\small{1: Aceitar se:}}\\ 
+     \small{2: $\mathbf{c} \leftarrow H(\mathbf{Ay} \mod{q}, \mu)$}  & \small{$\|\mathbf{z}\| \leq \eta\sigma\sqrt{m}$ e $\mathbf{c} = H(\mathbf{Az} - \mathbf{Tc} \mod{q}, \mu)$}  \\ 
+     \small{3: $\mathbf{z} \leftarrow \mathbf{Sc} + \mathbf{y}$}  & \\
+     \small{4: output $(\mathbf{z},\mathbf{c})$  com probabilidade min$\left(\cfrac{\mathcal{D}_\sigma^m(\mathbf{z})}{M\mathcal{D}_{\mathbf{Sc},\sigma}^m(\mathbf{z})},1\right)$} & \\
+    \hline
+  \end{tabular}
+  \caption{Esquema de assinaturas digitais}
+  \label{sig:esquema}
+\end{figure}
+A chave privada é a matriz $\mathbf{S}$ e a chave pública é composta pelas matrizes $\mathbf{A}$ e $\mathbf{T}$. A chave privada é gerada aleatoriamente de forma uniforme, enquanto que a matriz $\mathbf{A}$ não é completamente gerada de forma uniforme. Isto porque $\mathbf{A}$ está na \textit{Hermite Normal Form} (HMF), ou seja, $\mathbf{A} = [ \bar{\mathbf{A}} | \mathbf{I}_n ]$, onde $\bar{\mathbf{A}}$ é uma matriz $\mathbb{Z}^{n \times (m - n)}_q$ gerada de forma uniforme e $\mathbf{I}_n$ é a matriz identidade de $n \times n$.\\
+O vector $\mathbf{y}$ é escolhido de acordo com a distribuição gaussiana $\mathcal{D}^m_\sigma$ centrada em 0.\\
+O oráculo aleatório $H$ pode ser visto como uma função \textit{hash}  que mapeia string de tamanho variável em vectores de forma especial: são compostos apenas por -1, 0 e 1, em que a sua norma $\ell_1$ é menos do que o parâmetro $\kappa$. De seguida seguem-se as duas alternativas que decidimos utilizar.\\
+%
+Na primeira opção faz-se o SHA-1 de uma mensagem, divide-se o output em duas strings de 80 bits e retorna-se a sua subtracção, que é equivalente a um vector $\textbf{v} \in {-1, 0, 1}^k$. No entanto, o requisito de que a norma $\ell_1$ do vector tem de ser $\leq \kappa$ nem sempre é alcançado, o que poderá ter influência no resto do protocolo.\\
+A outra opção é baseada num outro trabalho de Lyubashevsky \cite{guneysu2012practical} em que é proposta uma alteração ao output da função de \textit{hash} tal que é gerado um polinómio de grau menor do que $512$ e com um máximo de 32 coeficientes $\pm 1$. Eis o seu funcionamento, assumindo que se tem a função de \textit{hash} $H$ (diferente do oráculo do protocolo!) que mapeia $\{0,1\}^*$ em strings de 160 bits:
+\begin{itemize}
+  \item Observar o output $r$ de $H$ como 32 sub strings de 5 bits $r_1 r_2 r_3 r_4 r_5$, e converta-las para strings de 16 bits usando as seguintes regras
+  \item se $r_1 = 0$, então coloca-se um $-1$ na posição $r_2 r_3 r_4 r_5$ da nova string de 16 bits
+  \item se $r_1 = 0$, então coloca-se um $1$ na posição $r_2 r_3 r_4 r_5$ da nova string de 16 bits
+\end{itemize}
+Desta forma converte-se uma string de 160 bits noutra de 512 com um máximo de 32 $\pm 1$'s.\\
+Apesar de não ser exactamente a função de que estamos à procura, é bastante similar ao que queremos atingir, e efectuando algumas alterações achamos que podemos chegar a valores que encaixem no nosso protocolo. Na implementação \sage\ efectuámos algumas alterações de forma a que o output gerado esteja de acordo com os parâmetros do protocolo.\\
+Existem cinco variantes do protocolo de assinaturas, sendo as três primeiras (I, II e III) baseadas na dificuldade do problema $\ell_2-SIS_{q, n, m, \beta}$ e as duas última no problema de pesquisa $SIS_{q, n, m, d}$.

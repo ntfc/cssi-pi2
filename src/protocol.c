@@ -67,22 +67,6 @@ int main(int argc, char **argv) {
 
   //test_lapin_reduc();
   test_lapin_irreduc();
-  Poly *a = poly_rand_uniform_poly(532);
-  Poly *b = poly_rand_uniform_poly(532);
-  Poly *c = poly_mult(a, b);
-  poly_free(a); poly_free(b);
-  printf("c=");poly_print_poly(c);
-  clock_cycles a1, a2, b1, b2;
-  CLOCK_START(a1);
-  Poly *cMod = poly_mod(c, f_irreducible);
-  CLOCK_END(b1);
-  CLOCK_START(a1);
-  Poly *cMod2 = poly_fast_mod_irreduc(c, f_irreducible);
-  CLOCK_END(b2);
-  printf("c1=");poly_print_poly(cMod);
-  printf("c2=");poly_print_poly(cMod2);
-  printf("mod1 = %llu\n", CLOCK_RESULT(a1, b1));
-  printf("mod2 = %llu\n", CLOCK_RESULT(a2, b2));
   return 0;
 }
 

@@ -1,0 +1,128 @@
+\section{Prototipagem em \sage}
+Depois de estudado o protocolo começámos a implementá-lo em \sage, tirando partido das excelentes capacidade matemáticas do \sage. Todas as operações aritmétricas descritas anteriormente estão já definidas para os polinómios \sage\ (de qualquer forma, também começámos por implementá-las em \sage). Seguem-se de seguida alguns detalhes de implementação.
+\subsection{Representações e operações em \sage}
+Apresentámos nesta secção 
+Apresentamos neste secção algumas das classes usadas, e como implementar algumas das operações do protocolo.\\
+Para se representar $\mathbb{F}_2[x]$ usa-se:
+\begin{lstlisting}[style=sage]
+F = PolynomialRing(GF(2), 'x')
+\end{lstlisting}
+Para declarar um polinómio não basta declará-lo com, por exemplo, \verb|x^2 + x|, pois o tipo da variável \verb|x| é uma \verb|Expression| do \sage. Posto isto, é preciso declarar a variável \verb|x| para que o \sage\ saiba que está a lidar com polinómios e não com simples \verb|Expressions| \sage. Sendo assim, para declarar $f(x) = x^7 + x + 1$ faz-se:
+\begin{lstlisting}[style=sage]
+sage: x = F.gen()
+sage: f = x**7 + x + 1
+\end{lstlisting}
+É desta forma que vamos definir todos os polinómios em \sage. Agora é possível efectuar operações sobre polinómios. Seguem alguns exemplos, em que todas as operações são efectuadas em $\mathbb{F}_2[x]$:
+\begin{lstlisting}[style=sage]
+sage: g = x**5 + x**2 + x + 1
+sage: f+g
+x^7 + x^5 + x^2
+sage: f*g
+x^12 + x^9 + x^8 + x^7 + x^6 + x^5 + x^3 + 1
+sage: f.mod(g)
+x^4 + x^3 + x^2 + x + 1
+sage: 
+\end{lstlisting}
+Tendo bem definido como se tratariam dos polinómios, é necessário representar o anel \textsf{R}. Usando como exemplo o anel $\mathbb{R}_2[x]/f(x)$ tem-se:
+\begin{lstlisting}[style=sage]
+sage: R = R.quotient_ring(f, 'x')
+sage: R.random_element()
+x^6 + x^5 + x^4 + x
+# CAREFUL: type of this R.random_element() doesn't support mod operations, so we have to convert it to type Polynomial_GF2X
+sage: type(R.random_element())
+sage.rings.polynomial.polynomial_quotient_ring_element.Polynomial
+QuotientRing_generic_with_category.element_class
+sage: type(binToPoly(polyToBin(R.random_element(), x), x)
+sage.rings.polynomial.polynomial_gf2x.Polynomial_GF2X
+\end{lstlisting}
+Note-se que as funções \verb|binToPoly| e \verb|polyToBin| estão definidas no módulo \verb|poly.py|
+Como também vamos ter de trabalhar com polinómios em CRT, vamos criar um exemplo de um anel \textsf{R} com um $f(x) = x^8 + x^6 + x^4 + x^3 + x$ factorizável em três polinómios $x$, $x^3 + x + 1$ e $x^4 + x + 1$ e com algumas operações em CRT:
+% aquele f = reduce() e o mesmo que o foldl do haskell
+\begin{lstlisting}[style=sage]
+sage: fi = [x, x**3 + x + 1, x**4 + x + 1]; f = reduce(operator.mul, fi, 1)
+sage: R = F.quotient_ring(f, 'x')
+sage: z = R.random_element();
+# convert z to Polynomial_GF2X
+...
+sage: zCRT = map(lambda m : z.mod(m), fi) ; zCRT
+[1, x^2, x^2 + 1]
+sage: CRT_list(zCRT, fi) == z
+True
+sage: w = R.random_element()
+# convert w to Polynomial_GF2X
+...
+sage: wCRT = map(lambda m : w.mod(m), fi) ; wCRT
+[1, x + 1, x^3 + x + 1]
+# perform w*z (mod f)
+sage: tmp1 = zip(wCRT, fi); tmp2 = zip(zCRT, fi)
+sage: wzCRT=map(lambda ((x1, y1), (x2, y2)) : (x1*x2).mod(y1), zip(tmp1,tmp2))
+sage: CRT_list(wzCRT, fi) == (w*z).mod(f)
+True
+\end{lstlisting}
+Como também vamos precisar de trabalhar com a string de bits $c \in \{0, 1\}^\lambda$, seguem-se os comandos para a criar, converter para representação inteira e para fazer \textit{padding}:
+\begin{lstlisting}[style=sage]
+sage: c = bin(getrandbits(80))[2:].zfill(80) ; Integer(c,2)
+64597992717886966981887
+# type of c is str and len(c) = 80
+sage: ''.join(['0' * 5], c) # pad c with 5 bits
+\end{lstlisting}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Protocolo em Sage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algumas operações em \sage}
+Tendo já conhecimento dos métodos apresentados anteriormente, é relativamente fácil concluir a implementação do Lapin no \sage. Apresentámos agora alguns dos métodos e funções com maior relevância. Todo o código pode ser consultado no Anexo~\ref{appendix:lapin}.\\
+Decidimos dividir a implementação do Lapin em três classes:
+\begin{description}
+  \item[Lapin] contém a definição dos parâmetros do protocolo, conforme os recomendados em \cite{lapin}. Contém todas as operações do protocolo apresentadas em \ref{lapin:protocol}, à excepção do \textit{mapping} $\pi$;
+  \item[Reducible] contém todas as operações comuns ao protocolo no caso em que $f$ é redutível. É aqui definido o \textit{mapping} $\pi$ e o anel \textsf{R}
+  \item[Irreducible] contém todas as operações comuns ao protocolo no caso em que $f$ é irredutível. É aqui definido o \textit{mapping} $\pi$ e o corpo \textsf{F}
+\end{description}
+As operações auxiliares comuns não estão em nenhuma classe de forma a possibilitar a sua utilização por todas as classes/funções do protocolo. Exemplo de tais funções são as que implementam somas e multiplicações em CRT ou operações binárias.\\
+De seguida apresenta-se o passo 2 do protocolo no caso em que $f$ é redutível:
+\begin{lstlisting}[style=sage]
+# method of Reducible class
+def tag_step2(self, c):
+  # ....
+  
+  # list of factors of f
+  fi = self.protocol.fi
+
+  r = reduceToCRT(self.protocol.genR(), fi)
+  e = reduceToCRT(self.protocol.genE(self.tau), fi)
+  # keys in crt form
+  (s1, s2) = (reduceToCRT(self.key1, fi), reduceToCRT(self.key2, fi))
+  pi = self.protocol.pimapping(c)
+
+  z = addCRT(multCRT(r, addCRT(multCRT(s1, pi, fi), s2, fi), fi), e, fi)
+  return (r, z)
+  
+# ...
+# function, not a method of any class
+def reduceToCRT(a, fi):
+  return map(lambda f : a.mod(f), fi)
+\end{lstlisting}
+O método \verb|pimapping| é a implementação do Algoritmo~\ref{alg:pi_irreduc}.\\
+O passo 3 consiste na verificação. Eis a sua implementação para o caso em que $f$ é irredutível:
+\begin{lstlisting}[style=sage]
+# method of Irreducible class
+def reader_step3(self, c, r, z):
+  # ....
+  
+  # list of factors of f
+  fi = self.protocol.fi
+
+  (r1, z1) = (CRT_list(r, fi), CRT_list(z, fi))
+  if r1.gcd(self.protocol.f) != 1:
+    print "reject R*"
+    return False
+  pi = CRT_list(self.protocol.pimapping(c), fi)
+
+  e2 = (z1 - r1 * (self.key1 * pi + self.key2)).mod(self.protocol.f)
+
+  if e2.hamming_weight() > (self.n * self.tau2):
+    print "reject wt"
+  return False
+
+  print "accept"
+  return True
+\end{lstlisting}

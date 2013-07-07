@@ -1,0 +1,62 @@
+\section{Polinómios binários}
+Como pretendermos implementar de raíz o protocolo em \textsf{C}, é necessário perceber como funcionam as operações sobre polinómios ao mais baixo nível, ou seja, apenas com a utilização de operações sobre bits.\\
+Neste capítulo pretende-se explicar como implementar as operações aritmétricas mais comuns sobre polinómios de forma eficiente. Até ao momento, só efectuámos a análise de duas operações: soma e multiplicação. A soma é de relativamente fácil percepção e implementação, mas na multiplicação demorámos mais tempo a perceber como realmente funciona. Devido a este facto, não nos é possível apresentar ainda a implementação das outras operações aritmétricas necessárias, tais como o módulo e máximo divisor comum (\textsf{gcd}).\\
+\subsection{Representação binária}
+De forma a que as operações com polinómios sejam o mais eficiente possível, é necessário trabalhar sobre a sua representação binária, em vez de os representar com simples inteiros. Neste capítulo descreve-se a representação usada na implementação do Lapin.\\
+Uma forma bastante simples de representar polinómios é colocar o bit menos significativo do lado direito, sendo a tradução de um polinómio para binário a seguinte:
+$$
+x^7 + x^4 + x^2 + x + 1 \Leftrightarrow 1 0 0 1 0 1 1 1
+$$
+O bit mais significativo representa o monómio $x^7$, enquanto que o menos significativo representa o $1$.\\
+Mas esta forma, por si só, não é a mais apropriada para implementar as operações aritmétricas em \textit{software}. Em \cite{lapin}, o autor refere-se a um método de multiplicação de polinómios mais eficiente, descrito em \cite{Hankerson:2003:GEC:940321}. Antes de descrever esses métodos, é necessário introduzir uma nova forma de representar polinómios binários.\\
+Nesta nova forma, assume-se que a máquina tem um arquitectura de $W$-bits, em que $W$ é um múltiplo de 8. Um polinómio passa a ser visto como um conjunto de palavras de $W$ bits, em que o bit menos significativo continua a estar do lado direito.\\
+Assume-se que existe o polinómio irredutível $f(x)$ com $deg(f) = m$. Todos os elementos $a(x)$ de $\mathbb{F}_2[x]/f(x)$ tem grau menor ou igual a $m-1$. Cada elemento $a(x)$ tem associada a representação descrita anteriormente, ou seja, é o vector binário $a = (a_{m-1}, a_m, \dotsc, a_1, a_0)$ de tamanho $m$. Considere-se $t = \lceil m/W \rceil$ e $s = Wt - m$. O vector binário $a$ pode ser guardado num \textit{array} de $t$ palavras de $W$ bits: $A = A[t-1], A[t], \dotsc, A[1], A[0]$. Os $s$ bits mais à direita de $A[t-1]$ nunca são usados (estão sempre a 0).\\
+A partir de agora vamos usar sempre esta última representação para tratar de polinómios.\\
+%%%%%%%%%%%%%%
+% soma
+%%%%%%%%%%%%%%
+\subsection{Soma}
+A soma de dois polinómios pode ser vista como um simples XOR entre as palavras dos dois polinómios, sendo efectuado o XOR palavra a palavra, bit a bit. No Algoritmo~\ref{alg:bin_add} descreve-se este processo.
+\begin{algorithm}
+  \caption{Soma de palavras binárias de $W$ bits}\label{alg:bin_add}
+
+  \begin{algorithmic}
+    \Require Polinómios $a(x)$ e $b(x)$ de grau menor ou igual a $m-1$
+    \Ensure Polinómio $c(x) = a(x) + b(x)$
+    \For {$i = 0$ to $t - 1$}
+    \State    $C[i] = A[i] \oplus B[i]$
+    \EndFor
+    \State \Return c
+  \end{algorithmic}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%
+% multplicacao
+%%%%%%%%%%%%%%%%%%%
+\subsection{Multiplicação de dois polinómios binários}
+Ao contrário da soma descrita no Algoritmo~\ref{alg:bin_add}, a multiplicação de polinómios já não é tão simples. Em \cite{lapin}, sugere-se a utilização do o método \textit{right-to-left comb} descrito em \cite{Hankerson:2003:GEC:940321} por ser o mais eficiente.\\
+Tal como para a soma, um polinómio é visto como $t$ palavras de $W$ bits. Em cada iteração conhece-se o resultado de $b(x) \cdot x^k$ para $k \in [0, W-1]$, logo, $b(x) \cdot x^{Wj+k}$ pode facilmente ser obtido adicionando $j$ palavras nulas (a zero) à direita do vector que representa $b(x) \cdot x^k$. Tal como o próprio nome indica, as palavras de $A$ são percorridas da direita para a esquerda. Quando se tem um array $C = C[n],\dotsc,C[1],C[0]$, denota-se por $C\{j\} = C[n],\dotsc,C[j+1],C[j]$ como o array truncado.
+\begin{algorithm}
+  \caption{Método \textit{Right-to-left comb} para a multiplicação de dois polinómios}\label{alg:right_to_left}
+  \begin{algorithmic}
+    \Require Polinómios $a(x)$ e $b(x)$ de grau menos ou igual a $m-1$
+    \Ensure Polinómio $c(x) = a(x) \cdot b(x)$
+    \State $C = 0$
+    \For {$k = 0$ to $W - 1$}
+      \For{$j = 0$ to $t - 1$}
+        \If{$k$-ésimo bit de $A[j]$ é $1$}
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% fodasse, isto ta mal. corrigir isto
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        \State Adicionar $B$ a $C\{j\}$
+        \State $c(x) = c(x) + b(x) \cdot x^{Wj + k}$ % Wj + k ou Wj??
+        \State $C = C\{j\} + B$
+        \EndIf
+      \EndFor
+      \If{$k \neq (W - 1)$}
+      \State $b(x) = b(x) \cdot x$
+      \State $B = B \cdot x$
+      \EndIf
+    \EndFor
+    \State \Return C
+  \end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,21 @@
+\section{Implementação em \textsf{C}}
+A primeira decisão a tomar na implementação em \textsf{C} foi de que forma iriam ser guardados os polinómios. A forma que surgiu, e que nos parece a mais óbvia, é a de guardar um polinómio de $t$ palavras de $W$-bits (a partir de agora vamos assumir sempre que $W = 32$) num \textit{array} de $t$ inteiros de $W$-bits, onde o bit mais significativo se encontra à esquerda. Sendo assim, o polinómio $x^{32} + x^{16} + x + 1$ poderá ser representado no seguinte array de duas palavras (representação hexadecimal das palavras): \verb|[ 0x1, 0x10003 ]|.\\
+Os polinómios (forma normal e CRT) estão representados nas seguintes estruturas:
+\begin{lstlisting}[style=C]
+typedef struct s_poly {
+  uint32_t *vec;
+  uint16_t n_words; // length of vec
+} Poly;
+
+typedef struct s_poly_crt {
+  uint8_t m; // length of crt
+  Poly **crt;
+} PolyCRT;
+\end{lstlisting}
+De seguida, e como íriamos trabalhar com bastantes operações \textit{low-level}, criámos um módulo \verb|binary| para tratar de todas as operações binárias, que por sua vez será chamado principalmente pelas operações do módulo \verb|poly|. Muitas das operações disponíveis em \verb|binary| foram adaptadas da página de San Eron Anderson\footnote{\url{http://graphics.stanford.edu/~seander/bithacks.html}}.\\
+A implementação dos algoritmos apresentados em \ref{alg:bin_add}, \ref{alg:right_to_left} e \ref{alg:mod} estão nas funções \verb|poly_add|, \verb|poly_mult| e \verb|poly_mod|, respectivamente. A função \verb|poly_mod| não altera o resultado dos polinómios recebidos como argumento, ou seja, aloca espaço para um novo polinómio e retorna o endereço do polinómio em módulo. De forma a tornar esta função um pouco mais eficiente criou-se também uma função \verb|poly_mod_faster| que trabalha directamente no primeiro polinómio recebido como argumento da função.
+%%%%%%%%%%%%%%
+% Comparacao tempos
+%%%%%%%%%%%%%%
+%\subsection{Medição de tempos}
+%Comparar com os tempos obtidos no paper

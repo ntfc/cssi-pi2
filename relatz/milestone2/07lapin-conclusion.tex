@@ -1,0 +1,10 @@
+\section{Conclusões}
+Os primeiros protótipos em \sage\ foram relativamente simples de implementar e permitiram-nos numa primeira fase perceber melhor o funcionamento do protocolo. Também foi bastante útil para a implementação das operações mais baixo nível. Com o uso de algumas bibliotecas e opções da linguagem \textsf{Python}/\sage\, foi possível implementar o protocolo em muito poucas linhas, apesar de no final a nossa implementação em \textsf{C} parece mais eficiente.\\
+No final da implementação ficámos com a ideia de que o código parece bastante mais simples do que o usado no \textsf{AES}. No entanto, as nossas medições de tempos em \textsf{C} não são comparáveis com as relatadas em \cite{lapin}. Isto deve-se sobretudo:
+\begin{itemize}
+  \item à nossa pouca experiência no desenvolvimento para dispositivos com capacidades reduzidas;
+  \item à não utilização de algumas pré-computações possíveis;
+  \item à utilização de alguns algoritmos poucos eficientes, nomeadamente nas operações de redução modular;
+\end{itemize}
+De qualquer forma, parece-nos que não seria muito difícil optimizar este código de forma a obter valores bastantes próximos dos de \cite{lapin}.\\
+Todo o protocolo ficou implementado, excepto a operação de verificação em \textsf{C} no caso da utilização de um polinómio irredutível $f$. No entanto, é possível verificar com a ajuda do \sage\ que os resultados obtidos são realmente válidos.\\

@@ -1,0 +1,12 @@
+%%%%%%%%%%%
+% Conclusao
+%%%%%%%%%%%
+Baseado no estudo efectuado sobre o protocolo de autenticação Lapin, pode-se afirmar que o mesmo é uma opção viável e segura para implementar em sistemas \textit{low-cost} e com recursos limitados, em que se pretenda um protocolo com pequena complexidade comunicacional. A análise de \cite{lapin} permitiu também verificar a utilidade de algumas operações realizadas sobre polinómios que permitem alcançar resultados muito mais eficientes comparativamente às operações realizadas de forma habitual.\\
+De assinalar ainda que a utilização da suposição \textsf{Ring-LPN}, apesar de ainda não ser um problema muito utilizado em criptografia, vem demonstrar que a sua utilização pode vir a aumentar, especialmente no âmbito das construções de esquemas \textit{low-cost}.\\ 
+%%%%%%%%%%%%%%%%%%%%
+% Trabalho futuro
+%%%%%%%%%%%%%%%%%%%%
+\section{Trabalho futuro}
+Depois de, nesta primeira fase, ter sido estudada a publicação referente ao protocolo Lapin e, inclusivamente, este ter sido implementado em \sage, pretende-se que na fase seguinte seja implementado em \textsf{C/C++} (de momento, referimos \textsf{C/C++}, apesar de estarmos mais inclinados para \textsf{C} e não \textsf{C++}). Como foi sendo dito ao longo deste documento, o protocolo Lapin é extremamente eficiente, pelo que nos parece óbvio usar \textsf{C/C++} para se obter uma aplicação igualmente eficiente.\\
+Mas ainda antes de partir para a implementação em \textsf{C/C++}, é necessário acabar a implementação do método \textit{right-to-left comb} (Algoritmo~\ref{alg:right_to_left}) e as restantes operações aritmétricas sobre polinómios, utilizando apenas operações binárias eficientes.\\
+Relativamente a \cite{lattice_sig}, a análise feita até ao momento não foi tão aprofundada quanto à feita a \cite{lapin}, portanto optámos por não incluir nada sobre o mesmo neste relatório. Contudo, o nosso propósito é o de também implementar o esquema de assinaturas baseado em reticulados em \sage, e se possível ainda, tentar uma implementação em \textsf{C/C++}. Dado que o estudo da primeira publicação nos permitiu ter uma noção exacta da complexidade da implementação da mesma, consideramos os objectivos descritos para o conjunto deste Projecto Integrador II atingíveis e razoáveis.
