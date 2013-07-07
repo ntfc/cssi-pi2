@@ -3,8 +3,8 @@ CFLAGS=-Wall -Wextra $(OPT_OR_DEBUG) $(DEF)
 OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
 LIBS=-lm
 EXEC=lapin # exec file name
-#DEF=-DURANDOM
-DEF=-DDEBUG -DPERFORMANCE
+#DEF=-DURANDOM -DDEBUG
+DEF=-DPERFORMANCE
 CC=gcc
 
 $(EXEC): $(OBJS)

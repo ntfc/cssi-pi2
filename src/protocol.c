@@ -65,7 +65,7 @@ void test_lapin_irreduc() {
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
 
-  //test_lapin_reduc();
+  test_lapin_reduc();
   test_lapin_irreduc();
 
   return 0;

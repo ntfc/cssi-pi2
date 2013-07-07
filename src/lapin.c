@@ -232,8 +232,10 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
   double tau1 = lapin->tau;
   
   #ifdef PERFORMANCE
-  struct timespec start, end, rand_start, rand_end;
-  START_MEASURE(start);
+  //struct timespec start, end, rand_start, rand_end;
+  //TIME_START(start);
+  clock_cycles cc_a, cc_b, cc_r_a, cc_r_b;  
+  CLOCK_START(cc_a);
   #endif
   // TODO: validate r and z and c and keys
   if(lapin->reduc) {
@@ -246,12 +248,14 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     
     #ifdef PERFORMANCE
     // exclude this from the measurement
-    START_MEASURE(rand_start);
+    //TIME_START(rand_start);
+    CLOCK_START(cc_r_a);
     #endif
     *r_crt = poly_crt_rand_uniform(fi);
     PolyCRT *e = poly_crt_rand_bernoulli(lapin->n, fi, tau1);
     #ifdef PERFORMANCE
-    END_MEASURE(rand_end);
+    CLOCK_END(cc_r_b);
+    //TIME_END(rand_end);
     #endif
     #ifdef DEBUG
     printf("e=");poly_crt_print_poly(e);
@@ -279,13 +283,15 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     const Poly *f = lapin->f_normal;
     #ifdef PERFORMANCE
     // exclude this from the measurement
-    START_MEASURE(rand_start);
+    //TIME_START(rand_start);
+    CLOCK_START(cc_r_a);
     #endif
     *r_poly = poly_rand_uniform_poly(lapin->n);
 
     Poly *e = poly_rand_bernoulli_poly(lapin->n, tau1);
     #ifdef PERFORMANCE
-    END_MEASURE(rand_end);
+    CLOCK_END(cc_r_b);
+    //TIME_END(rand_end);
     #endif
     Poly *pi = lapin_pimapping_irreduc(lapin, c);
     
@@ -334,12 +340,17 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
 
   }
   #ifdef PERFORMANCE
-  END_MEASURE(end);
+  CLOCK_END(cc_b);
+  //TIME_END(end);
   
-  uint32_t rand_duration = MEASURE_RESULT(rand_start, rand_end);
-  uint32_t duration = MEASURE_RESULT(start, end) - rand_duration;
-  fprintf(stdout, "Time elapsed in lapin_tag (reducible = %u) = %u ms (%u ms in random)\n",
-                  lapin->reduc, duration, rand_duration);
+  /*uint32_t rand_duration = TIME_RESULT(rand_start, rand_end);
+  uint32_t duration = TIME_RESULT(start, end) - rand_duration;
+  fprintf(stdout, "Time elapsed in lapin_tag (reducible = %u)", lapin->reduc);
+  fprintf(stdout, " = %u ms (%u ms in random)\n", duration, rand_duration);*/
+  clock_cycles cc_rand = CLOCK_RESULT(cc_r_a, cc_r_b);
+  clock_cycles cc_total = CLOCK_RESULT(cc_a, cc_b) - cc_rand;
+  fprintf(stdout, "Time elapsed in lapin_tag (reducible = %u)", lapin->reduc);
+  fprintf(stdout, " = %llu clock cycles (%llu in random)\n", cc_total, cc_rand);
   #endif
   return 1;
 }
@@ -355,8 +366,10 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
   int8_t ret = 0;
   
   #ifdef PERFORMANCE
-  struct timespec start, end;
-  START_MEASURE(start);
+  //struct timespec start, end;
+  //TIME_START(start);
+  clock_cycles cc_a, cc_b;
+  CLOCK_START(cc_a);
   #endif
   if(lapin->reduc) {
     const KeyCRT *key = lapin->key_crt;
@@ -456,11 +469,15 @@ int8_t lapin_vrfy(const Lapin *lapin, const Challenge c, const void *r, const vo
     table_free(table);*/
   }
   #ifdef PERFORMANCE
-  END_MEASURE(end);
+  CLOCK_END(cc_b);
+  //TIME_END(end);
   
-  uint32_t duration = MEASURE_RESULT(start, end);
-  fprintf(stdout, "Time elapsed in lapin_vrfy (reducible = %u) = %u ms\n",
-                  lapin->reduc, duration);
+  //uint32_t duration = TIME_RESULT(start, end);
+  //fprintf(stdout, "Time elapsed in lapin_vrfy (reducible = %u) = %u ms\n",
+  //                lapin->reduc, duration);
+  clock_cycles cc_total = CLOCK_RESULT(cc_a, cc_b);
+  fprintf(stdout, "Time elapsed in lapin_crfy (reducible = %u)", lapin->reduc);
+  fprintf(stdout, " = %llu clock cycles\n", cc_total);
   #endif
   return ret;
 }
