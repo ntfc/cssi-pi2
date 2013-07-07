@@ -33,10 +33,6 @@ class LatticeSignature:
     
   def calcT(self, A, S):
     return (A*S).mod(self.q)
-    
-  # gaussian rejection for integers
-  def __p(self, c, x):
-    return exp((float(-((x-c)**2) / (2*self.sigma**2))))
 
   def genY(self):
     limite = Integer(self.sigma * log(self.n,2))
@@ -52,21 +48,15 @@ class LatticeSignature:
         i+=1
     return vec
     
-  """
-  TODO: mu must be the message digest
-  """
   def genC(self, A, y, mu):
     if type(mu) != str:
       print "Message must be a string!"
       return
-    # TODO: unicode troubles..
-    mu = base64.b64encode(mu)
+
     s1 = (A*y).Mod(self.q)
+    s2 = self.hash_mu(mu)
     s = ''.join(map(lambda x : str(x), s1.list()))
-    sha1 = hashlib.sha1()
-    sha1.update(mu)
-    mu = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
-    s += mu
+    s += s2
     #resultado hash com 160bits
     #h = self.H(s)
     h = self.H2(s)
@@ -75,6 +65,12 @@ class LatticeSignature:
 
   def calcZ(self, S, c, y):
     return (S*c) + y
+    
+  def hash_mu(self, mu):
+    sha1 = hashlib.sha1()
+    mu = base64.b64encode(mu)
+    sha1.update(mu)
+    return bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
     
   def H(self, m):
     sha1 = hashlib.sha1()
@@ -113,36 +109,76 @@ class LatticeSignature:
     
     return h2[80 : ]
     
-  def Vrfy(self, mu, z, c, A, T):
-    z_norm = float(z.norm(p=2))
+  def Sign(self, mu, A, S):
     if type(mu) != str:
       print "Message must be a string!"
       return
-    # TODO: unicode troubles..
-    mu = base64.b64encode(mu)
-    s1 = (A*z - T*c)
+    i = 1
+    while True:
+      print "Attempt nr {0}..".format(i)
+      print "Generating y..."
+      y = self.genY()
+      print "Calculating Ay mod q..."
+      s1 = (A*y).Mod(self.q)
+      s2 = self.hash_mu(mu)
+      print "Calculating H(Ay, mu)..."
+      s = ''.join(map(lambda x : str(x), s1.list()))
+      s += s2
+      print "Calculating s...."
+      c = self.H2(s)
+      print "Calculating Sc + y...."
+      z = S*c + y
+      print "Rejection sampling..."
+      if self.rejectionSampling() == True:
+        print "Rejection sampling ok after {0} tries. Returning (z,c)..".format(i)
+        return (z, c)
+      else:
+        print "Rejection sampling failed. Trying again..."
+      i += 1
+    
+  def Vrfy(self, mu, z, c, A, T):
+    if type(mu) != str:
+      print "Message must be a string!"
+      return
+    z_norm = float(z.norm(p=2))
+    #mu = base64.b64encode(mu)
+    print "Calculating Az - Tc mod q...."
+    s1 = (A*z - T*c).Mod(self.q)
+    s2 = self.hash_mu(mu)
+    print "Converting Az - Tc to str..."
     s = ''.join(map(lambda x : str(x), s1.list()))
-    sha1 = hashlib.sha1()
-    sha1.update(mu)
-    mu = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
-    s += mu
+    #sha1 = hashlib.sha1()
+    #sha1.update(mu)
+    #mu = bin(Integer(sha1.hexdigest(),16))[2:].zfill(160)
+    s += s2
     #resultado hash com 160bits
     #h = self.H(s)
+    print "Calculating H(Az - Tc, mu)...."
     h = self.H2(s)
     z_to_compare = float(self.eta*self.sigma*float(sqrt(self.m)))
     return z_norm < z_to_compare and c == h
   
   #denominador e comum portanto pode ser cortado
   def rejectionSampling(self, S, z, c):
+    print "Calculating S*c..."
     Sc = S*c
-
-    pz = math.pow(1/(self.sigma * sqrt(2 * math.pi)), self.m) * math.exp(- ((z.norm(p=2))**2) / (2 * self.sigma**2))
+    
+    """pz = math.pow(1/(self.sigma * sqrt(2 * math.pi)), self.m) * math.exp(- ((z.norm(p=2))**2) / (2 * self.sigma**2))
     
     print pz
     return
     pvz = math.pow(1/(self.sigma * sqrt(2 * math.pi)), self.m) * math.exp(- ((z - Sc).norm(p=2)**2) / (2 * self.sigma**2))
 
-    return float(pz/(self.m*pvz))
+    return float(pz/(self.m*pvz))"""
+    return int(random() < float(1 / self.M))
+  
+  # gaussian rejection for integers
+  def __p(self, c, x):
+    return exp((float(-((x-c)**2) / (2*self.sigma**2))))
+  
+  # return D^m_sigma(x)
+  #def D(self, v, x):
+    # TODO: acabar isto
     
 def randomMatrix(nrows, ncols, bound):
   A = matrix(nrows, ncols)
