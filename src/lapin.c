@@ -298,12 +298,16 @@ int8_t lapin_tag(const Lapin *lapin, const Challenge c, void *r, void *z) {
     // NOTE: this way all the memory can be free'd
     // r * (s * pi(c) + s') + e
     Poly *sTimesPi = poly_mult_mod(key->s1, pi, f);
+    /*Poly *sTimesPi = poly_mult(key->s1, pi);
+    sTimesPi = poly_fast_mod_irreduc(sTimesPi, f);*/
     
     Poly *sTimesPiPlusS2 = poly_add(sTimesPi, key->s2);
 
     poly_free(sTimesPi);
 
     Poly *rTimesRest = poly_mult_mod(*r_poly, sTimesPiPlusS2, f);
+    /*Poly *rTimesRest = poly_mult(*r_poly, sTimesPiPlusS2);
+    rTimesRest = poly_fast_mod_irreduc(rTimesRest, f);*/
     poly_free(sTimesPiPlusS2);
     
     *z_poly = poly_add(rTimesRest, e);

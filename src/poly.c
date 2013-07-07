@@ -319,7 +319,8 @@ Poly* poly_mult(const Poly *a, const Poly *b) {
   }
   
   poly_free(B);
-  return poly_refresh(c);
+  //return poly_refresh(c);
+  return c;
 }
 
 // TODO: use global table variable
@@ -379,6 +380,27 @@ Poly* poly_mod(const Poly *c, const Poly *f) {
   a->vec[0] &= (0xffffffff >> s); // align last word
 
   return a;
+}
+
+Poly *poly_fast_mod_irreduc(Poly *c, const Poly *f) {
+  if(c->n_words != (f->n_words * 2)) {
+    fprintf(stderr, "ERROR: poly c words\n");
+    return NULL;
+  }
+  uint16_t i = c->n_words - 1;
+  uint8_t s = 12;
+  uint32_t T = 0;
+  for( ; i >= f->n_words; i--) {
+    T = c->vec[GET_VEC_WORD_INDEX(c->n_words, i)];
+    c->vec[GET_VEC_WORD_INDEX(c->n_words, i - 17)] ^= ((T << 12) ^ (T << 13));
+    c->vec[GET_VEC_WORD_INDEX(c->n_words, i - 16)] ^= ((T >> 20) ^ (T >> 19));
+  }
+  
+  T = c->vec[GET_VEC_WORD_INDEX(c->n_words, 16)];
+  c->vec[GET_VEC_WORD_INDEX(c->n_words, 0)] ^= ((T >> 20) ^ (T >> 19));
+  c = poly_realloc(c, f->n_words);
+  c->vec[0] &= 0xFFFFF;
+  return c;
 }
 
 Poly* poly_mod_faster(Poly *c, const Poly *f, uint32_t ***tb) {
@@ -495,6 +517,20 @@ void poly_print_poly(const Poly *f) {
   
   while(i < t) {
     printf("%s", binary_uint32_to_char(f->vec[i], w));
+    i++;
+  }
+  printf("\n");
+}
+void poly_print_poly_hex(const Poly *f) {
+  if(!f) {
+    fprintf(stderr, "ERROR poly NULL\n");
+    return;
+  }
+  uint16_t i = 0;
+  uint16_t t = f->n_words;
+  
+  while(i < t) {
+    printf("0x%.8x ", f->vec[i]);
     i++;
   }
   printf("\n");

@@ -42,6 +42,7 @@ Poly* poly_shift_right(Poly *a, uint16_t i);
 Poly* poly_add(const Poly *a, const Poly *b);
 Poly* poly_mult(const Poly *a, const Poly *b);
 Poly* poly_mod(const Poly *c, const Poly *f);
+Poly* poly_fast_mod_irreduc(Poly *c, const Poly *f);
 Poly* poly_mod_faster(Poly *c, const Poly *f, uint32_t ***tb);
 Poly *poly_mult_mod(const Poly *a, const Poly *b, const Poly *f);
 Poly *poly_mult_mod_faster(Poly *a, const Poly *b, const Poly *f, uint32_t ***table);

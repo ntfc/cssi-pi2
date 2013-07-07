@@ -390,6 +390,7 @@ class BinaryPolynomial:
     # return C[7], C[6], .. C[0]
     return ''.join(str(bit) for bit in A[ (t*2 *W) - (t * W) : ])
     
+  """ NOTA: Isto foi feito à pressa apenas para testar """
   # fast reduction modulo x**532 + x**1 + 1
   def polyFastMod_lapin(self, a):
     if type(a) != type(self.var):
